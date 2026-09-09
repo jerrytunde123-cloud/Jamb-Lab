@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>JAMB Quiz · Newton</title>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+    }
+    body {
+      background: #f4f7fb;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .app {
+      max-width: 720px;
+      width: 100%;
+      background: white;
+      border-radius: 2rem 2rem 1.5rem 1.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+      overflow: hidden;
+      padding: 1.5rem 1.2rem 2rem;
+      position: relative;
+      margin: 0.5rem 0;
+    }
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #0b2b40;
+      margin-bottom: 0.2rem;
+    }
+    h1 small {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #2a6f8f;
+      background: #e5f0f8;
+      padding: 0.2rem 0.9rem;
+      border-radius: 40px;
+      margin-left: auto;
+    }
+    .subhead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #3a5e73;
+      margin-bottom: 1.2rem;
+      border-bottom: 1px solid #e9edf2;
+      padding-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .channel-badge {
+      background: #25D366;
+      color: white;
+      padding: 0.25rem 1rem;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 1.5rem;
+      padding: 1.2rem 1rem;
+      box-shadow: 0 4px 12px rgba(0, 20, 30, 0.05);
+      margin: 1rem 0;
+      border: 1px solid #eef3f8;
+    }
+    .card-title {
+      font-weight: 600;
+      color: #1d3b4f;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .card-title i {
+      color: #2a7f9f;
+      width: 1.5rem;
+    }
+    .unlock-box {
+      background: #f0f7fe;
+      border-radius: 1.2rem;
+      padding: 1.2rem 1rem;
+      text-align: center;
+      border: 1px dashed #3f8db0;
+      margin: 0.5rem 0 1.2rem;
+    }
+    .unlock-box p {
+      font-size: 0.9rem;
+      color: #1d4b62;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    .btn-whatsapp {
+      background: #25D366;
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 0.9rem 1.5rem;
+      border-radius: 60px;
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 320px;
+      transition: all 0.15s;
+      box-shadow: 0 6px 14px rgba(37, 211, 102, 0.25);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-whatsapp:active {
+      transform: scale(0.96);
+      background: #1fa854;
+    }
+    .btn-secondary {
+      background: #eaf0f5;
+      color: #1d4b62;
+      box-shadow: none;
+      font-weight: 600;
+    }
+    .btn-secondary i {
+      color: #2a7f9f;
+    }
+    .btn-primary {
+      background: #1a5f7a;
+      color: white;
+      box-shadow: 0 6px 14px rgba(26, 95, 122, 0.25);
+    }
+    .btn-primary:disabled {
+      opacity: 0.4;
+      pointer-events: none;
+      filter: grayscale(0.3);
+    }
+    .btn-block {
+      width: 100%;
+      justify-content: center;
+      border: none;
+      padding: 0.9rem;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.15s;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .subject-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 10px;
+      margin: 12px 0 8px;
+    }
+    .subject-item {
+      background: #f8fafc;
+      border-radius: 30px;
+      padding: 0.6rem 0.2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #1d3b4f;
+      border: 1px solid #dee8f0;
+      transition: all 0.1s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      cursor: default;
+    }
+    .subject-item i {
+      color: #2a7f9f;
+      margin-right: 4px;
+    }
+    .subject-item.active {
+      background: #1a5f7a;
+      color: white;
+      border-color: #1a5f7a;
+    }
+    .subject-item.active i {
+      color: white;
+    }
+    .share-section {
+      background: #f2f6fa;
+      border-radius: 1.5rem;
+      padding: 1rem 1rem 0.8rem;
+      margin: 1.2rem 0 0.5rem;
+    }
+    .share-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin: 10px 0 6px;
+    }
+    .share-btn {
+      background: white;
+      border-radius: 40px;
+      padding: 0.4rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border: 1px solid #d0dde8;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #1f4960;
+      cursor: pointer;
+      transition: 0.1s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      text-decoration: none;
+    }
+    .share-btn:active {
+      background: #e3edf5;
+      transform: scale(0.96);
+    }
+    .share-btn i {
+      font-size: 1rem;
+    }
+    .contact-card {
+      margin-top: 1.2rem;
+      background: #eaf3fa;
+      border-radius: 2rem;
+      padding: 0.8rem 1.2rem;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      border: 1px solid #bdd7e8;
+    }
+    .contact-card span {
+      font-weight: 500;
+      color: #0b2a3b;
+      font-size: 0.9rem;
+    }
+    .contact-card a {
+      background: #075e54;
+      color: white;
+      border-radius: 40px;
+      padding: 0.4rem 1.2rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .footer-note {
+      text-align: center;
+      font-size: 0.7rem;
+      color: #6f8b9c;
+      margin-top: 1.5rem;
+      border-top: 1px solid #e2eaf0;
+      padding-top: 1rem;
+    }
+    .badge-unlocked {
+      background: #25D366;
+      color: white;
+      border-radius: 40px;
+      padding: 0.2rem 0.9rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .lock-icon {
+      opacity: 0.5;
+    }
+    .flex {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .mt-1 { margin-top: 0.5rem; }
+    .mb-1 { margin-bottom: 0.5rem; }
+    .text-small { font-size: 0.8rem; color: #3f637a; }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <header>
+    <h1>
+      <i class="fas fa-graduation-cap" style="color: #1a5f7a;"></i> JAMB<span style="font-weight: 300; margin-left: 2px;">Lab</span>
+      <small>UTME</small>
+    </h1>
+    <div class="subhead">
+      <span><i class="fas fa-calendar-alt" style="color: #2a7f9f;"></i> 2026/2027</span>
+      <span class="channel-badge"><i class="fab fa-whatsapp"></i> Channel 1 · 1.2k</span>
+    </div>
+  </header>
+
+  <!-- UNLOCK SECTION -->
+  <div class="unlock-box" id="unlockBox">
+    <p><i class="fas fa-lock" style="margin-right: 6px;"></i> <strong>🔐 Share & unlock</strong> — join our WhatsApp channels to start quiz</p>
+    <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
+      <a href="https://whatsapp.com/channel/0029VbCJXuCDeON8S6aCk43B" target="_blank" class="btn-whatsapp" id="channel1Btn">
+        <i class="fab fa-whatsapp"></i> Join Channel 1
+      </a>
+      <a href="https://whatsapp.com/channel/0029Vb8HCZE6rsR1fthNok1P" target="_blank" class="btn-whatsapp" id="channel2Btn" style="background: #128C7E; box-shadow: 0 6px 14px rgba(18, 140, 126, 0.25);">
+        <i class="fab fa-whatsapp"></i> Join Channel 2
+      </a>
+      <div style="margin: 6px 0; display: flex; align-items: center; gap: 10px;">
+        <span class="badge-unlocked" id="unlockStatus" style="background: #8fabbc;"><i class="fas fa-lock"></i> locked</span>
+        <span class="text-small">share & unlock quiz</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBJECT SELECTION (enabled after unlock) -->
+  <div class="card" style="margin-top: 0.2rem;">
+    <div class="card-title">
+      <i class="fas fa-book-open"></i> Choose subject · JAMB syllabus
+    </div>
+    <div class="subject-grid" id="subjectGrid">
+      <div class="subject-item" data-subject="Maths"><i class="fas fa-calculator"></i> Maths</div>
+      <div class="subject-item" data-subject="English"><i class="fas fa-font"></i> English</div>
+      <div class="subject-item" data-subject="Physics"><i class="fas fa-atom"></i> Physics</div>
+      <div class="subject-item" data-subject="Chemistry"><i class="fas fa-flask"></i> Chemistry</div>
+      <div class="subject-item" data-subject="Biology"><i class="fas fa-dna"></i> Biology</div>
+      <div class="subject-item" data-subject="Economics"><i class="fas fa-chart-line"></i> Economics</div>
+      <div class="subject-item" data-subject="Government"><i class="fas fa-gavel"></i> Government</div>
+      <div class="subject-item" data-subject="Lit-in-Eng"><i class="fas fa-feather-alt"></i> Literature</div>
+      <div class="subject-item" data-subject="CRK"><i class="fas fa-bible"></i> CRK</div>
+      <div class="subject-item" data-subject="Commerce"><i class="fas fa-store"></i> Commerce</div>
+      <div class="subject-item" data-subject="Accounts"><i class="fas fa-coins"></i> Accounts</div>
+      <div class="subject-item" data-subject="IRK"><i class="fas fa-star-and-crescent"></i> IRK</div>
+    </div>
+    <div style="margin: 12px 0 4px; display: flex; justify-content: center;">
+      <button class="btn-block btn-primary" id="startQuizBtn" disabled>
+        <i class="fas fa-play"></i> Start Quiz (unlock first)
+      </button>
+    </div>
+    <p class="text-small" style="text-align: center; margin-top: 2px;"><i class="fas fa-info-circle"></i> 20 questions · 25 mins · JAMB standard</p>
+  </div>
+
+  <!-- SHARE SECTION -->
+  <div class="share-section">
+    <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1d3b4f;">
+      <i class="fas fa-share-alt" style="color: #2a7f9f;"></i> Share & invite classmates
+    </div>
+    <div class="share-row">
+      <a class="share-btn" href="https://api.whatsapp.com/send?text=🎓 *JAMB Quiz* Join me on Newton Quiz builder! https://newtonquizbuilder.netlify.app/?q=ms3luanz0b8&m=e" target="_blank"><i class="fab fa-whatsapp" style="color: #25D366;"></i> Friends</a>
+      <a class="share-btn" href="https://api.whatsapp.com/send?text=📚 *JAMB daily drills* Join our WhatsApp channel for UTME prep! https://whatsapp.com/channel/0029VbCJXuCDeON8S6aCk43B" target="_blank"><i class="fas fa-users" style="color: #2a7f9f;"></i> Groups</a>
+      <a class="share-btn" href="https://api.whatsapp.com/send?text=👨‍🎓 *Classmates* let's practice JAMB together! https://whatsapp.com/channel/0029Vb8HCZE6rsR1fthNok1P" target="_blank"><i class="fas fa-user-graduate"></i> Class</a>
+    </div>
+    <p class="text-small" style="margin: 6px 0 0; text-align: center;">Share to unlock more trials & access all subjects</p>
+  </div>
+
+  <!-- WHATSAPP CONTACT (JAMB main exam assistance) -->
+  <div class="contact-card">
+    <span><i class="fab fa-whatsapp" style="color: #25D366; font-size: 1.2rem;"></i> JAMB main exam assistance</span>
+    <a href="https://wa.me/message/WHTP63YEENQ4C1" target="_blank"><i class="fab fa-whatsapp"></i> Chat now</a>
+  </div>
+
+  <div class="footer-note">
+    <i class="fas fa-check-circle" style="color: #1a7f5a;"></i> JAMB syllabus standard · Newton Quizbuilder
+  </div>
+</div>
+
+<script>
+  (function() {
+    // --- State ---
+    let unlocked = false;          // true when both channels visited (simulated)
+    let selectedSubject = 'Maths';
+
+    const unlockStatus = document.getElementById('unlockStatus');
+    const startBtn = document.getElementById('startQuizBtn');
+    const subjectItems = document.querySelectorAll('.subject-item');
+
+    // Simulate unlocking when user clicks on channel links (both)
+    // In real scenario we could use visibility API, but we'll use click+manual toggle.
+    // We'll also add a "force unlock" for demo (but user must click both)
+    let channel1Clicked = false;
+    let channel2Clicked = false;
+
+    function checkUnlock() {
+      if (channel1Clicked && channel2Clicked) {
+        unlocked = true;
+        unlockStatus.innerHTML = '<i class="fas fa-unlock"></i> unlocked';
+        unlockStatus.style.background = '#25D366';
+        startBtn.disabled = false;
+        startBtn.innerHTML = '<i class="fas fa-play"></i> Start Quiz';
+        // enable subject selection active style
+        subjectItems.forEach(item => {
+          item.style.cursor = 'pointer';
+          item.style.opacity = '1';
+        });
+        // set default active
+        document.querySelector('.subject-item[data-subject="Maths"]')?.classList.add('active');
+      } else {
+        unlocked = false;
+        unlockStatus.innerHTML = '<i class="fas fa-lock"></i> locked';
+        unlockStatus.style.background = '#8fabbc';
+        startBtn.disabled = true;
+        startBtn.innerHTML = '<i class="fas fa-lock"></i> Start Quiz (unlock first)';
+        subjectItems.forEach(item => {
+          item.style.cursor = 'default';
+          item.classList.remove('active');
+        });
+      }
+    }
+
+    // Channel buttons: mark as clicked
+    document.getElementById('channel1Btn').addEventListener('click', function(e) {
+      // we don't prevent default, opens WhatsApp
+      channel1Clicked = true;
+      checkUnlock();
+      // also open in new tab? default is fine
+    });
+
+    document.getElementById('channel2Btn').addEventListener('click', function(e) {
+      channel2Clicked = true;
+      checkUnlock();
+    });
+
+    // Subject selection (only if unlocked)
+    subjectItems.forEach(item => {
+      item.addEventListener('click', function(e) {
+        if (!unlocked) {
+          // gentle reminder
+          alert('🔒 Please join both WhatsApp channels to unlock subjects.');
+          return;
+        }
+        // remove active from all
+        subjectItems.forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+        selectedSubject = this.getAttribute('data-subject') || 'Maths';
+        console.log('Selected subject:', selectedSubject);
+      });
+    });
+
+    // Start Quiz button
+    startBtn.addEventListener('click', function() {
+      if (!unlocked) {
+        alert('⚠️ You need to join both WhatsApp channels to unlock the quiz.');
+        return;
+      }
+      const subject = selectedSubject || 'Maths';
+      alert(`✅ Starting ${subject} quiz (JAMB standard) ... \n20 questions · 25 minutes\nGood luck! 🍀`);
+      // In real app, redirect to quiz page with subject param
+      // window.location.href = `/quiz?subject=${subject}`;
+    });
+
+    // share buttons: just open whatsapp with prefilled text
+    // they already have href with text
+
+    // also initial state: locked
+    checkUnlock();
+
+    // extra: if user wants to unlock by sharing, we add a little reminder
+    // click on share buttons could also count as "unlock" but we stick to channels
+    // we'll add a small hover effect
+    console.log('JAMB quiz app ready — share & unlock!');
+
+    // for demo, we can also add a "force unlock" via double click on header (hidden)
+    // but not needed, just for testing : 
+    // double click on header to unlock (dev)
+    document.querySelector('header').addEventListener('dblclick', function(e) {
+      channel1Clicked = true;
+      channel2Clicked = true;
+      checkUnlock();
+      alert('🔓 Unlocked (demo) — both channels joined.');
+    });
+
+  })();
+</script>
+</body>
+</html>
