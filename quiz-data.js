@@ -283,7 +283,409 @@ const quizData = {
                 correct: 2
             }
         ]
-    }
+    },// ============================================================
+// ADD THESE SUBJECTS INSIDE YOUR EXISTING quizData OBJECT
+// Paste right after the biology block (before the closing };)
+// ============================================================
+
+    government: {
+        name: "Government",
+        icon: "🏛️",
+        questions: [
+            {
+                question: "The principle that the powers of government should be divided among the three arms is called:",
+                options: ["Separation of powers", "Federalism", "Rule of law", "Sovereignty"],
+                correct: 0
+            },
+            {
+                question: "In a federal system, residual powers are exercised by:",
+                options: ["State governments", "Federal government", "Local governments", "Both federal and state"],
+                correct: 0
+            },
+            {
+                question: "The concept of 'rule of law' was propounded by:",
+                options: ["A.V. Dicey", "John Locke", "Thomas Hobbes", "Jean Bodin"],
+                correct: 0
+            },
+            {
+                question: "The process by which a bill becomes law after presidential assent is called:",
+                options: ["Legislation", "Adjudication", "Execution", "Delegation"],
+                correct: 0
+            },
+            {
+                question: "A constitution that can be amended by a simple majority in parliament is:",
+                options: ["Flexible constitution", "Rigid constitution", "Written constitution", "Unwritten constitution"],
+                correct: 0
+            },
+            {
+                question: "The doctrine that the state should not interfere in the economic activities of citizens is:",
+                options: ["Laissez-faire", "Socialism", "Communism", "Welfarism"],
+                correct: 0
+            },
+            {
+                question: "The upper legislative chamber in Nigeria is called:",
+                options: ["Senate", "House of Representatives", "National Assembly", "Council of State"],
+                correct: 0
+            },
+            {
+                question: "The type of government in which the king or queen is the ceremonial head of state is:",
+                options: ["Constitutional monarchy", "Absolute monarchy", "Republic", "Oligarchy"],
+                correct: 0
+            },
+            {
+                question: "The process of redrawing constituency boundaries is called:",
+                options: ["Delimitation", "Gerrymandering", "Franchise", "Registration"],
+                correct: 0
+            },
+            {
+                question: "The principle of collective responsibility applies to:",
+                options: ["Cabinet ministers", "Judges", "Civil servants", "Members of parliament"],
+                correct: 0
+            }
+        ]
+    },
+
+    economics: {
+        name: "Economics",
+        icon: "📊",
+        questions: [
+            {
+                question: "If the price of a commodity increases from ₦10 to ₦12 and quantity demanded falls from 100 to 80 units, calculate the price elasticity of demand.",
+                options: ["1.0", "0.5", "2.0", "1.5"],
+                correct: 0
+            },
+            {
+                question: "The point where demand and supply curves intersect is called:",
+                options: ["Equilibrium point", "Break-even point", "Maximum point", "Minimum point"],
+                correct: 0
+            },
+            {
+                question: "If the marginal propensity to consume is 0.8, the multiplier is:",
+                options: ["5", "4", "2", "8"],
+                correct: 0
+            },
+            {
+                question: "A situation where inflation coexists with unemployment is called:",
+                options: ["Stagflation", "Deflation", "Disinflation", "Hyperinflation"],
+                correct: 0
+            },
+            {
+                question: "The relationship between price and quantity supplied is:",
+                options: ["Direct", "Inverse", "Constant", "Undefined"],
+                correct: 0
+            },
+            {
+                question: "Calculate the GDP if consumption is ₦500m, investment is ₦200m, government spending is ₦300m, and net exports is ₦50m.",
+                options: ["₦1,050m", "₦950m", "₦1,000m", "₦1,100m"],
+                correct: 0
+            },
+            {
+                question: "The type of unemployment caused by technological changes is:",
+                options: ["Structural unemployment", "Frictional unemployment", "Cyclical unemployment", "Seasonal unemployment"],
+                correct: 0
+            },
+            {
+                question: "A tax that takes a larger proportion of income from low-income earners is:",
+                options: ["Regressive tax", "Progressive tax", "Proportional tax", "Direct tax"],
+                correct: 0
+            },
+            {
+                question: "The type of market where there is only one buyer is:",
+                options: ["Monopsony", "Monopoly", "Oligopoly", "Perfect competition"],
+                correct: 0
+            },
+            {
+                question: "A movement along the demand curve is caused by a change in:",
+                options: ["Price of the commodity", "Income", "Taste", "Population"],
+                correct: 0
+            }
+        ]
+    },
+
+    literature: {
+        name: "Literature in English",
+        icon: "📚",
+        questions: [
+            {
+                question: "In 'Things Fall Apart', the death of Ikemefuna is significant because:",
+                options: ["It marks the beginning of Okonkwo's downfall", "It brings peace to the village", "It strengthens Okonkwo's position", "It ends the war"],
+                correct: 0
+            },
+            {
+                question: "The literary device used in 'The moon is a queen' is:",
+                options: ["Metaphor", "Simile", "Personification", "Hyperbole"],
+                correct: 0
+            },
+            {
+                question: "In 'The Lion and the Jewel', Lakunle represents:",
+                options: ["Modernity", "Tradition", "Colonialism", "Nationalism"],
+                correct: 0
+            },
+            {
+                question: "A play that ends with the downfall of the protagonist is called:",
+                options: ["Tragedy", "Comedy", "Farce", "Melodrama"],
+                correct: 0
+            },
+            {
+                question: "The narrator in a literary work who knows everything about the characters is:",
+                options: ["Omniscient narrator", "First-person narrator", "Limited narrator", "Objective narrator"],
+                correct: 0
+            },
+            {
+                question: "The use of 'winter' to represent old age is an example of:",
+                options: ["Symbolism", "Irony", "Satire", "Paradox"],
+                correct: 0
+            },
+            {
+                question: "A speech made by a character alone on stage is:",
+                options: ["Soliloquy", "Monologue", "Dialogue", "Aside"],
+                correct: 0
+            },
+            {
+                question: "The literary term for a hint of future events is:",
+                options: ["Foreshadowing", "Flashback", "Suspense", "Cliffhanger"],
+                correct: 0
+            },
+            {
+                question: "A poem of mourning for the dead is called:",
+                options: ["Elegy", "Ode", "Sonnet", "Ballad"],
+                correct: 0
+            },
+            {
+                question: "The protagonist in a literary work is:",
+                options: ["The main character", "The villain", "The narrator", "The author"],
+                correct: 0
+            }
+        ]
+    },
+
+    crs: {
+        name: "Christian Religious Studies",
+        icon: "✝️",
+        questions: [
+            {
+                question: "According to Matthew's Gospel, the Beatitudes were delivered on:",
+                options: ["A mountain", "A plain", "A boat", "A synagogue"],
+                correct: 0
+            },
+            {
+                question: "The significance of the Transfiguration was to:",
+                options: ["Reveal Jesus' divine nature", "Show Jesus' humanity", "Predict Jesus' death only", "Show Moses' superiority"],
+                correct: 0
+            },
+            {
+                question: "In the parable of the Good Samaritan, the point Jesus made was that:",
+                options: ["Neighbourliness transcends ethnic boundaries", "Priests are evil", "Samaritans are holy", "Travel is dangerous"],
+                correct: 0
+            },
+            {
+                question: "The main lesson from the story of the Prodigal Son is:",
+                options: ["God's forgiveness for repentant sinners", "The danger of wealth", "The importance of farming", "The role of elder brothers"],
+                correct: 0
+            },
+            {
+                question: "According to Paul, justification is by:",
+                options: ["Faith in Jesus Christ", "Works of the law", "Circumcision", "Temple sacrifice"],
+                correct: 0
+            },
+            {
+                question: "The Holy Spirit descended on the apostles on the day of:",
+                options: ["Pentecost", "Passover", "Tabernacles", "Atonement"],
+                correct: 0
+            },
+            {
+                question: "The main message of the prophet Amos was:",
+                options: ["Social justice and righteousness", "Temple worship", "Kingship", "Sacrifice"],
+                correct: 0
+            },
+            {
+                question: "According to James, faith without works is:",
+                options: ["Dead", "Alive", "Perfect", "Sufficient"],
+                correct: 0
+            },
+            {
+                question: "Paul's conversion occurred on the road to:",
+                options: ["Damascus", "Jerusalem", "Rome", "Antioch"],
+                correct: 0
+            },
+            {
+                question: "According to Jesus, the greatest commandment is:",
+                options: ["Love God and love your neighbour", "Honour your parents", "Do not steal", "Keep the Sabbath"],
+                correct: 0
+            }
+        ]
+    },
+
+    geography: {
+        name: "Geography",
+        icon: "🌍",
+        questions: [
+            {
+                question: "The process by which rocks are broken down by chemical reactions is:",
+                options: ["Chemical weathering", "Physical weathering", "Biological weathering", "Erosion"],
+                correct: 0
+            },
+            {
+                question: "A line on a map joining points of equal rainfall is:",
+                options: ["Isohyet", "Isotherm", "Isobar", "Contour"],
+                correct: 0
+            },
+            {
+                question: "The type of rainfall associated with the Inter-Tropical Convergence Zone is:",
+                options: ["Convectional", "Relief", "Frontal", "Cyclonic"],
+                correct: 0
+            },
+            {
+                question: "The process by which a river deposits its load at its mouth is:",
+                options: ["Delta formation", "Erosion", "Transportation", "Attrition"],
+                correct: 0
+            },
+            {
+                question: "A map scale of 1:50,000 means that 1cm on the map represents:",
+                options: ["0.5 km", "5 km", "50 km", "500 km"],
+                correct: 0
+            },
+            {
+                question: "The phenomenon where the sun is directly overhead at the Tropic of Cancer occurs in:",
+                options: ["June", "December", "March", "September"],
+                correct: 0
+            },
+            {
+                question: "The instrument used to measure atmospheric pressure is:",
+                options: ["Barometer", "Thermometer", "Hygrometer", "Anemometer"],
+                correct: 0
+            },
+            {
+                question: "The main cause of tides in oceans is:",
+                options: ["Gravitational pull of the moon", "Wind", "Earthquakes", "Ocean currents"],
+                correct: 0
+            },
+            {
+                question: "A plateau is best described as:",
+                options: ["An elevated flat land", "A lowland plain", "A mountain peak", "A river valley"],
+                correct: 0
+            },
+            {
+                question: "The type of soil erosion caused by wind in arid regions is:",
+                options: ["Aeolian erosion", "Fluvial erosion", "Glacial erosion", "Marine erosion"],
+                correct: 0
+            }
+        ]
+    },
+
+    commerce: {
+        name: "Commerce",
+        icon: "💼",
+        questions: [
+            {
+                question: "The function of commerce that involves moving goods from producers to consumers is:",
+                options: ["Trade", "Aids to trade", "Production", "Manufacturing"],
+                correct: 0
+            },
+            {
+                question: "A document sent by a seller to a buyer requesting payment is:",
+                options: ["Invoice", "Receipt", "Credit note", "Debit note"],
+                correct: 0
+            },
+            {
+                question: "The type of business organization where members share profits and losses is:",
+                options: ["Partnership", "Sole proprietorship", "Public corporation", "Cooperative"],
+                correct: 0
+            },
+            {
+                question: "The principle of insurance where the insured must disclose all material facts is:",
+                options: ["Utmost good faith", "Indemnity", "Subrogation", "Contribution"],
+                correct: 0
+            },
+            {
+                question: "The process of transporting goods by sea is called:",
+                options: ["Shipping", "Freighting", "Haulage", "Carriage"],
+                correct: 0
+            },
+            {
+                question: "A document that serves as evidence of ownership of goods in transit is:",
+                options: ["Bill of lading", "Invoice", "Waybill", "Consignment note"],
+                correct: 0
+            },
+            {
+                question: "A warehouse where goods are stored until duty is paid is:",
+                options: ["Bonded warehouse", "Private warehouse", "Public warehouse", "Cooperative warehouse"],
+                correct: 0
+            },
+            {
+                question: "A cheque that has been crossed cannot be:",
+                options: ["Cashed over the counter", "Deposited in a bank", "Endorsed", "Transferred"],
+                correct: 0
+            },
+            {
+                question: "The main advantage of a cooperative society is:",
+                options: ["Members share profits equitably", "Government control", "Limited liability", "Large capital base"],
+                correct: 0
+            },
+            {
+                question: "The purpose of a trade mark is to:",
+                options: ["Identify a product", "Advertise a product", "Price a product", "Distribute a product"],
+                correct: 0
+            }
+        ]
+    },
+
+    financialAccounting: {
+        name: "Financial Accounting",
+        icon: "🧾",
+        questions: [
+            {
+                question: "If assets are ₦500,000 and liabilities are ₦200,000, what is the owner's equity?",
+                options: ["₦300,000", "₦700,000", "₦200,000", "₦500,000"],
+                correct: 0
+            },
+            {
+                question: "The accounting concept that requires transactions to be recorded at their original cost is:",
+                options: ["Historical cost concept", "Going concern concept", "Matching concept", "Accrual concept"],
+                correct: 0
+            },
+            {
+                question: "A purchase of goods on credit will:",
+                options: ["Increase assets and increase liabilities", "Decrease assets and decrease liabilities", "Increase assets only", "Decrease liabilities only"],
+                correct: 0
+            },
+            {
+                question: "The trial balance is prepared to:",
+                options: ["Check the arithmetical accuracy of the ledger", "Determine profit", "Show financial position", "Record transactions"],
+                correct: 0
+            },
+            {
+                question: "If opening stock is ₦50,000, purchases ₦200,000, and closing stock ₦30,000, calculate cost of goods sold.",
+                options: ["₦220,000", "₦250,000", "₦230,000", "₦180,000"],
+                correct: 0
+            },
+            {
+                question: "The double entry for cash sales is:",
+                options: ["Debit Cash, Credit Sales", "Debit Sales, Credit Cash", "Debit Cash, Credit Capital", "Debit Purchases, Credit Cash"],
+                correct: 0
+            },
+            {
+                question: "A credit balance in the cash book represents:",
+                options: ["Bank overdraft", "Cash in hand", "Bank balance", "Petty cash"],
+                correct: 0
+            },
+            {
+                question: "If sales is ₦500,000, cost of goods sold is ₦350,000, calculate gross profit.",
+                options: ["₦150,000", "₦850,000", "₦200,000", "₦100,000"],
+                correct: 0
+            },
+            {
+                question: "The provision for doubtful debts is created to:",
+                options: ["Cover possible losses from bad debts", "Increase profit", "Reduce expenses", "Increase debtors"],
+                correct: 0
+            },
+            {
+                question: "The accounting equation is expressed as:",
+                options: ["Assets = Liabilities + Capital", "Assets = Capital - Liabilities", "Capital = Assets + Liabilities", "Liabilities = Assets + Capital"],
+                correct: 0
+            }
+        ]
+            }
 };
 
 // Additional subjects can be added here
