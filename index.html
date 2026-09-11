@@ -11,10 +11,8 @@
     .app { max-width: 720px; width: 100%; background: white; border-radius: 2rem 2rem 1.5rem 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.08); overflow: hidden; padding: 1.5rem 1.2rem 2rem; position: relative; margin: 0.5rem 0; }
     h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; color: #0b2b40; margin-bottom: 0.2rem; }
     h1 small { font-size: 1rem; font-weight: 500; color: #2a6f8f; background: #e5f0f8; padding: 0.2rem 0.9rem; border-radius: 40px; margin-left: auto; }
-
     .points-badge { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 0.35rem 1rem; border-radius: 30px; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.35); }
     .points-badge i { color: #fff; }
-
     .subhead { display: flex; justify-content: space-between; align-items: center; color: #3a5e73; margin-bottom: 1.2rem; border-bottom: 1px solid #e9edf2; padding-bottom: 0.75rem; flex-wrap: wrap; gap: 8px; }
     .channel-badge { background: #25D366; color: white; padding: 0.25rem 1rem; border-radius: 30px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3); }
     .card { background: #ffffff; border-radius: 1.5rem; padding: 1.2rem 1rem; box-shadow: 0 4px 12px rgba(0, 20, 30, 0.05); margin: 1rem 0; border: 1px solid #eef3f8; }
@@ -26,15 +24,15 @@
     .btn-whatsapp:active { transform: scale(0.96); background: #1fa854; }
     .btn-telegram { background: #229ED9; box-shadow: 0 6px 14px rgba(34, 158, 217, 0.25); }
     .btn-telegram:active { background: #1a7fb0; }
+    .btn-facebook { background: #1877f2; box-shadow: 0 6px 14px rgba(24, 119, 242, 0.25); }
+    .btn-facebook:active { background: #0e5fc9; }
     .btn-block { width: 100%; justify-content: center; border: none; padding: 0.9rem; border-radius: 60px; font-weight: 600; font-size: 1rem; display: flex; align-items: center; gap: 10px; transition: all 0.15s; cursor: pointer; text-decoration: none; }
     .btn-primary { background: #1a5f7a; color: white; box-shadow: 0 6px 14px rgba(26, 95, 122, 0.25); }
     .btn-primary:disabled { opacity: 0.5; pointer-events: none; filter: grayscale(0.3); }
-
     .bonus-grid { display: flex; flex-direction: column; gap: 10px; align-items: center; }
     .bonus-row { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 600; color: #1d4b62; background: white; padding: 0.3rem 0.8rem; border-radius: 30px; border: 1px dashed #3f8db0; }
     .bonus-row.claimed { background: #d4edda; border-color: #25D366; color: #1a7f5a; border-style: solid; }
     .bonus-row.claimed::after { content: ' ✓'; font-weight: 700; }
-
     .subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin: 12px 0 8px; }
     .subject-item { background: #f8fafc; border-radius: 30px; padding: 0.6rem 0.2rem; text-align: center; font-size: 0.8rem; font-weight: 500; color: #1d3b4f; border: 1px solid #dee8f0; transition: all 0.1s; box-shadow: 0 1px 3px rgba(0,0,0,0.02); cursor: pointer; position: relative; }
     .subject-item i { color: #2a7f9f; margin-right: 4px; }
@@ -45,7 +43,6 @@
     .subject-item.selected::after { content: '✓'; position: absolute; top: -4px; right: -4px; background: #0b2b40; color: white; width: 18px; height: 18px; border-radius: 50%; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
     .subject-info { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border-radius: 1rem; padding: 0.6rem 0.9rem; margin: 8px 0; font-size: 0.8rem; color: #3f637a; }
     .subject-info strong { color: #1a5f7a; }
-
     .share-section { background: #f2f6fa; border-radius: 1.5rem; padding: 1rem 1rem 0.8rem; margin: 1.2rem 0 0.5rem; }
     .share-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 10px 0 6px; }
     .share-btn { background: white; border-radius: 40px; padding: 0.4rem 1rem; font-size: 0.8rem; font-weight: 500; border: 1px solid #d0dde8; display: inline-flex; align-items: center; gap: 6px; color: #1f4960; cursor: pointer; transition: 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-decoration: none; }
@@ -53,99 +50,23 @@
     .share-btn.claimed { background: #d4edda; border-color: #25D366; color: #1a7f5a; }
     .share-btn.claimed::after { content: ' ✓'; font-weight: 700; }
     .share-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-
     .contact-card { margin-top: 1.2rem; background: #eaf3fa; border-radius: 2rem; padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 10px; border: 1px solid #bdd7e8; }
     .contact-card .contact-title { font-weight: 600; color: #0b2a3b; font-size: 0.95rem; display: flex; align-items: center; gap: 6px; }
     .contact-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
     .contact-card a { border-radius: 40px; padding: 0.5rem 1.1rem; font-size: 0.8rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; color: white; }
     .contact-card a.wa { background: #075e54; }
     .contact-card a.tg { background: #229ED9; }
-
     .footer-note { text-align: center; font-size: 0.75rem; color: #6f8b9c; margin-top: 1.5rem; border-top: 1px solid #e2eaf0; padding-top: 1rem; }
     .footer-note a { color: #1a5f7a; font-weight: 700; text-decoration: none; }
     .footer-note a:hover { text-decoration: underline; }
     .badge-unlocked { background: #25D366; color: white; border-radius: 40px; padding: 0.2rem 0.9rem; font-size: 0.7rem; font-weight: 600; display: inline-block; }
     .text-small { font-size: 0.8rem; color: #3f637a; }
-
-    .referral-card { background: linear-gradient(135deg, #e0f2fe, #f0f7fe); border-radius: 1.5rem; padding: 1rem 1rem 0.9rem; margin: 1rem 0; border: 1px solid #bae6fd; }
-    .referral-card .card-title i { color: #0284c7; }
-    .referral-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-  <title>JAMB Quiz · Newton</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif; }
-    body { background: #f4f7fb; min-height: 100vh; display: flex; justify-content: center; padding: 1rem; }
-    .app { max-width: 720px; width: 100%; background: white; border-radius: 2rem 2rem 1.5rem 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.08); overflow: hidden; padding: 1.5rem 1.2rem 2rem; position: relative; margin: 0.5rem 0; }
-    h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; color: #0b2b40; margin-bottom: 0.2rem; }
-    h1 small { font-size: 1rem; font-weight: 500; color: #2a6f8f; background: #e5f0f8; padding: 0.2rem 0.9rem; border-radius: 40px; margin-left: auto; }
-
-    .points-badge { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 0.35rem 1rem; border-radius: 30px; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.35); }
-    .points-badge i { color: #fff; }
-
-    .subhead { display: flex; justify-content: space-between; align-items: center; color: #3a5e73; margin-bottom: 1.2rem; border-bottom: 1px solid #e9edf2; padding-bottom: 0.75rem; flex-wrap: wrap; gap: 8px; }
-    .channel-badge { background: #25D366; color: white; padding: 0.25rem 1rem; border-radius: 30px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3); }
-    .card { background: #ffffff; border-radius: 1.5rem; padding: 1.2rem 1rem; box-shadow: 0 4px 12px rgba(0, 20, 30, 0.05); margin: 1rem 0; border: 1px solid #eef3f8; }
-    .card-title { font-weight: 600; color: #1d3b4f; font-size: 1rem; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-    .card-title i { color: #2a7f9f; width: 1.5rem; }
-    .unlock-box { background: #f0f7fe; border-radius: 1.2rem; padding: 1.2rem 1rem; text-align: center; border: 1px dashed #3f8db0; margin: 0.5rem 0 1.2rem; }
-    .unlock-box p { font-size: 0.9rem; color: #1d4b62; margin-bottom: 12px; font-weight: 500; }
-    .btn-whatsapp { background: #25D366; border: none; color: white; font-weight: 600; padding: 0.9rem 1.5rem; border-radius: 60px; font-size: 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 320px; transition: all 0.15s; box-shadow: 0 6px 14px rgba(37, 211, 102, 0.25); cursor: pointer; text-decoration: none; }
-    .btn-whatsapp:active { transform: scale(0.96); background: #1fa854; }
-    .btn-telegram { background: #229ED9; box-shadow: 0 6px 14px rgba(34, 158, 217, 0.25); }
-    .btn-telegram:active { background: #1a7fb0; }
-    .btn-block { width: 100%; justify-content: center; border: none; padding: 0.9rem; border-radius: 60px; font-weight: 600; font-size: 1rem; display: flex; align-items: center; gap: 10px; transition: all 0.15s; cursor: pointer; text-decoration: none; }
-    .btn-primary { background: #1a5f7a; color: white; box-shadow: 0 6px 14px rgba(26, 95, 122, 0.25); }
-    .btn-primary:disabled { opacity: 0.5; pointer-events: none; filter: grayscale(0.3); }
-
-    .bonus-grid { display: flex; flex-direction: column; gap: 10px; align-items: center; }
-    .bonus-row { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 600; color: #1d4b62; background: white; padding: 0.3rem 0.8rem; border-radius: 30px; border: 1px dashed #3f8db0; }
-    .bonus-row.claimed { background: #d4edda; border-color: #25D366; color: #1a7f5a; border-style: solid; }
-    .bonus-row.claimed::after { content: ' ✓'; font-weight: 700; }
-
-    .subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin: 12px 0 8px; }
-    .subject-item { background: #f8fafc; border-radius: 30px; padding: 0.6rem 0.2rem; text-align: center; font-size: 0.8rem; font-weight: 500; color: #1d3b4f; border: 1px solid #dee8f0; transition: all 0.1s; box-shadow: 0 1px 3px rgba(0,0,0,0.02); cursor: pointer; position: relative; }
-    .subject-item i { color: #2a7f9f; margin-right: 4px; }
-    .subject-item.active { background: #1a5f7a; color: white; border-color: #1a5f7a; }
-    .subject-item.active i { color: white; }
-    .subject-item.selected { background: #25D366; color: white; border-color: #25D366; }
-    .subject-item.selected i { color: white; }
-    .subject-item.selected::after { content: '✓'; position: absolute; top: -4px; right: -4px; background: #0b2b40; color: white; width: 18px; height: 18px; border-radius: 50%; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-    .subject-info { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border-radius: 1rem; padding: 0.6rem 0.9rem; margin: 8px 0; font-size: 0.8rem; color: #3f637a; }
-    .subject-info strong { color: #1a5f7a; }
-
-    .share-section { background: #f2f6fa; border-radius: 1.5rem; padding: 1rem 1rem 0.8rem; margin: 1.2rem 0 0.5rem; }
-    .share-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 10px 0 6px; }
-    .share-btn { background: white; border-radius: 40px; padding: 0.4rem 1rem; font-size: 0.8rem; font-weight: 500; border: 1px solid #d0dde8; display: inline-flex; align-items: center; gap: 6px; color: #1f4960; cursor: pointer; transition: 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-decoration: none; }
-    .share-btn:active { background: #e3edf5; transform: scale(0.96); }
-    .share-btn.claimed { background: #d4edda; border-color: #25D366; color: #1a7f5a; }
-    .share-btn.claimed::after { content: ' ✓'; font-weight: 700; }
-    .share-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-
-    .contact-card { margin-top: 1.2rem; background: #eaf3fa; border-radius: 2rem; padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 10px; border: 1px solid #bdd7e8; }
-    .contact-card .contact-title { font-weight: 600; color: #0b2a3b; font-size: 0.95rem; display: flex; align-items: center; gap: 6px; }
-    .contact-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-    .contact-card a { border-radius: 40px; padding: 0.5rem 1.1rem; font-size: 0.8rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; color: white; }
-    .contact-card a.wa { background: #075e54; }
-    .contact-card a.tg { background: #229ED9; }
-
-    .footer-note { text-align: center; font-size: 0.75rem; color: #6f8b9c; margin-top: 1.5rem; border-top: 1px solid #e2eaf0; padding-top: 1rem; }
-    .footer-note a { color: #1a5f7a; font-weight: 700; text-decoration: none; }
-    .footer-note a:hover { text-decoration: underline; }
-    .badge-unlocked { background: #25D366; color: white; border-radius: 40px; padding: 0.2rem 0.9rem; font-size: 0.7rem; font-weight: 600; display: inline-block; }
-    .text-small { font-size: 0.8rem; color: #3f637a; }
-
     .referral-card { background: linear-gradient(135deg, #e0f2fe, #f0f7fe); border-radius: 1.5rem; padding: 1rem 1rem 0.9rem; margin: 1rem 0; border: 1px solid #bae6fd; }
     .referral-card .card-title i { color: #0284c7; }
     .referral-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
     .referral-input { flex: 1; min-width: 180px; padding: 0.6rem 0.9rem; border-radius: 30px; border: 1px solid #bae6fd; background: white; font-size: 0.8rem; color: #0c4a6e; font-weight: 500; outline: none; }
     .btn-copy { background: #0284c7; color: white; border: none; padding: 0.6rem 1.1rem; border-radius: 30px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
     .btn-copy:active { background: #0369a1; }
-
     .quiz-screen { display: none; }
     .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #e9edf2; }
     .quiz-header .subject-name { font-weight: 700; color: #1a5f7a; font-size: 1rem; display: flex; align-items: center; gap: 6px; }
@@ -167,7 +88,6 @@
     .btn-next:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-prev { background: #eaf0f5; color: #1d4b62; }
     .btn-submit { background: #25D366; color: white; }
-
     .result-screen { display: none; text-align: center; padding: 1.5rem 1rem; }
     .result-screen .score-circle { width: 140px; height: 140px; border-radius: 50%; background: linear-gradient(135deg, #1a5f7a, #25D366); display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 1.2rem; color: white; box-shadow: 0 10px 25px rgba(26,95,122,0.3); }
     .result-screen .score-circle .num { font-size: 2.5rem; font-weight: 700; line-height: 1; }
@@ -181,7 +101,6 @@
     .review-item .ans { font-size: 0.8rem; color: #3f637a; }
     .review-item .ans .user-wrong { color: #dc3545; text-decoration: line-through; }
     .review-item .ans .correct-ans { color: #1a7f5a; font-weight: 600; }
-
     .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #0b2b40; color: white; padding: 0.7rem 1.3rem; border-radius: 30px; font-size: 0.85rem; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.25); opacity: 0; transition: all 0.3s; z-index: 999; display: flex; align-items: center; gap: 8px; max-width: 90vw; }
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
     .toast.green { background: #25D366; }
@@ -275,24 +194,29 @@
 
     <!-- SHARE -->
     <div class="share-section">
-      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1d3b4f;"><i class="fas fa-share-alt" style="color: #2a7f9f;"></i> Share & earn 5 pts each (once)</div>
+      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1d3b4f;"><i class="fas fa-share-alt" style="color: #2a7f9f;"></i> Share & earn 10 pts each (daily)</div>
       <div class="share-row">
         <a class="share-btn" data-share="friends" href="https://api.whatsapp.com/send?text=🎓 *JAMB Questions* Join me on JAMB Quiz builder!%0Ahttps://jamb-lab.netlify.app%0A%0AJoin our tutorial class 👇%0Ahttps://whatsapp.com/channel/0029VbD2bkWLNSZwxGpz2k0x" target="_blank"><i class="fab fa-whatsapp" style="color: #25D366;"></i> Friends</a>
         <a class="share-btn" data-share="groups" href="https://api.whatsapp.com/send?text=📚 *JAMB daily drills* Join our WhatsApp channel for UTME prep! https://whatsapp.com/channel/0029VbCJXuCDeON8S6aCk43B" target="_blank"><i class="fas fa-users" style="color: #2a7f9f;"></i> Groups</a>
         <a class="share-btn" data-share="class" href="https://api.whatsapp.com/send?text=👨‍🎓 *Classmates* let's practice JAMB together! https://whatsapp.com/channel/0029Vb8HCZE6rsR1fthNok1P" target="_blank"><i class="fas fa-user-graduate"></i> Class</a>
       </div>
-      <p class="text-small" style="margin: 6px 0 0; text-align: center;">Each button can only be claimed once for +5 pts</p>
+      <p class="text-small" style="margin: 6px 0 0; text-align: center;">Each button = +10 pts · Resets every day</p>
     </div>
 
     <!-- BONUS CHANNELS -->
     <div class="card" style="background: #f0f7fe; border: 1px solid #bae6fd;">
       <div class="card-title"><i class="fas fa-gift" style="color: #0284c7;"></i> More channels · earn bonus points</div>
-      <p class="text-small" style="margin-bottom: 10px;">Join these extra channels to earn bonus points (one-time rewards).</p>
+      <p class="text-small" style="margin-bottom: 10px;">Join these extra channels to earn bonus points (resets daily).</p>
       <div class="bonus-grid">
         <a href="https://t.me/jambvip" target="_blank" class="btn-whatsapp btn-telegram" id="tgChannelBtn"><i class="fab fa-telegram"></i> Join JAMB Telegram (+15 pts)</a>
         <a href="https://whatsapp.com/channel/0029Vb8Fm3hH5JM3KEspIR04" target="_blank" class="btn-whatsapp" id="waecChannelBtn" style="background: #16a34a; box-shadow: 0 6px 14px rgba(22, 163, 74, 0.25);"><i class="fab fa-whatsapp"></i> Join WAEC Tutorial Channel (+10 pts)</a>
+        <a href="https://whatsapp.com/channel/0029Vb8TtA8EVccNvTRmUI2u" target="_blank" class="btn-whatsapp" id="jambTutChannelBtn" style="background: #0e7490; box-shadow: 0 6px 14px rgba(14, 116, 144, 0.25);"><i class="fab fa-whatsapp"></i> Join JAMB Tutorial Channel (+10 pts)</a>
+        <a href="https://www.facebook.com/share/1DK8kQej6q/" target="_blank" class="btn-whatsapp btn-facebook" id="fbPageBtn"><i class="fab fa-facebook"></i> Like our Facebook Page (+5 pts)</a>
+
         <div class="bonus-row" id="bonusRowTg"><i class="fas fa-paper-plane"></i> 15 pts for JAMB Telegram</div>
         <div class="bonus-row" id="bonusRowWaec"><i class="fas fa-graduation-cap"></i> 10 pts for WAEC Tutorial</div>
+        <div class="bonus-row" id="bonusRowJambTut"><i class="fas fa-chalkboard-teacher"></i> 10 pts for JAMB Tutorial</div>
+        <div class="bonus-row" id="bonusRowFb"><i class="fab fa-facebook"></i> 5 pts for Facebook Page</div>
       </div>
     </div>
 
@@ -361,15 +285,31 @@
       UNLOCK_BONUS: 15,
       TG_CHANNEL_BONUS: 15,
       WAEC_CHANNEL_BONUS: 10,
-      SHARE_REWARD: 5,
+      JAMB_TUTORIAL_BONUS: 10,
+      FACEBOOK_BONUS: 5,
+      SHARE_REWARD: 10,
       REFERRAL_REWARD: 10,
       QUIZ_COST: 5,
-      DAILY_TOPUP: 5,
+      DAILY_TOPUP: 10,
       MIN_TO_TOPUP: 5
     };
-    const QUIZ_LENGTH = 20;          // total questions per quiz
-    const TOTAL_TIME = 25 * 60;      // 25 minutes
+    const QUIZ_LENGTH = 20;
+    const TOTAL_TIME = 25 * 60;
 
+    // ==================== DATE KEY (for daily reset) ====================
+    function todayKey() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+    // returns true if the task key was already claimed TODAY
+    function claimedToday(taskKey) {
+      return localStorage.getItem('jamb_daily_' + taskKey) === todayKey();
+    }
+    function markClaimedToday(taskKey) {
+      localStorage.setItem('jamb_daily_' + taskKey, todayKey());
+    }
+
+    // ==================== BASIC POINTS ====================
     function getPoints() { return parseInt(localStorage.getItem('jamb_points') || '0', 10); }
     function setPoints(v) { localStorage.setItem('jamb_points', String(Math.max(0, v))); updatePointsUI(); }
     function addPoints(v) {
@@ -432,7 +372,7 @@
       toastTimer = setTimeout(() => { t.className = 'toast ' + color; }, 2600);
     }
 
-    // ==================== UNLOCK ====================
+    // ==================== UNLOCK (compulsory 2 channels - never reset) ====================
     let unlocked = false;
     function checkUnlock() {
       const c1 = localStorage.getItem('jamb_ch1') === 'yes';
@@ -456,42 +396,90 @@
     }
     document.getElementById('channel1Btn').addEventListener('click', () => { localStorage.setItem('jamb_ch1', 'yes'); setTimeout(checkUnlock, 200); });
     document.getElementById('channel2Btn').addEventListener('click', () => { localStorage.setItem('jamb_ch2', 'yes'); setTimeout(checkUnlock, 200); });
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUnlock(); });
-    window.addEventListener('focus', checkUnlock);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkUnlock(); refreshDailyTasks(); } });
+    window.addEventListener('focus', () => { checkUnlock(); refreshDailyTasks(); });
 
-    const tgBtn = document.getElementById('tgChannelBtn');
-    if (localStorage.getItem('jamb_tg_bonus') === 'yes') document.getElementById('bonusRowTg').classList.add('claimed');
-    tgBtn.addEventListener('click', () => {
-      if (localStorage.getItem('jamb_tg_bonus') === 'yes') return;
-      localStorage.setItem('jamb_tg_bonus', 'yes');
+    // ==================== DAILY-RESET BONUS CHANNELS ====================
+    function refreshDailyTasks() {
+      // Telegram
+      if (claimedToday('tg')) document.getElementById('bonusRowTg').classList.add('claimed');
+      else document.getElementById('bonusRowTg').classList.remove('claimed');
+
+      // WAEC
+      if (claimedToday('waec')) document.getElementById('bonusRowWaec').classList.add('claimed');
+      else document.getElementById('bonusRowWaec').classList.remove('claimed');
+
+      // JAMB Tutorial
+      if (claimedToday('jambtut')) document.getElementById('bonusRowJambTut').classList.add('claimed');
+      else document.getElementById('bonusRowJambTut').classList.remove('claimed');
+
+      // Facebook
+      if (claimedToday('fb')) document.getElementById('bonusRowFb').classList.add('claimed');
+      else document.getElementById('bonusRowFb').classList.remove('claimed');
+
+      // Share buttons
+      document.querySelectorAll('.share-btn[data-share]').forEach(btn => {
+        const key = 'share_' + btn.dataset.share;
+        if (claimedToday(key)) {
+          btn.classList.add('claimed');
+          btn.setAttribute('disabled', 'true');
+        } else {
+          btn.classList.remove('claimed');
+          btn.removeAttribute('disabled');
+        }
+      });
+    }
+
+    // Telegram
+    document.getElementById('tgChannelBtn').addEventListener('click', () => {
+      if (claimedToday('tg')) { showToast('Already claimed today', 'red'); return; }
+      markClaimedToday('tg');
       addPoints(POINTS.TG_CHANNEL_BONUS);
       document.getElementById('bonusRowTg').classList.add('claimed');
       showToast('✅ +' + POINTS.TG_CHANNEL_BONUS + ' points for joining JAMB Telegram!', 'green');
     });
 
-    const waecBtn = document.getElementById('waecChannelBtn');
-    if (localStorage.getItem('jamb_waec_bonus') === 'yes') document.getElementById('bonusRowWaec').classList.add('claimed');
-    waecBtn.addEventListener('click', () => {
-      if (localStorage.getItem('jamb_waec_bonus') === 'yes') return;
-      localStorage.setItem('jamb_waec_bonus', 'yes');
+    // WAEC
+    document.getElementById('waecChannelBtn').addEventListener('click', () => {
+      if (claimedToday('waec')) { showToast('Already claimed today', 'red'); return; }
+      markClaimedToday('waec');
       addPoints(POINTS.WAEC_CHANNEL_BONUS);
       document.getElementById('bonusRowWaec').classList.add('claimed');
       showToast('✅ +' + POINTS.WAEC_CHANNEL_BONUS + ' points for joining WAEC Tutorial!', 'green');
     });
 
-    // ==================== SHARE ====================
+    // JAMB Tutorial
+    document.getElementById('jambTutChannelBtn').addEventListener('click', () => {
+      if (claimedToday('jambtut')) { showToast('Already claimed today', 'red'); return; }
+      markClaimedToday('jambtut');
+      addPoints(POINTS.JAMB_TUTORIAL_BONUS);
+      document.getElementById('bonusRowJambTut').classList.add('claimed');
+      showToast('✅ +' + POINTS.JAMB_TUTORIAL_BONUS + ' points for joining JAMB Tutorial!', 'green');
+    });
+
+    // Facebook
+    document.getElementById('fbPageBtn').addEventListener('click', () => {
+      if (claimedToday('fb')) { showToast('Already claimed today', 'red'); return; }
+      markClaimedToday('fb');
+      addPoints(POINTS.FACEBOOK_BONUS);
+      document.getElementById('bonusRowFb').classList.add('claimed');
+      showToast('✅ +' + POINTS.FACEBOOK_BONUS + ' points for liking our Facebook page!', 'green');
+    });
+
+    // ==================== SHARE (daily reset, 10 pts) ====================
     document.querySelectorAll('.share-btn[data-share]').forEach(btn => {
-      const key = 'jamb_shared_' + btn.dataset.share;
-      if (localStorage.getItem(key) === 'yes') { btn.classList.add('claimed'); btn.setAttribute('disabled', 'true'); }
+      const key = 'share_' + btn.dataset.share;
       btn.addEventListener('click', function(e) {
-        if (localStorage.getItem(key) === 'yes') { e.preventDefault(); showToast('Already claimed this share', 'red'); return; }
-        localStorage.setItem(key, 'yes');
+        if (claimedToday(key)) { e.preventDefault(); showToast('Already claimed today', 'red'); return; }
+        markClaimedToday(key);
         addPoints(POINTS.SHARE_REWARD);
         showToast('✅ +' + POINTS.SHARE_REWARD + ' points for sharing!', 'green');
+        btn.classList.add('claimed');
+        btn.setAttribute('disabled', 'true');
       });
     });
 
-    // ==================== SUBJECTS ====================
+    // ==================== SUBJECTS====================
     const MAX_SUBJECTS = 4;
     const subjectItems = document.querySelectorAll('.subject-item');
     const selectedSubjects = new Set();
@@ -525,9 +513,9 @@
       btn.innerHTML = '<i class="fas fa-play"></i> Start Quiz (−' + cost + ' pts)';
     }
 
-    // ==================== DAILY TOPUP ====================
+    // ==================== DAILY TOPUP (10 pts) ====================
     function dailyTopUp() {
-      const today = new Date().toDateString();
+      const today = todayKey();
       const last = localStorage.getItem('jamb_last_topup');
       if (getPoints() < POINTS.MIN_TO_TOPUP && last !== today) {
         localStorage.setItem('jamb_last_topup', today);
@@ -547,7 +535,7 @@
       catch(e) { document.execCommand('copy'); showToast('📋 Copied!', 'green'); }
     });
 
-    // ==================== SUBJECT → KEY MAP (matches your quiz-data.js) ====================
+    // ==================== SUBJECT → KEY MAP ====================
     function getQuizKey(name) {
       const map = {
         'English': 'english',
@@ -583,25 +571,22 @@
       return { question: q.question, options: shuffled, correct: shuffled.indexOf(correctText) };
     }
 
-    // ==================== BUILD BALANCED POOL ====================
+    // ==================== BALANCED POOL ====================
     function buildBalancedPool(subjects) {
-      // Get question arrays for each subject
       const pools = {};
       subjects.forEach(subj => {
         const data = quizData[getQuizKey(subj)];
         if (data && data.questions && data.questions.length) {
           pools[subj] = shuffleArray(data.questions).map(q => Object.assign({}, q, { _subject: subj }));
         } else {
-          pools[subj] = []; // no questions
+          pools[subj] = [];
         }
       });
 
-      // Target: QUIZ_LENGTH questions total, split equally
       const n = subjects.length;
-      const base = Math.floor(QUIZ_LENGTH / n);      // e.g. 20/3 = 6
-      const remainder = QUIZ_LENGTH % n;             // e.g. 20%3 = 2
+      const base = Math.floor(QUIZ_LENGTH / n);
+      const remainder = QUIZ_LENGTH % n;
 
-      // Randomly pick `remainder` subjects to get 1 extra question
       const indexes = shuffleArray(subjects.map((_, i) => i));
       const targetCount = {};
       subjects.forEach((s, i) => {
@@ -616,22 +601,15 @@
         const available = pools[s];
         const take = Math.min(need, available.length);
         pool = pool.concat(available.slice(0, take));
-        // Put unused ones in leftovers in case we need more
         leftovers = leftovers.concat(available.slice(take).map(q => Object.assign({}, q, { _fromOverflow: true })));
       });
 
-      // If we still have less than QUIZ_LENGTH (because some subjects had too few),
-      // fill from leftovers randomly
       if (pool.length < QUIZ_LENGTH) {
         const shuffledLeftovers = shuffleArray(leftovers);
-        const needed = QUIZ_LENGTH - pool.length;
-        pool = pool.concat(shuffledLeftovers.slice(0, needed));
+        pool = pool.concat(shuffledLeftovers.slice(0, QUIZ_LENGTH - pool.length));
       }
 
-      // Final shuffle + limit
       pool = shuffleArray(pool).slice(0, QUIZ_LENGTH);
-
-      // Shuffle each question's options
       return pool.map(shuffleQuestion);
     }
 
@@ -650,25 +628,20 @@
       if (!deductPoints(cost)) { showToast('❌ Not enough points', 'red'); return; }
       showToast('✅ −' + cost + ' points. Good luck!', 'green');
 
-      // Check which selected subjects have data
       const missing = subjects.filter(s => {
         const d = quizData[getQuizKey(s)];
         return !d || !d.questions || !d.questions.length;
       });
 
       const questions = buildBalancedPool(subjects);
-
       if (questions.length === 0) {
         showToast('📚 No questions available', 'red');
-        addPoints(cost); // refund
+        addPoints(cost);
         return;
       }
 
       beginQuiz(questions, subjects);
-
-      if (missing.length) {
-        setTimeout(() => showToast('ℹ️ No questions yet for: ' + missing.join(', '), 'red'), 1500);
-      }
+      if (missing.length) setTimeout(() => showToast('ℹ️ No questions yet for: ' + missing.join(', '), 'red'), 1500);
     });
 
     function beginQuiz(questions, subjects) {
@@ -676,11 +649,8 @@
       currentIndex = 0;
       userAnswers = new Array(questions.length).fill(null);
       timeLeft = TOTAL_TIME;
-
-      document.getElementById('quizSubjectName').innerHTML =
-        '<i class="fas fa-book"></i> ' + subjects.join(' · ');
+      document.getElementById('quizSubjectName').innerHTML = '<i class="fas fa-book"></i> ' + subjects.join(' · ');
       document.getElementById('scoreLbl').textContent = 'out of ' + questions.length;
-
       mainScreen.style.display = 'none';
       resultScreen.style.display = 'none';
       quizScreen.style.display = 'block';
@@ -795,6 +765,7 @@
       document.getElementById('refCount').textContent = localStorage.getItem('jamb_ref_count') || '0';
       updatePointsUI();
       checkUnlock();
+      refreshDailyTasks();
       updateSelectedUI();
       dailyTopUp();
       updateStartButtonState();
@@ -804,4 +775,5 @@
   })();
 </script>
 </body>
+</html>
 ```
