@@ -87,6 +87,21 @@
     .utmelab .promotion-link { color: #0e7490; }
     .examgroup .promotion-link { color: #b45309; }
     .quiz-screen { display: none; }
+    #showMoreSubjectsBtn {
+      padding: 0.5rem 1.2rem;
+      font-size: 0.82rem;
+      border-radius: 30px;
+      max-width: 260px;
+      width: auto;
+      margin: 12px auto 0;
+      background: #eaf0f5;
+      color: #1d4b62;
+      box-shadow: none;
+      border: 1px solid #d0dde8;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    #showMoreSubjectsBtn:hover { background: #d0dde8; }
     .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #e9edf2; }
     .quiz-header .subject-name { font-weight: 700; color: #1a5f7a; font-size: 1rem; display: flex; align-items: center; gap: 6px; }
     .timer { background: #fff3cd; color: #856404; padding: 0.3rem 0.9rem; border-radius: 30px; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
@@ -180,13 +195,11 @@
         <span>Selected: <strong id="selectedCount">0</strong> / 4</span>
         <span>Cost: <strong id="quizCost">0</strong> pts</span>
       </div>
-      <div style="margin: 12px 0 4px; display: flex; justify-content: center;">
-        <button class="btn-block btn-primary" id="startQuizBtn" disabled><i class="fas fa-play"></i> Start Quiz</button>
-      </div>
-      <div style="margin: 12px 0 4px; display: flex; justify-content: center;">
-        <button class="btn-block" id="showMoreSubjectsBtn" style="display: none; background: #eaf0f5; color: #1d4b62; box-shadow: none;"><i class="fas fa-plus"></i> Show more subjects</button>
-      </div>
       <p class="text-small" style="text-align: center; margin-top: 6px;"><i class="fas fa-info-circle"></i> 20 questions · 25 mins · shuffled from full question bank</p>
+    </div>
+
+    <div style="text-align: center; margin: 8px 0 16px;">
+      <button class="btn-block" id="showMoreSubjectsBtn" style="display: none; background: #eaf0f5; color: #1d4b62; box-shadow: none; padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; max-width: 300px;"><i class="fas fa-plus"></i> Show more subjects</button>
     </div>
 
     <section class="promotion-section" aria-label="Partner services">
