@@ -1,14 +1,10 @@
 /**
  * JAMB Quiz - Application State & Configuration
- * Central state management for the entire app
  */
 
 const JAMB_STATE = (function() {
   'use strict';
 
-  // ============================================
-  // CONFIGURATION
-  // ============================================
   const CONFIG = {
     POINTS: {
       UNLOCK_BONUS: 15,
@@ -28,99 +24,88 @@ const JAMB_STATE = (function() {
     },
     QUIZ: {
       LENGTH: 20,
-      TIME: 25 * 60, // 25 minutes in seconds
+      TIME: 25 * 60,
       MAX_SUBJECTS: 4
     }
   };
 
-  // ============================================
-  // STATE
-  // ============================================
+  function loadNumber(key) {
+    const n = parseInt(localStorage.getItem(key) || '0', 10);
+    return isNaN(n) ? 0 : n;
+  }
+
   const state = {
-    // Auth & Unlock
-    userId: null,
+    userId: localStorage.getItem('jamb_uid') || null,
     unlocked: false,
-    
-    // Points
-    points: 0,
-    earned: 0,
-    spent: 0,
-    
-    // Referrals
-    referralCount: 0,
-    referralUsed: null,
-    newbieBonusClaimed: false,
-    
-    // Question Bank
+    points: loadNumber('jamb_points'),
+    earned: loadNumber('jamb_earned'),
+    spent: loadNumber('jamb_spent'),
+    referralCount: loadNumber('jamb_ref_count'),
+    referralUsed: localStorage.getItem('jamb_ref_used') || null,
+    newbieBonusClaimed: localStorage.getItem('jamb_newbie_bonus') === 'yes',
     questionBank: null,
     subjectsLoaded: false,
-    
-    // Subject Selection
     showMoreSubjects: false,
     selectedSubjects: new Set(),
-    
-    // Quiz
-    currentQuiz: null, // { questions, index, answers, timeLeft, timer }
-    
-    // Daily
-    lastTopUpTime: null
+    currentQuiz: null,
+    lastTopUpTime: localStorage.getItem('jamb_daily_topup')
   };
 
-  // ============================================
-  // PUBLIC API
-  // ============================================
   return {
-    // Config
-    getConfig: () => CONFIG,
-    
-    // User
-    getUserId: () => state.userId,
-    setUserId: (id) => { state.userId = id; },
-    
-    // Unlock
-    isUnlocked: () => state.unlocked,
-    setUnlocked: (val) => { state.unlocked = val; },
-    
-    // Points
-    getPoints: () => state.points,
-    setPoints: (val) => { 
+    getConfig: function() { return CONFIG; },
+
+    getUserId: function() { return state.userId; },
+    setUserId: function(id) { state.userId = id; },
+
+    isUnlocked: function() { return state.unlocked; },
+    setUnlocked: function(val) { state.unlocked = !!val; },
+
+    getPoints: function() { return state.points; },
+    setPoints: function(val) {
       state.points = Math.max(0, val);
       localStorage.setItem('jamb_points', String(state.points));
     },
-    getEarned: () => state.earned,
-    getSpent: () => state.spent,
-    
-    // Referrals
-    getReferralCount: () => state.referralCount,
-    setReferralCount: (count) => { state.referralCount = count; },
-    getReferralUsed: () => state.referralUsed,
-    setReferralUsed: (ref) => { state.referralUsed = ref; },
-    isNewbieBonusClaimed: () => state.newbieBonusClaimed,
-    setNewbieBonusClaimed: (val) => { state.newbieBonusClaimed = val; },
-    
-    // Questions
-    getQuestionBank: () => state.questionBank,
-    setQuestionBank: (bank) => { state.questionBank = bank; },
-    isSubjectsLoaded: () => state.subjectsLoaded,
-    setSubjectsLoaded: (val) => { state.subjectsLoaded = val; },
-    
-    // Subjects
-    getShowMoreSubjects: () => state.showMoreSubjects,
-    setShowMoreSubjects: (val) => { state.showMoreSubjects = val; },
-    getSelectedSubjects: () => Array.from(state.selectedSubjects),
-    setSelectedSubjects: (set) => { state.selectedSubjects = set; },
-    addSelectedSubject: (key) => state.selectedSubjects.add(key),
-    removeSelectedSubject: (key) => state.selectedSubjects.delete(key),
-    clearSelectedSubjects: () => state.selectedSubjects.clear(),
-    getSelectedSubjectCount: () => state.selectedSubjects.size,
-    
-    // Quiz
-    getCurrentQuiz: () => state.currentQuiz,
-    setCurrentQuiz: (quiz) => { state.currentQuiz = quiz; },
-    clearCurrentQuiz: () => { state.currentQuiz = null; },
-    
-    // Daily
-    getLastTopUpTime: () => state.lastTopUpTime,
-    setLastTopUpTime: (time) => { state.lastTopUpTime = time; }
+    getEarned: function() { return state.earned; },
+    setEarned: function(val) {
+      state.earned = Math.max(0, val);
+      localStorage.setItem('jamb_earned', String(state.earned));
+    },
+    getSpent: function() { return state.spent; },
+    setSpent: function(val) {
+      state.spent = Math.max(0, val);
+      localStorage.setItem('jamb_spent', String(state.spent));
+    },
+
+    getReferralCount: function() { return state.referralCount; },
+    setReferralCount: function(count) { state.referralCount = count; },
+    getReferralUsed: function() { return state.referralUsed; },
+    setReferralUsed: function(ref) { state.referralUsed = ref; },
+    isNewbieBonusClaimed: function() { return state.newbieBonusClaimed; },
+    setNewbieBonusClaimed: function(val) { state.newbieBonusClaimed = !!val; },
+
+    getQuestionBank: function() { return state.questionBank; },
+    setQuestionBank: function(bank) { state.questionBank = bank; },
+    isSubjectsLoaded: function() { return state.subjectsLoaded; },
+    setSubjectsLoaded: function(val) { state.subjectsLoaded = !!val; },
+
+    getShowMoreSubjects: function() { return state.showMoreSubjects; },
+    setShowMoreSubjects: function(val) { state.showMoreSubjects = !!val; },
+    getSelectedSubjects: function() { return Array.from(state.selectedSubjects); },
+    setSelectedSubjects: function(set) { state.selectedSubjects = set; },
+    addSelectedSubject: function(key) { state.selectedSubjects.add(key); },
+    removeSelectedSubject: function(key) { state.selectedSubjects.delete(key); },
+    clearSelectedSubjects: function() { state.selectedSubjects.clear(); },
+    getSelectedSubjectCount: function() { return state.selectedSubjects.size; },
+
+    getCurrentQuiz: function() { return state.currentQuiz; },
+    setCurrentQuiz: function(quiz) { state.currentQuiz = quiz; },
+    clearCurrentQuiz: function() { state.currentQuiz = null; },
+
+    getLastTopUpTime: function() { return state.lastTopUpTime; },
+    setLastTopUpTime: function(time) { state.lastTopUpTime = time; }
   };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = JAMB_STATE;
+}

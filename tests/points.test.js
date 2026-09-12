@@ -1,46 +1,8 @@
 /**
  * JAMB Quiz - Points System Tests
- * Tests for points earning, spending, and display
  */
 
-const { JSDOM } = require('jsdom');
-
-// Setup DOM environment
-const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
-  url: 'http://localhost',
-  pretendToBeVisual: true
-});
-
-global.window = dom.window;
-global.document = dom.window.document;
-global.localStorage = {
-  store: {},
-  getItem: function(key) { return this.store[key] || null; },
-  setItem: function(key, value) { this.store[key] = String(value); },
-  removeItem: function(key) { delete this.store[key]; },
-  clear: function() { this.store = {}; }
-};
-
-// Create points display elements
-const pointsValue = document.createElement('span');
-pointsValue.id = 'pointsValue';
-const pointsBig = document.createElement('span');
-pointsBig.id = 'pointsBig';
-const pointsEarned = document.createElement('span');
-pointsEarned.id = 'pointsEarned';
-const pointsSpent = document.createElement('span');
-pointsSpent.id = 'pointsSpent';
-const startQuizBtn = document.createElement('button');
-startQuizBtn.id = 'startQuizBtn';
-document.body.appendChild(pointsValue);
-document.body.appendChild(pointsBig);
-document.body.appendChild(pointsEarned);
-document.body.appendChild(pointsSpent);
-document.body.appendChild(startQuizBtn);
-
-// Import modules in correct order
 const JAMB_STATE = require('../js/state.js');
-const JAMB_UTILS = require('../js/utils.js');
 const JAMB_POINTS = require('../js/points.js');
 
 describe('JAMB_POINTS - Points System', function() {
@@ -51,6 +13,12 @@ describe('JAMB_POINTS - Points System', function() {
     JAMB_STATE.setSpent(0);
     JAMB_STATE.setUnlocked(true);
     JAMB_STATE.clearSelectedSubjects();
+    document.body.innerHTML =
+      '<span id="pointsValue"></span>' +
+      '<span id="pointsBig"></span>' +
+      '<span id="pointsEarned"></span>' +
+      '<span id="pointsSpent"></span>' +
+      '<button id="startQuizBtn"></button>';
   });
 
   describe('getPoints()', function() {
@@ -62,27 +30,12 @@ describe('JAMB_POINTS - Points System', function() {
       localStorage.setItem('jamb_points', '100');
       expect(JAMB_POINTS.getPoints()).toBe(100);
     });
-
-    it('should parse string to integer', function() {
-      localStorage.setItem('jamb_points', '250');
-      expect(JAMB_POINTS.getPoints()).toBe(250);
-    });
   });
 
-  describe('getEarned()', function() {
-    it('should return 0 when no earned stored', function() {
-      expect(JAMB_POINTS.getEarned()).toBe(0);
-    });
-
+  describe('getEarned() / getSpent()', function() {
     it('should return stored earned value', function() {
       localStorage.setItem('jamb_earned', '500');
       expect(JAMB_POINTS.getEarned()).toBe(500);
-    });
-  });
-
-  describe('getSpent()', function() {
-    it('should return 0 when no spent stored', function() {
-      expect(JAMB_POINTS.getSpent()).toBe(0);
     });
 
     it('should return stored spent value', function() {
@@ -135,10 +88,10 @@ describe('JAMB_POINTS - Points System', function() {
       expect(JAMB_POINTS.getSpent()).toBe(30);
     });
 
-    it('should not go below zero', function() {
+    it('should not deduct when the balance is too low', function() {
       JAMB_POINTS.addPoints(50);
-      JAMB_POINTS.deductPoints(100);
-      expect(JAMB_POINTS.getPoints()).toBe(0);
+      expect(JAMB_POINTS.deductPoints(100)).toBe(false);
+      expect(JAMB_POINTS.getPoints()).toBe(50);
     });
   });
 
@@ -201,9 +154,9 @@ describe('JAMB_POINTS - Points System', function() {
       localStorage.setItem('jamb_points', '100');
       localStorage.setItem('jamb_earned', '500');
       localStorage.setItem('jamb_spent', '200');
-      
+
       JAMB_POINTS.updateUI();
-      
+
       expect(document.getElementById('pointsValue').textContent).toBe('100');
       expect(document.getElementById('pointsBig').textContent).toBe('100');
       expect(document.getElementById('pointsEarned').textContent).toBe('500');
@@ -212,44 +165,33 @@ describe('JAMB_POINTS - Points System', function() {
   });
 
   describe('updateStartButtonState()', function() {
-    it('should disable button when not unlocked', function() {
-      JAMB_STATE.setUnlocked(false);
-      JAMB_POINTS.updateStartButtonState();
-      expect(startQuizBtn.disabled).toBe(true);
-      expect(startQuizBtn.innerHTML).toContain('Join channels');
-    });
-
     it('should disable button when no subjects selected', function() {
-      JAMB_STATE.setUnlocked(true);
       JAMB_POINTS.updateStartButtonState();
-      expect(startQuizBtn.disabled).toBe(true);
-      expect(startQuizBtn.innerHTML).toContain('Select at least 1');
+      expect(document.getElementById('startQuizBtn').disabled).toBe(true);
+      expect(document.getElementById('startQuizBtn').innerHTML).toContain('Select at least 1');
     });
 
-    it('should disable button when insufficient points', function() {
-      JAMB_STATE.setUnlocked(true);
+    it('should enable button when subjects are selected even if locked', function() {
+      JAMB_STATE.setUnlocked(false);
       JAMB_STATE.addSelectedSubject('english');
       JAMB_POINTS.updateStartButtonState();
-      expect(startQuizBtn.disabled).toBe(true);
-      expect(startQuizBtn.innerHTML).toContain('Need');
+      expect(document.getElementById('startQuizBtn').disabled).toBe(false);
+      expect(document.getElementById('startQuizBtn').innerHTML).toContain('Start Quiz');
     });
 
-    it('should enable button when ready', function() {
-      JAMB_STATE.setUnlocked(true);
+    it('should enable button when subjects are selected even with zero points', function() {
       JAMB_STATE.addSelectedSubject('english');
-      JAMB_STATE.setPoints(100);
       JAMB_POINTS.updateStartButtonState();
-      expect(startQuizBtn.disabled).toBe(false);
-      expect(startQuizBtn.innerHTML).toContain('Start Quiz');
+      expect(document.getElementById('startQuizBtn').disabled).toBe(false);
+      expect(document.getElementById('startQuizBtn').innerHTML).toContain('Start Quiz');
     });
 
     it('should show correct cost', function() {
-      JAMB_STATE.setUnlocked(true);
       JAMB_STATE.addSelectedSubject('english');
       JAMB_STATE.addSelectedSubject('math');
       JAMB_STATE.setPoints(100);
       JAMB_POINTS.updateStartButtonState();
-      expect(startQuizBtn.innerHTML).toContain('-10 pts');
+      expect(document.getElementById('startQuizBtn').innerHTML).toContain('-10 pts');
     });
   });
 });

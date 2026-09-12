@@ -1,13 +1,10 @@
 /**
  * JAMB Quiz - Score History
- * Tracks best scores per subject and overall stats
  */
 
 const JAMB_HISTORY = (function() {
   'use strict';
 
-  const state = JAMB_STATE;
-  const utils = JAMB_UTILS;
   const STORAGE_KEY = 'jamb_history';
 
   function load() {
@@ -22,10 +19,6 @@ const JAMB_HISTORY = (function() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
-  // Record a finished quiz result
-  // score = { correct, wrong, unanswered, percentage, total }
-  // subjects = array of subject keys
-  // Returns array of subjects where a new personal best was set
   function recordQuiz(subjects, score) {
     const data = load();
     const newBests = [];
@@ -42,6 +35,9 @@ const JAMB_HISTORY = (function() {
       if (!prev || score.percentage > prev.best) {
         entry.isNewBest = true;
         newBests.push(key);
+      } else {
+        entry.best = prev.best;
+        entry.bestCorrect = prev.bestCorrect;
       }
       data[key] = entry;
     });
@@ -59,28 +55,13 @@ const JAMB_HISTORY = (function() {
     return load();
   }
 
-  function getSubjectsWithHistory() {
-    return Object.keys(load());
-  }
-
-  // Get best percentage for a subject (0 if none)
-  function getBestPercentage(subject) {
-    const entry = getBest(subject);
-    return entry ? entry.best : 0;
-  }
-
-  // Total plays across all subjects
-  function getTotalPlays() {
-    const data = load();
-    return Object.values(data).reduce(function(sum, e) { return sum + (e.plays || 0); }, 0);
-  }
-
   return {
     recordQuiz: recordQuiz,
     getBest: getBest,
-    getAll: getAll,
-    getSubjectsWithHistory: getSubjectsWithHistory,
-    getBestPercentage: getBestPercentage,
-    getTotalPlays: getTotalPlays
+    getAll: getAll
   };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = JAMB_HISTORY;
+}

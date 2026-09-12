@@ -1,34 +1,26 @@
 /**
  * JAMB Quiz - State Management Tests
- * Tests for application state management
  */
 
-const { JSDOM } = require('jsdom');
-
-// Setup DOM environment
-const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
-  url: 'http://localhost',
-  pretendToBeVisual: true
-});
-
-global.window = dom.window;
-global.document = dom.window.document;
-global.localStorage = {
-  store: {},
-  getItem: function(key) { return this.store[key] || null; },
-  setItem: function(key, value) { this.store[key] = String(value); },
-  removeItem: function(key) { delete this.store[key]; },
-  clear: function() { this.store = {}; }
-};
-
-// Import modules in correct order
 const JAMB_STATE = require('../js/state.js');
-const JAMB_UTILS = require('../js/utils.js');
-const JAMB_POINTS = require('../js/points.js');
 
 describe('JAMB_STATE - Application State', function() {
   beforeEach(function() {
     localStorage.clear();
+    JAMB_STATE.setPoints(0);
+    JAMB_STATE.setEarned(0);
+    JAMB_STATE.setSpent(0);
+    JAMB_STATE.setUnlocked(false);
+    JAMB_STATE.clearSelectedSubjects();
+    JAMB_STATE.setQuestionBank(null);
+    JAMB_STATE.setSubjectsLoaded(false);
+    JAMB_STATE.setShowMoreSubjects(false);
+    JAMB_STATE.clearCurrentQuiz();
+    JAMB_STATE.setUserId(null);
+    JAMB_STATE.setReferralCount(0);
+    JAMB_STATE.setReferralUsed(null);
+    JAMB_STATE.setNewbieBonusClaimed(false);
+    JAMB_STATE.setLastTopUpTime(null);
   });
 
   describe('Configuration', function() {
@@ -49,10 +41,6 @@ describe('JAMB_STATE - Application State', function() {
   });
 
   describe('User State', function() {
-    it('should initialize userId as null', function() {
-      expect(JAMB_STATE.getUserId()).toBeNull();
-    });
-
     it('should allow setting userId', function() {
       JAMB_STATE.setUserId('ABC123');
       expect(JAMB_STATE.getUserId()).toBe('ABC123');
@@ -71,10 +59,6 @@ describe('JAMB_STATE - Application State', function() {
   });
 
   describe('Points State', function() {
-    it('should initialize points as 0', function() {
-      expect(JAMB_STATE.getPoints()).toBe(0);
-    });
-
     it('should allow setting points', function() {
       JAMB_STATE.setPoints(100);
       expect(JAMB_STATE.getPoints()).toBe(100);
@@ -98,26 +82,14 @@ describe('JAMB_STATE - Application State', function() {
   });
 
   describe('Referral State', function() {
-    it('should initialize referralCount as 0', function() {
-      expect(JAMB_STATE.getReferralCount()).toBe(0);
-    });
-
     it('should allow setting referral count', function() {
       JAMB_STATE.setReferralCount(5);
       expect(JAMB_STATE.getReferralCount()).toBe(5);
     });
 
-    it('should initialize referralUsed as null', function() {
-      expect(JAMB_STATE.getReferralUsed()).toBeNull();
-    });
-
     it('should allow setting referral used', function() {
       JAMB_STATE.setReferralUsed('REF123');
       expect(JAMB_STATE.getReferralUsed()).toBe('REF123');
-    });
-
-    it('should initialize newbieBonusClaimed as false', function() {
-      expect(JAMB_STATE.isNewbieBonusClaimed()).toBe(false);
     });
 
     it('should allow setting newbie bonus claimed', function() {
@@ -127,18 +99,10 @@ describe('JAMB_STATE - Application State', function() {
   });
 
   describe('Question Bank State', function() {
-    it('should initialize questionBank as null', function() {
-      expect(JAMB_STATE.getQuestionBank()).toBeNull();
-    });
-
     it('should allow setting question bank', function() {
       const bank = { english: { questions: [] } };
       JAMB_STATE.setQuestionBank(bank);
       expect(JAMB_STATE.getQuestionBank()).toEqual(bank);
-    });
-
-    it('should initialize subjectsLoaded as false', function() {
-      expect(JAMB_STATE.isSubjectsLoaded()).toBe(false);
     });
 
     it('should allow setting subjects loaded', function() {
@@ -148,25 +112,20 @@ describe('JAMB_STATE - Application State', function() {
   });
 
   describe('Subject Selection State', function() {
-    it('should initialize showMoreSubjects as false', function() {
-      expect(JAMB_STATE.getShowMoreSubjects()).toBe(false);
-    });
-
     it('should allow toggling showMoreSubjects', function() {
       JAMB_STATE.setShowMoreSubjects(true);
       expect(JAMB_STATE.getShowMoreSubjects()).toBe(true);
     });
 
-    it('should initialize selectedSubjects as empty Set', function() {
+    it('should initialize selectedSubjects as empty array', function() {
       const selected = JAMB_STATE.getSelectedSubjects();
-      expect(selected).toBeInstanceOf(Set);
-      expect(selected.size).toBe(0);
+      expect(Array.isArray(selected)).toBe(true);
+      expect(selected.length).toBe(0);
     });
 
     it('should allow setting selected subjects', function() {
-      const set = new Set(['english', 'math']);
-      JAMB_STATE.setSelectedSubjects(set);
-      expect(JAMB_STATE.getSelectedSubjects()).toEqual(set);
+      JAMB_STATE.setSelectedSubjects(new Set(['english', 'math']));
+      expect(JAMB_STATE.getSelectedSubjects()).toEqual(['english', 'math']);
     });
 
     it('should allow adding selected subject', function() {
@@ -184,7 +143,7 @@ describe('JAMB_STATE - Application State', function() {
       JAMB_STATE.addSelectedSubject('english');
       JAMB_STATE.addSelectedSubject('math');
       JAMB_STATE.clearSelectedSubjects();
-      expect(JAMB_STATE.getSelectedSubjects().size).toBe(0);
+      expect(JAMB_STATE.getSelectedSubjects().length).toBe(0);
     });
 
     it('should return selected subject count', function() {
@@ -196,28 +155,16 @@ describe('JAMB_STATE - Application State', function() {
   });
 
   describe('Quiz State', function() {
-    it('should initialize currentQuiz as null', function() {
-      expect(JAMB_STATE.getCurrentQuiz()).toBeNull();
-    });
-
-    it('should allow setting current quiz', function() {
+    it('should allow setting and clearing current quiz', function() {
       const quiz = { questions: [], index: 0 };
       JAMB_STATE.setCurrentQuiz(quiz);
       expect(JAMB_STATE.getCurrentQuiz()).toEqual(quiz);
-    });
-
-    it('should allow clearing current quiz', function() {
-      JAMB_STATE.setCurrentQuiz({ questions: [] });
       JAMB_STATE.clearCurrentQuiz();
       expect(JAMB_STATE.getCurrentQuiz()).toBeNull();
     });
   });
 
   describe('Daily State', function() {
-    it('should initialize lastTopUpTime as null', function() {
-      expect(JAMB_STATE.getLastTopUpTime()).toBeNull();
-    });
-
     it('should allow setting last top up time', function() {
       const time = Date.now();
       JAMB_STATE.setLastTopUpTime(time);

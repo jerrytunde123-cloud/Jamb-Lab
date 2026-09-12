@@ -1,56 +1,44 @@
+/**
+ * JAMB Quiz - Application entry point
+ */
+
 const JAMB_APP = (function() {
   'use strict';
 
-  const state = JAMB_STATE;
-  const utils = JAMB_UTILS;
-  const points = JAMB_POINTS;
-  const referrals = JAMB_REFERRALS;
-  const unlock = JAMB_UNLOCK;
-  const daily = JAMB_DAILY;
-  const questionsModule = JAMB_QUESTIONS;
-
-  // Unlocked modal channel state - restored from localStorage on init
-  let modalChannel1Joined = false;
-  let modalChannel2Joined = false;
+  const state = typeof JAMB_STATE !== 'undefined' ? JAMB_STATE : require('./state.js');
+  const utils = typeof JAMB_UTILS !== 'undefined' ? JAMB_UTILS : require('./utils.js');
+  const points = typeof JAMB_POINTS !== 'undefined' ? JAMB_POINTS : require('./points.js');
+  const referrals = typeof JAMB_REFERRALS !== 'undefined' ? JAMB_REFERRALS : require('./referrals.js');
+  const unlock = typeof JAMB_UNLOCK !== 'undefined' ? JAMB_UNLOCK : require('./unlock.js');
+  const questionsModule = typeof JAMB_QUESTIONS !== 'undefined' ? JAMB_QUESTIONS : require('./questions.js');
+  const config = state.getConfig();
+  let started = false;
 
   function init() {
-    console.log('Initializing JAMB Quiz App...');
-    // Restore modal join state from localStorage
-    modalChannel1Joined = localStorage.getItem('jamb_modal_ch1') === 'yes';
-    modalChannel2Joined = localStorage.getItem('jamb_modal_ch2') === 'yes';
+    if (started) return;
+    started = true;
     referrals.getUserId();
     referrals.handleIncomingReferral();
-    awardReferralToCurrent();
     referrals.setupReferralUI();
-    const refCountEl = utils.$('refCount');
-    if (refCountEl) refCountEl.textContent = localStorage.getItem('jamb_ref_count') || '0';
     points.updateUI();
     unlock.checkUnlock();
-    daily.refreshDailyTasks();
     questionsModule.updateSubjectUI();
-    daily.dailyTopUp();
+    points.dailyTopUp();
     questionsModule.loadQuestionBank();
-    updateStartButtonState();
-    console.log('JAMB Quiz app ready');
-  }
-
-  function awardReferralToCurrent() {
-    const params = new URLSearchParams(window.location.search);
-    const ref = params.get('ref');
-    if (ref && ref !== referrals.getUserId() && state.getReferralUsed() !== ref) {
-      if (localStorage.getItem('jamb_earned_ref_' + ref) !== 'yes') {
-        localStorage.setItem('jamb_earned_ref_' + ref, 'yes');
-        points.addPoints(state.getConfig().POINTS.REFERRAL_REWARD);
-        utils.showToast('+10 points for using a referral link!', 'green');
-      }
-    }
+    setupEventListeners();
   }
 
   function setupEventListeners() {
     const startQuizBtn = utils.$('startQuizBtn');
     if (startQuizBtn) startQuizBtn.addEventListener('click', onStartQuiz);
+
     const showMoreBtn = utils.$('showMoreSubjectsBtn');
-    if (showMoreBtn) showMoreBtn.addEventListener('click', function() { questionsModule.toggleShowMoreSubjects(); });
+    if (showMoreBtn) {
+      showMoreBtn.addEventListener('click', function() {
+        questionsModule.toggleShowMoreSubjects();
+      });
+    }
+
     const prevBtn = utils.$('prevBtn');
     if (prevBtn) prevBtn.addEventListener('click', function() { questionsModule.prevQuestion(); });
     const nextBtn = utils.$('nextBtn');
@@ -59,264 +47,132 @@ const JAMB_APP = (function() {
     if (submitBtn) submitBtn.addEventListener('click', function() { questionsModule.finishQuiz(); });
     const restartBtn = utils.$('restartBtn');
     if (restartBtn) restartBtn.addEventListener('click', function() { questionsModule.restartQuiz(); });
-    setupChannelButtons();
+
+    setupUnlockButtons();
+    setupBonusChannels();
     setupShareButtons();
-    wireModalButtons();
-    console.log('Event listeners registered');
-  }
-
-  function setupChannelButtons() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('tg') === 'joined') {
-      unlock.markTelegramJoined();
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-    if (params.get('wa') === 'joined') {
-      unlock.markWhatsAppJoined();
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-    // Unlock box buttons (WhatsApp channels 1 & 2)
-    wireSimpleUnlock('channel1Btn', 'jamb_wa');
-    wireSimpleUnlock('channel2Btn', 'jamb_wa');
-    // Bonus channel card buttons
-    wireChannelBonus('tgChannelBtn', 'bonusRowTg', 'tg_channel', 'jamb_tg');
-    wireChannelBonus('waecChannelBtn', 'bonusRowWaec', 'waec_tutorial', 'jamb_wa');
-    wireChannelBonus('jambTutChannelBtn', 'bonusRowJambTut', 'jamb_tutorial', 'jamb_wa');
-    wireChannelBonus('fbPageBtn', 'bonusRowFb', 'fb_page');
-  }
-
-  function wireSimpleUnlock(btnId, flag) {
-    const btn = utils.$(btnId);
-    if (!btn) return;
-    btn.addEventListener('click', function() {
-      localStorage.setItem(flag, 'yes');
-      unlock.checkUnlock();
-      updateStartButtonState();
-      points.updateUI();
-      utils.showToast('Joined! You can now start quizzes.', 'green');
-    });
-  }
-
-  function wireChannelBonus(btnId, rowId, bonusKey, unlockKey) {
-    const btn = utils.$(btnId);
-    const row = utils.$(rowId);
-    if (!btn || !row) return;
-    if (localStorage.getItem(bonusKey) === 'yes') {
-      row.classList.add('claimed');
-      btn.textContent = '✅ Claimed';
-      btn.disabled = true;
-    } else {
-      btn.addEventListener('click', function() {
-        localStorage.setItem(bonusKey, 'yes');
-        row.classList.add('claimed');
-        btn.textContent = '✅ Claimed';
-        btn.disabled = true;
-        points.addPoints(15);
-        points.updateUI();
-        utils.showToast('+15 points!', 'green');
-        if (unlockKey) {
-          localStorage.setItem(unlockKey, 'yes');
-          unlock.checkUnlock();
-          updateStartButtonState();
-        }
-      });
-    }
-  }
-
-  // --- Unlock Modal Functions ---
-
-  function showUnlockModal() {
-    const modal = utils.$('unlockModal');
-    if (modal) {
-      modal.classList.add('show');
-      // Restore join state from localStorage
-      modalChannel1Joined = localStorage.getItem('jamb_modal_ch1') === 'yes';
-      modalChannel2Joined = localStorage.getItem('jamb_modal_ch2') === 'yes';
-      updateModalProgress();
-    }
-  }
-
-  function hideUnlockModal() {
-    const modal = utils.$('unlockModal');
-    if (modal) modal.classList.remove('show');
-  }
-
-  function updateModalProgress() {
-    const prog = utils.$('modalProgress');
-    if (!prog) return;
-    let count = 0;
-    if (modalChannel1Joined) count++;
-    if (modalChannel2Joined) count++;
-    if (count === 2) {
-      prog.innerHTML = '✅ Both channels joined - you are unlocked!';
-      prog.classList.add('done');
-      localStorage.setItem('jamb_wa', 'yes');
-      localStorage.setItem('jamb_tg', 'yes');
-      unlock.checkUnlock();
-      updateStartButtonState();
-      points.updateUI();
-      setTimeout(function() {
-        hideUnlockModal();
-        utils.showToast('Quizzes unlocked! Starting your quiz...', 'green');
-        startQuizAfterUnlock();
-      }, 900);
-    } else {
-      prog.innerHTML = 'Joined: ' + count + ' / 2 channels';
-      prog.classList.remove('done');
-    }
-  }
-
-  function startQuizAfterUnlock() {
-    if (!state.getQuestionBank()) {
-      utils.showToast('Question bank not loaded', 'red');
-      return;
-    }
-    var selected = state.getSelectedSubjects();
-    if (selected.length === 0) {
-      utils.showToast('Select at least 1 subject', 'red');
-      return;
-    }
-    var cost = selected.length * state.getConfig().POINTS.QUIZ_COST;
-    if (!points.deductPoints(cost)) {
-      utils.showToast('Not enough points', 'red');
-      return;
-    }
-    var quizQuestions = questionsModule.generateQuizQuestions(selected);
-    if (quizQuestions.length === 0) {
-      utils.showToast('No questions available', 'red');
-      points.addPoints(cost);
-      return;
-    }
-    var displayNames = selected.map(function(key) { return questionsModule.getSubjectName(key); });
-    utils.showToast('Good luck!', 'green');
-    questionsModule.startQuiz(selected);
-    questionsModule.beginQuiz(displayNames);
-  }
-
-    function wireModalButtons() {
-    var ch1 = utils.$('modalChannel1Btn');
-    var ch2 = utils.$('modalChannel2Btn');
-    var proceedBtn = utils.$('modalProceedBtn');
-    var cancelBtn = utils.$('modalCancelBtn');
-    if (ch1) {
-      ch1.addEventListener('click', function() {
-        localStorage.setItem('jamb_modal_ch1', 'yes');
-        modalChannel1Joined = true;
-        points.addPoints(15);
-        points.updateUI();
-        utils.showToast('+15 points!', 'green');
-        setTimeout(updateModalUI, 500);
-      });
-    }
-    if (ch2) {
-      ch2.addEventListener('click', function() {
-        localStorage.setItem('jamb_modal_ch2', 'yes');
-        modalChannel2Joined = true;
-        points.addPoints(15);
-        points.updateUI();
-        utils.showToast('+15 points!', 'green');
-        setTimeout(updateModalUI, 500);
-      });
-    }
-    if (proceedBtn) {
-      proceedBtn.addEventListener('click', function() {
-        localStorage.setItem('jamb_wa', 'yes');
-        localStorage.setItem('jamb_tg', 'yes');
-        unlock.checkUnlock();
-        updateStartButtonState();
-        points.updateUI();
-        hideUnlockModal();
-        utils.showToast('Quizzes unlocked!', 'green');
-        startQuizAfterUnlock();
-      });
-    }
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', hideUnlockModal);
-    }
-  }
-
-        function updateStartButtonState() {
-    questionsModule.updateStartButtonState();
-  }
-
-  function showUnlockModal() {
-    const modal = utils.$('unlockModal');
-    const proceedBtn = utils.$('modalProceedBtn');
-    if (modal) {
-      // Restore join state from localStorage
-      modalChannel1Joined = localStorage.getItem('jamb_modal_ch1') === 'yes';
-      modalChannel2Joined = localStorage.getItem('jamb_modal_ch2') === 'yes';
-      updateModalUI();
-      modal.classList.add('show');
-    }
-  }
-
-  function hideUnlockModal() {
-    const modal = utils.$('unlockModal');
-    if (modal) modal.classList.remove('show');
-  }
-
-  function updateModalUI() {
-    const progress = utils.$('modalUnlockProgress');
-    const proceedBtn = utils.$('modalProceedBtn');
-    if (!progress || !proceedBtn) return;
-    let count = 0;
-    if (modalChannel1Joined) count++;
-    if (modalChannel2Joined) count++;
-    if (count === 2) {
-      progress.innerHTML = '✅ Both channels joined';
-      progress.classList.add('done');
-      proceedBtn.disabled = false;
-      proceedBtn.textContent = 'Proceed to Quiz';
-    } else {
-      progress.innerHTML = 'Joined: ' + count + ' / 2 channels';
-      progress.classList.remove('done');
-      proceedBtn.disabled = true;
-      proceedBtn.textContent = 'Join both channels to proceed';
-    }
+    setupModal();
   }
 
   function onStartQuiz() {
-    // Start Quiz button ALWAYS opens the modal - nothing else
     if (state.isUnlocked()) {
-      startQuizAfterUnlock();
+      questionsModule.tryStartQuiz();
     } else {
-      showUnlockModal();
+      unlock.showUnlockModal();
     }
   }
 
-  function setupShareButtons() {
-    const shareButtons = [
-      { id: 'shareFriendsBtn', key: 'jamb_share_friends' },
-      { id: 'shareGroupsBtn', key: 'jamb_share_groups' },
-      { id: 'shareClassBtn', key: 'jamb_share_class' }
-    ];
-    shareButtons.forEach(function(item) {
-      const btn = utils.$(item.id);
+  function setupUnlockButtons() {
+    function wire(id, channel) {
+      const btn = utils.$(id);
       if (!btn) return;
+      btn.addEventListener('click', function() {
+        unlock.markChannelJoined(channel);
+      });
+    }
+    wire('channel1Btn', 1);
+    wire('channel2Btn', 2);
+    wire('modalChannel1Btn', 1);
+    wire('modalChannel2Btn', 2);
+  }
+
+  function setupBonusChannels() {
+    const bonuses = [
+      { btn: 'tgChannelBtn', row: 'bonusRowTg', key: 'tg_channel', amount: config.POINTS.TG_CHANNEL_BONUS },
+      { btn: 'waecChannelBtn', row: 'bonusRowWaec', key: 'waec_tutorial', amount: config.POINTS.WAEC_CHANNEL_BONUS },
+      { btn: 'jambTutChannelBtn', row: 'bonusRowJambTut', key: 'jamb_tutorial', amount: config.POINTS.JAMB_TUTORIAL_BONUS },
+      { btn: 'fbPageBtn', row: 'bonusRowFb', key: 'fb_page', amount: config.POINTS.FACEBOOK_BONUS }
+    ];
+
+    bonuses.forEach(function(item) {
+      const btn = utils.$(item.btn);
+      const row = utils.$(item.row);
+      if (!btn) return;
+
       if (localStorage.getItem(item.key) === 'yes') {
-        btn.textContent = '✅ Shared';
-        btn.disabled = true;
-      } else {
-        btn.addEventListener('click', function() {
-          localStorage.setItem(item.key, 'yes');
-          btn.textContent = '✅ Shared';
-          btn.disabled = true;
-          points.addPoints(10);
-          points.updateUI();
-          utils.showToast('+10 points!', 'green');
-        });
+        markClaimed(btn, row);
+        return;
       }
+
+      btn.addEventListener('click', function onClaim() {
+        if (localStorage.getItem(item.key) === 'yes') return;
+        localStorage.setItem(item.key, 'yes');
+        markClaimed(btn, row);
+        points.addPoints(item.amount);
+        utils.showToast('+' + item.amount + ' points!', 'green');
+      });
     });
   }
 
+  function markClaimed(btn, row) {
+    btn.classList.add('claimed');
+    if (row) row.classList.add('claimed');
+  }
+
+  function setupShareButtons() {
+    const shares = [
+      { id: 'shareFriendsBtn', key: 'share_friends' },
+      { id: 'shareGroupsBtn', key: 'share_groups' },
+      { id: 'shareClassBtn', key: 'share_class' }
+    ];
+
+    shares.forEach(function(item) {
+      const btn = utils.$(item.id);
+      if (!btn) return;
+
+      if (utils.isToday(item.key)) {
+        btn.classList.add('claimed');
+        return;
+      }
+
+      btn.addEventListener('click', function() {
+        if (utils.isToday(item.key)) return;
+        utils.markToday(item.key);
+        btn.classList.add('claimed');
+        points.addPoints(config.POINTS.SHARE_REWARD);
+        utils.showToast('+' + config.POINTS.SHARE_REWARD + ' points!', 'green');
+      });
+    });
+  }
+
+  function setupModal() {
+    const cancelBtn = utils.$('modalCancelBtn');
+    if (cancelBtn) cancelBtn.addEventListener('click', function() {
+      unlock.hideUnlockModal();
+    });
+
+    const proceedBtn = utils.$('modalProceedBtn');
+    if (proceedBtn) {
+      proceedBtn.addEventListener('click', function() {
+        if (!state.isUnlocked()) {
+          unlock.checkUnlock();
+        }
+        if (!state.isUnlocked()) {
+          utils.showToast('Join both channels first', 'red');
+          return;
+        }
+        unlock.hideUnlockModal();
+        questionsModule.tryStartQuiz();
+      });
+    }
+
+    const overlay = utils.$('unlockModal');
+    if (overlay) {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) unlock.hideUnlockModal();
+      });
+    }
+  }
+
   return {
-    init: init,
-    setupEventListeners: setupEventListeners
+    init: init
   };
 })();
 
 document.addEventListener('DOMContentLoaded', function() {
   JAMB_APP.init();
-  JAMB_APP.setupEventListeners();
 });
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = JAMB_APP;
+}
