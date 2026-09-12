@@ -254,11 +254,7 @@ const JAMB_QUESTIONS = (function() {
 
   // Toggle subject selection
   function toggleSubjectSelection(key, displayName, item) {
-    if (!state.isUnlocked()) {
-      utils.showToast('Join both WhatsApp channels first', 'red');
-      return;
-    }
-    
+    // Allow subject selection even when locked - unlock is only required at quiz start
     const selected = state.getSelectedSubjects();
     
     if (selected.includes(key)) {

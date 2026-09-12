@@ -76,11 +76,26 @@ const JAMB_APP = (function() {
       window.history.replaceState({}, '', window.location.pathname);
     }
 
-    // Channel join buttons -> award daily bonus points
+    // Unlock box buttons (WhatsApp channels 1 & 2)
+    wireSimpleUnlock('channel1Btn', 'jamb_wa');
+    wireSimpleUnlock('channel2Btn', 'jamb_wa');
+
+    // Bonus channel card buttons
     wireChannelBonus('tgChannelBtn', 'bonusRowTg', 'tg_channel', 'jamb_tg');
     wireChannelBonus('waecChannelBtn', 'bonusRowWaec', 'waec_tutorial', 'jamb_wa');
     wireChannelBonus('jambTutChannelBtn', 'bonusRowJambTut', 'jamb_tutorial', 'jamb_wa');
     wireChannelBonus('fbPageBtn', 'bonusRowFb', 'fb_page');
+  }
+
+  // Simple unlock for the unlock-box buttons (just set flag, no points)
+  function wireSimpleUnlock(btnId, flag) {
+    const btn = utils.$(btnId);
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+      localStorage.setItem(flag, 'yes');
+      unlock.checkUnlock();
+      utils.showToast('Channel joined! Keep going...', 'green');
+    });
   }
 
   // Award daily points when a channel link is clicked; mark row claimed
@@ -130,6 +145,22 @@ const JAMB_APP = (function() {
     row.innerHTML += ' <span style="margin-left:auto;">✓</span>';
   }
 
+  // Show unlock prompt: scroll to unlock box + pulse it
+  function showUnlockPrompt() {
+    var box = utils.$('unlockBox');
+    if (box) {
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      box.style.transition = 'box-shadow 0.3s, transform 0.3s';
+      box.style.boxShadow = '0 0 0 4px rgba(37,211,102,0.6), 0 8px 30px rgba(0,0,0,0.15)';
+      box.style.transform = 'scale(1.02)';
+      setTimeout(function() {
+        box.style.boxShadow = '';
+        box.style.transform = '';
+      }, 1800);
+    }
+    utils.showToast('🔐 Join both WhatsApp channels to unlock quizzes', 'red');
+  }
+
   function setupShareButtons() {
     // Share section uses data-share attribute buttons
     const shareBtns = document.querySelectorAll('.share-btn[data-share]');
@@ -149,7 +180,7 @@ const JAMB_APP = (function() {
 
   function onStartQuiz() {
     if (!state.isUnlocked()) {
-      utils.showToast('🔒 Join both WhatsApp channels first', 'red');
+      showUnlockPrompt();
       return;
     }
     if (!state.getQuestionBank()) {
