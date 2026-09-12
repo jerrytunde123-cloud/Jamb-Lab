@@ -55,21 +55,13 @@ Jamb-Lab/
 └── vercel.json
 ```
 
-## Points
+## Points Flow
 
-| Action | Amount |
-|---|---|
-| Join both unlock channels (once) | +15 |
-| JAMB Telegram / WAEC / JAMB tutorial / Facebook | +15 / +10 / +10 / +5 (once each) |
-| Daily share (friends, groups, class) | +10 each, resets daily |
-| Friend opens your invite link | +10 welcome bonus for them |
-| Start a quiz | −5 per selected subject |
-| Correct / wrong answer | +10 / −5 |
-| Answered every question | +20 |
-| Perfect score | +50 |
-| Daily top-up if under 5 pts | +10 |
-
-All of this is stored in `localStorage` on the device. There is no backend, so a referrer cannot be credited on someone else's phone.
+- **Initial balance**: 0 points for new users.
+- **Earning points**: Users earn **+10 points** each time they share (Friends, Groups, Class, or Invite link). Points are only earned from sharing, not from exams.
+- **Starting an exam**: Costs **5 points** per selected subject. Points are deducted upon starting the exam and refreshed to 0 / spent balance.
+- **Exam completion**: Exams do **not** award points. Once points are used up to take the exam, users must share again to earn points for their next quiz.
+- **Invite welcome**: A friend who opens an invite link receives a +10 pt welcome bonus to try their first quiz.
 
 ## Tests
 

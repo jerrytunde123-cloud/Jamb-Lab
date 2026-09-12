@@ -427,16 +427,6 @@ const JAMB_QUESTIONS = (function() {
       else wrong++;
     });
 
-    let pointsEarned = 0;
-    pointsEarned += correct * POINTS_CONFIG.CORRECT_BONUS;
-    pointsEarned += wrong * POINTS_CONFIG.WRONG_PENALTY;
-    if (unanswered === 0 && currentQuestions.length > 0) {
-      pointsEarned += POINTS_CONFIG.ATTEND_ALL_BONUS;
-    }
-    if (wrong === 0 && unanswered === 0 && correct === currentQuestions.length && currentQuestions.length > 0) {
-      pointsEarned += POINTS_CONFIG.PERFECT_BONUS;
-    }
-
     const percentage = currentQuestions.length > 0
       ? Math.round((correct / currentQuestions.length) * 100)
       : 0;
@@ -447,7 +437,7 @@ const JAMB_QUESTIONS = (function() {
       wrong: wrong,
       unanswered: unanswered,
       percentage: percentage,
-      pointsEarned: pointsEarned
+      pointsEarned: 0
     };
   }
 
@@ -569,8 +559,6 @@ const JAMB_QUESTIONS = (function() {
     bindReviewToggle();
     applyReviewVisibility();
 
-    points.addPoints(score.pointsEarned);
-
     if (history) {
       const quiz = state.getCurrentQuiz();
       const subjects = quiz ? quiz.subjectKeys : [];
@@ -602,7 +590,6 @@ const JAMB_QUESTIONS = (function() {
     renderSubjectGrid();
     updateSubjectUI();
 
-    points.dailyTopUp();
     scrollTop();
   }
 
@@ -618,7 +605,11 @@ const JAMB_QUESTIONS = (function() {
     }
     const cost = selected.length * POINTS_CONFIG.QUIZ_COST;
     if (!points.deductPoints(cost)) {
-      utils.showToast('Need ' + cost + ' pts (you have ' + points.getPoints() + ')', 'red');
+      utils.showToast('Need ' + cost + ' pts (you have ' + points.getPoints() + '). Share below to get points!', 'red');
+      const shareSec = document.querySelector('.share-section');
+      if (shareSec && typeof shareSec.scrollIntoView === 'function') {
+        shareSec.scrollIntoView({ behavior: 'smooth' });
+      }
       return false;
     }
     const quiz = startQuiz(selected);

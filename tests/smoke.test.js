@@ -91,24 +91,27 @@ describe('app smoke', function() {
     expect(document.getElementById('modalProceedBtn').disabled).toBe(true);
   });
 
-  it('unlocks after both channels are joined and awards the bonus once', function() {
+  it('unlocks after both channels are joined without giving free exam points', function() {
     document.getElementById('modalChannel1Btn').click();
     document.getElementById('modalChannel2Btn').click();
     expect(JAMB_STATE.isUnlocked()).toBe(true);
     expect(document.getElementById('modalProceedBtn').disabled).toBe(false);
-    expect(JAMB_POINTS.getPoints()).toBeGreaterThanOrEqual(25);
-    const after = JAMB_POINTS.getPoints();
-    JAMB_UNLOCK.checkUnlock();
-    expect(JAMB_POINTS.getPoints()).toBe(after);
+    // User initially has 0 points
+    expect(JAMB_POINTS.getPoints()).toBe(0);
   });
 
-  it('starts a quiz, lets Next work, shows images, and scores once', function() {
+  it('earns points from sharing to start the exam, and uses points upon starting', function() {
+    // User shares to earn points
+    document.getElementById('shareFriendsBtn').click();
+    expect(JAMB_POINTS.getPoints()).toBe(10);
+
     const pointsBefore = JAMB_POINTS.getPoints();
     document.getElementById('modalProceedBtn').click();
 
     const quizScreen = document.getElementById('quizScreen');
     expect(quizScreen.style.display).toBe('block');
     expect(document.getElementById('mainScreen').style.display).toBe('none');
+    // Points are used up (5 points deducted for 1 subject)
     expect(JAMB_POINTS.getPoints()).toBe(pointsBefore - 5);
 
     const questions = JAMB_QUESTIONS.getCurrentQuestions();
@@ -145,8 +148,8 @@ describe('app smoke', function() {
     expect(document.getElementById('resultScreen').style.display).toBe('block');
     expect(document.getElementById('resultCorrect').textContent).toBe('20');
     expect(document.getElementById('resultPercentage').textContent).toBe('100%');
-    // Perfect: 20*10 + 20 attend-all + 50 perfect = 270, awarded once
-    expect(JAMB_POINTS.getEarned()).toBe(earnedBefore + 270);
+    // No points earned from exam - only from sharing
+    expect(JAMB_POINTS.getEarned()).toBe(earnedBefore);
 
     const reviewItems = document.querySelectorAll('#reviewAccordion .review-item');
     expect(reviewItems.length).toBe(20);
@@ -154,11 +157,13 @@ describe('app smoke', function() {
     expect(reviewItems[5].style.display).toBe('none');
   });
 
-  it('returns home and clears the subject selection', function() {
+  it('returns home with points used up and clears the subject selection', function() {
     document.getElementById('restartBtn').click();
     expect(document.getElementById('mainScreen').style.display).toBe('block');
     expect(document.getElementById('resultScreen').style.display).toBe('none');
     expect(JAMB_STATE.getSelectedSubjectCount()).toBe(0);
     expect(document.getElementById('startQuizBtn').disabled).toBe(true);
+    // Points remained used up, no auto top-up
+    expect(JAMB_POINTS.getPoints()).toBe(5);
   });
 });

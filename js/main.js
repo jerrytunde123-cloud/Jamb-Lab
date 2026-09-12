@@ -23,7 +23,6 @@ const JAMB_APP = (function() {
     points.updateUI();
     unlock.checkUnlock();
     questionsModule.updateSubjectUI();
-    points.dailyTopUp();
     questionsModule.loadQuestionBank();
     setupEventListeners();
   }
@@ -111,28 +110,28 @@ const JAMB_APP = (function() {
 
   function setupShareButtons() {
     const shares = [
-      { id: 'shareFriendsBtn', key: 'share_friends' },
-      { id: 'shareGroupsBtn', key: 'share_groups' },
-      { id: 'shareClassBtn', key: 'share_class' }
+      { id: 'shareFriendsBtn', name: 'friends' },
+      { id: 'shareGroupsBtn', name: 'groups' },
+      { id: 'shareClassBtn', name: 'class' }
     ];
 
     shares.forEach(function(item) {
       const btn = utils.$(item.id);
       if (!btn) return;
 
-      if (utils.isToday(item.key)) {
-        btn.classList.add('claimed');
-        return;
-      }
-
       btn.addEventListener('click', function() {
-        if (utils.isToday(item.key)) return;
-        utils.markToday(item.key);
-        btn.classList.add('claimed');
         points.addPoints(config.POINTS.SHARE_REWARD);
-        utils.showToast('+' + config.POINTS.SHARE_REWARD + ' points!', 'green');
+        utils.showToast('+' + config.POINTS.SHARE_REWARD + ' points for sharing!', 'green');
       });
     });
+
+    const shareRef = utils.$('shareRefBtn');
+    if (shareRef) {
+      shareRef.addEventListener('click', function() {
+        points.addPoints(config.POINTS.SHARE_REWARD);
+        utils.showToast('+' + config.POINTS.SHARE_REWARD + ' points for sharing invite link!', 'green');
+      });
+    }
   }
 
   function setupModal() {

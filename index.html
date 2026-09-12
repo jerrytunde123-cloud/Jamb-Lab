@@ -31,14 +31,14 @@
           <div class="text-small">Earned: <strong id="pointsEarned">0</strong> · Spent: <strong id="pointsSpent">0</strong></div>
         </div>
         <div style="text-align: right;">
-          <div class="text-small">Each subject = <strong>−5 pts</strong></div>
+          <div class="text-small">Each subject = <strong>−5 pts</strong> · Share to earn</div>
           <div class="text-small">20 questions · 25 mins</div>
         </div>
       </div>
     </div>
 
     <div class="unlock-box" id="unlockBox">
-      <p><i class="fas fa-lock"></i> <strong>Join & unlock</strong> — earn points to start quizzes</p>
+      <p><i class="fas fa-lock"></i> <strong>Join & unlock</strong> — join channels to access quizzes</p>
       <div class="bonus-grid">
         <a href="https://whatsapp.com/channel/0029VbCJXuCDeON8S6aCk43B" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" id="channel1Btn"><i class="fab fa-whatsapp"></i> Join WhatsApp Channel</a>
         <a href="https://t.me/jambvip" target="_blank" rel="noopener noreferrer" class="btn-whatsapp btn-telegram" id="channel2Btn"><i class="fab fa-telegram"></i> Join Telegram Channel</a>
@@ -46,7 +46,7 @@
           <span class="badge-unlocked" id="unlockStatus" style="background: #8fabbc;"><i class="fas fa-lock"></i> locked</span>
           <span class="text-small">join WhatsApp and Telegram to start</span>
         </div>
-        <div class="bonus-row" id="bonusRowUnlock"><i class="fas fa-star"></i> 15 pts bonus for both channels</div>
+        <div class="bonus-row" id="bonusRowUnlock"><i class="fas fa-unlock"></i> Join channels to unlock quiz access</div>
       </div>
     </div>
 
@@ -81,13 +81,13 @@
     </div>
 
     <div class="share-section">
-      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1d3b3f;"><i class="fas fa-share-alt" style="color: #2a7f9f;"></i> Share & earn 10 pts each (daily)</div>
+      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1d3b4f;"><i class="fas fa-share-alt" style="color: #2a7f9f;"></i> Share to earn points to start exam</div>
       <div class="share-row">
         <a class="share-btn" id="shareFriendsBtn" href="https://api.whatsapp.com/send?text=🎓%20*JAMB%20Questions*%20Join%20me%20on%20JAMB%20Quiz%20builder!%0Ahttps://jamb-lab.netlify.app%0A%0AJoin%20our%20tutorial%20class%20👇%0Ahttps://whatsapp.com/channel/0029VbD2bkWLNSZwxGpz2k0x" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp" style="color: #25D366;"></i> Friends</a>
         <a class="share-btn" id="shareGroupsBtn" href="https://api.whatsapp.com/send?text=📚%20*JAMB%20daily%20drills*%20Join%20our%20WhatsApp%20channel%20for%20UTME%20prep!%20https://whatsapp.com/channel/0029VbCJXuCDeON8S6aCk43B" target="_blank" rel="noopener noreferrer"><i class="fas fa-users" style="color: #2a7f9f;"></i> Groups</a>
         <a class="share-btn" id="shareClassBtn" href="https://api.whatsapp.com/send?text=👨‍🎓%20*Classmates*%20let's%20practice%20JAMB%20together!%20https://whatsapp.com/channel/0029Vb8HCZE6rsR1fthNok1P" target="_blank" rel="noopener noreferrer"><i class="fas fa-user-graduate"></i> Class</a>
       </div>
-      <p class="text-small" style="margin: 6px 0 0; text-align: center;">Each button = +10 pts · Resets every day</p>
+      <p class="text-small" style="margin: 6px 0 0; text-align: center;">Each share = +10 pts · Use points to start quiz</p>
     </div>
 
     <div class="card bonus-channels">
@@ -150,10 +150,11 @@
         <div class="stat-lbl">Score</div>
       </div>
       <div class="stat-box">
-        <div class="stat-num" id="resultPoints">+0</div>
-        <div class="stat-lbl">Points Earned</div>
+        <div class="stat-num" id="resultPoints">0</div>
+        <div class="stat-lbl">Exam Points</div>
       </div>
     </div>
+    <p class="text-small" style="text-align: center; margin: 8px 0 12px; color: #1a5f7a;"><i class="fas fa-info-circle"></i> Points are only earned from sharing. Share to get points for your next quiz!</p>
     <div id="reviewAccordion" style="margin-top: 1rem; max-height: 300px; overflow-y: auto;"></div>
     <button class="btn-block" id="showMoreQuestions" type="button"><i class="fas fa-plus"></i> Show more questions</button>
     <button class="btn-block btn-primary" id="restartBtn" type="button"><i class="fas fa-redo"></i> Back to Home</button>

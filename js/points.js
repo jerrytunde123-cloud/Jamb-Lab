@@ -88,15 +88,8 @@ const JAMB_POINTS = (function() {
   }
 
   function dailyTopUp() {
-    const config = state.getConfig();
-    if (utils.isToday('topup')) return;
-    if (getPoints() >= config.POINTS.MIN_TO_TOPUP) return;
-
-    addPoints(config.POINTS.DAILY_TOPUP);
-    utils.markToday('topup');
-    state.setLastTopUpTime(String(Date.now()));
-    localStorage.setItem('jamb_daily_topup', String(Date.now()));
-    utils.showToast('Daily top-up: +' + config.POINTS.DAILY_TOPUP + ' points', 'green');
+    // Points are only earned from sharing, not automatic top-ups
+    return;
   }
 
   return {

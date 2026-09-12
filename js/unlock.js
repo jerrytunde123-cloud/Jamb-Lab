@@ -29,8 +29,7 @@ const JAMB_UNLOCK = (function() {
   function awardUnlockBonusOnce() {
     if (localStorage.getItem('jamb_unlock_bonus') === 'yes') return;
     localStorage.setItem('jamb_unlock_bonus', 'yes');
-    points.addPoints(state.getConfig().POINTS.UNLOCK_BONUS);
-    utils.showToast('Quizzes unlocked! +' + state.getConfig().POINTS.UNLOCK_BONUS + ' points', 'green');
+    utils.showToast('Quizzes unlocked! Share below to earn points to start.', 'green');
   }
 
   function checkUnlock() {
