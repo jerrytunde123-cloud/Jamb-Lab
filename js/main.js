@@ -75,44 +75,76 @@ const JAMB_APP = (function() {
       unlock.markWhatsAppJoined();
       window.history.replaceState({}, '', window.location.pathname);
     }
+
+    // Channel join buttons -> award daily bonus points
+    wireChannelBonus('tgChannelBtn', 'bonusRowTg', 'tg_channel', 'jamb_tg');
+    wireChannelBonus('waecChannelBtn', 'bonusRowWaec', 'waec_tutorial');
+    wireChannelBonus('jambTutChannelBtn', 'bonusRowJambTut', 'jamb_tutorial');
+    wireChannelBonus('fbPageBtn', 'bonusRowFb', 'fb_page');
+  }
+
+  // Award daily points when a channel link is clicked; mark row claimed
+  function wireChannelBonus(btnId, rowId, taskKey, unlockKey) {
+    const btn = utils.$(btnId);
+    if (!btn) return;
+
+    btn.addEventListener('click', function() {
+      if (utils.isToday(taskKey)) {
+        utils.showToast('Already claimed today', 'orange');
+        return;
+      }
+      const cfg = state.getConfig().POINTS;
+      const rewards = {
+        tg_channel: cfg.TG_CHANNEL_BONUS,
+        waec_tutorial: cfg.WAEC_CHANNEL_BONUS,
+        jamb_tutorial: cfg.JAMB_TUTORIAL_BONUS,
+        fb_page: cfg.FACEBOOK_BONUS
+      };
+      const pts = rewards[taskKey];
+      if (!pts) return;
+
+      if (unlockKey) {
+        localStorage.setItem(unlockKey, 'yes');
+        unlock.checkUnlock();
+      }
+
+      points.addPoints(pts);
+      utils.markToday(taskKey);
+      markRowClaimed(rowId, pts);
+      daily.refreshDailyTasks();
+      utils.showToast('+' + pts + ' points earned!', 'green');
+    });
+
+    // Show already-claimed state on load
+    if (utils.isToday(taskKey)) {
+      const cfg = state.getConfig().POINTS;
+      const rewards = { tg_channel: cfg.TG_CHANNEL_BONUS, waec_tutorial: cfg.WAEC_CHANNEL_BONUS, jamb_tutorial: cfg.JAMB_TUTORIAL_BONUS, fb_page: cfg.FACEBOOK_BONUS };
+      markRowClaimed(rowId, rewards[taskKey] || 0);
+    }
+  }
+
+  function markRowClaimed(rowId, pts) {
+    const row = utils.$(rowId);
+    if (!row) return;
+    row.classList.add('claimed');
+    row.innerHTML += ' <span style="margin-left:auto;">✓</span>';
   }
 
   function setupShareButtons() {
-    const waShareBtn = utils.$('shareWhatsApp');
-    if (waShareBtn) {
-      waShareBtn.addEventListener('click', function() {
+    // Share section uses data-share attribute buttons
+    const shareBtns = document.querySelectorAll('.share-btn[data-share]');
+    shareBtns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
         if (utils.isToday('share')) {
-          utils.showToast('Already shared today', 'orange');
+          utils.showToast('Already claimed today', 'orange');
           return;
         }
-        const url = referrals.buildReferralLink();
-        const text = 'Join me on JAMB Quiz App! ' + url;
-        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
-        setTimeout(function() {
-          points.addPoints(state.getConfig().POINTS.SHARE_REWARD);
-          utils.markToday('share');
-          daily.refreshDailyTasks();
-          utils.showToast('📱 Share reward claimed! +' + state.getConfig().POINTS.SHARE_REWARD + ' pts', 'green');
-        }, 3000);
+        points.addPoints(state.getConfig().POINTS.SHARE_REWARD);
+        utils.markToday('share');
+        daily.refreshDailyTasks();
+        utils.showToast('📱 Share reward claimed! +' + state.getConfig().POINTS.SHARE_REWARD + ' pts', 'green');
       });
-    }
-    const fbShareBtn = utils.$('shareFacebook');
-    if (fbShareBtn) {
-      fbShareBtn.addEventListener('click', function() {
-        if (utils.isToday('facebook')) {
-          utils.showToast('Already followed today', 'orange');
-          return;
-        }
-        const url = referrals.buildReferralLink();
-        window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url), '_blank');
-        setTimeout(function() {
-          points.addPoints(state.getConfig().POINTS.FACEBOOK_BONUS);
-          utils.markToday('facebook');
-          daily.refreshDailyTasks();
-          utils.showToast('👍 Facebook follow reward! +' + state.getConfig().POINTS.FACEBOOK_BONUS + ' pts', 'green');
-        }, 3000);
-      });
-    }
+    });
   }
 
   function onStartQuiz() {

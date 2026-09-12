@@ -554,11 +554,12 @@ const JAMB_QUESTIONS = (function() {
     const score = calculateScore();
     const letters = ['A', 'B', 'C', 'D', 'E'];
 
-    const correctEl = utils.$('correctCount');
-    const wrongEl = utils.$('wrongCount');
-    const unansEl = utils.$('unansweredCount');
-    const pctEl = utils.$('scorePercent');
-    const ptsEl = utils.$('pointsEarned');
+    // Use the actual IDs from index.html result screen
+    const correctEl = utils.$('resultCorrect');
+    const wrongEl = utils.$('resultWrong');
+    const unansEl = utils.$('resultUnanswered');
+    const pctEl = utils.$('resultPercentage');
+    const ptsEl = utils.$('resultPoints');
 
     if (correctEl) correctEl.textContent = score.correct;
     if (wrongEl) wrongEl.textContent = score.wrong;
@@ -566,12 +567,7 @@ const JAMB_QUESTIONS = (function() {
     if (pctEl) pctEl.textContent = score.percentage + '%';
     if (ptsEl) ptsEl.textContent = '+' + score.pointsEarned;
 
-    const perfectMsg = utils.$('perfectMsg');
-    if (perfectMsg) {
-      perfectMsg.style.display = (score.wrong === 0 && score.correct === score.total && score.total > 0) ? 'block' : 'none';
-    }
-
-    const accordion = utils.$('reviewList');
+    const accordion = utils.$('reviewAccordion');
     if (accordion) {
       accordion.innerHTML = currentQuestions.map(function(q, overallIndex) {
         const ok = userAnswers[overallIndex] !== null && userAnswers[overallIndex] === q.correct;
@@ -593,7 +589,7 @@ const JAMB_QUESTIONS = (function() {
       });
     }
 
-    const moreBtn = utils.$('showMoreResultsBtn');
+    const moreBtn = utils.$('showMoreQuestions');
     if (moreBtn && accordion) {
       let expanded = false;
       moreBtn.addEventListener('click', function() {

@@ -199,7 +199,8 @@
 
     <div style="text-align: center; margin: 8px 0 0;">
       <button class="btn-block" id="showMoreSubjectsBtn" style="display: none; background: #eaf0f5; color: #1d4b62; box-shadow: none; padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; max-width: 300px;"><i class="fas fa-plus"></i> Show more subjects</button>
-      <p class="text-small" style="text-align: center; margin-top: 8px; margin-bottom: 16px;"><i class="fas fa-info-circle"></i> 20 questions · 25 mins · shuffled from full question bank</p>
+      <p class="text-small" style="text-align: center; margin-top: 8px; margin-bottom: 12px;"><i class="fas fa-info-circle"></i> 20 questions · 25 mins · shuffled from full question bank</p>
+      <button class="btn-block btn-primary" id="startQuizBtn" disabled style="max-width: 320px; margin: 0 auto;"><i class="fas fa-play"></i> Select at least 1 subject</button>
     </div>
 
     <section class="promotion-section" aria-label="Partner services">
@@ -263,6 +264,12 @@
         <div class="bonus-row" id="bonusRowJambTut"><i class="fas fa-chalkboard-teacher"></i> 10 pts for JAMB Tutorial</div>
         <div class="bonus-row" id="bonusRowFb"><i class="fab fa-facebook"></i> 5 pts for Facebook Page</div>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="fas fa-calendar-check" style="color: #0284c7;"></i> Daily tasks</div>
+      <p class="text-small" style="margin-bottom: 8px;">Complete these tasks to earn bonus points. Resets every day.</p>
+      <div class="bonus-grid" id="dailyTasks"></div>
     </div>
 
     <div class="contact-card">

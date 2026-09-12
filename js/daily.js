@@ -60,7 +60,7 @@ const JAMB_DAILY = (function() {
     
     tasks.forEach(function(t) {
       const done = t.check();
-      const div = utils.createEl('div', 'bonusrow' + (done ? ' claimed' : ''), 
+      const div = utils.createEl('div', 'bonus-row' + (done ? ' claimed' : ''),
         '<i class="' + t.icon + '"></i> ' + t.label + ' <span style="margin-left:auto;">+' + t.points + 'pts</span>'
       );
       
