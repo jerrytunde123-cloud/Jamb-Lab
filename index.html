@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <title>JAMB Quiz · Newton</title>
+  <link rel="icon" type="image/svg+xml" href="public/favicon.svg">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif; }
@@ -135,6 +136,20 @@
     .review-item .ans { font-size: 0.8rem; color: #3f637a; }
     .review-item .ans .user-wrong { color: #dc3545; text-decoration: line-through; }
     .review-item .ans .correct-ans { color: #1a7f5a; font-weight: 600; }
+    #reviewAccordion { -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #b6cbd8 transparent; }
+    #reviewAccordion::-webkit-scrollbar { width: 6px; }
+    #reviewAccordion::-webkit-scrollbar-thumb { background: #b6cbd8; border-radius: 3px; }
+    @media (max-width: 560px) {
+      #reviewAccordion { max-height: 55vh; }
+      .review-item { padding: 1rem 0.85rem; }
+      .review-item .q { font-size: 0.95rem; line-height: 1.45; }
+      .review-item .ans { font-size: 0.85rem; }
+    }
+    .best-badge { display: none; background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; font-size: 0.8rem; font-weight: 700; padding: 0.35rem 1rem; border-radius: 30px; margin: 0 auto 0.8rem; width: fit-content; box-shadow: 0 4px 10px rgba(245,158,11,0.35); }
+    .best-badge.show { display: inline-block; }
+    #bestScoresInfo { text-align: center; font-size: 0.78rem; color: #2a6f8f; margin-top: 4px; min-height: 1.1em; }
+    #bestScoresInfo i { margin-right: 4px; }
+    .subject-item .best-star { position: absolute; bottom: 2px; right: 6px; font-size: 0.6rem; color: #f59e0b; }
     .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #0b2b40; color: white; padding: 0.7rem 1.3rem; border-radius: 30px; font-size: 0.85rem; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.25); opacity: 0; transition: all 0.3s; z-index: 999; display: flex; align-items: center; gap: 8px; max-width: 90vw; }
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
     .toast.green { background: #25D366; }
@@ -195,6 +210,7 @@
         <span>Selected: <strong id="selectedCount">0</strong> / 4</span>
         <span>Cost: <strong id="quizCost">0</strong> pts</span>
       </div>
+      <div id="bestScoresInfo"></div>
     </div>
 
     <div style="text-align: center; margin: 8px 0 0;">
@@ -306,6 +322,7 @@
 
   <!-- RESULT SCREEN -->
   <div class="result-screen" id="resultScreen">
+    <div class="best-badge" id="bestBadge"><i class="fas fa-trophy"></i> New personal best!</div>
     <div class="score-circle">
       <div class="num" id="resultCorrect">0</div>
       <div class="lbl" id="scoreLbl">out of 20</div>
@@ -345,6 +362,7 @@
 <script src="js/referrals.js"></script>
 <script src="js/unlock.js"></script>
 <script src="js/daily.js"></script>
+<script src="js/history.js"></script>
 <script src="js/questions.js"></script>
 <script src="js/main.js"></script>
 </body>

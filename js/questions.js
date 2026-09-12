@@ -224,6 +224,17 @@ const JAMB_QUESTIONS = (function() {
       item.setAttribute('data-subject-name', displayName);
       item.innerHTML = '<i class="' + iconClass + '"></i> ' + displayName;
       
+      // Show a star on subjects you've played before
+      if (history) {
+        const best = history.getBest(key);
+        if (best) {
+          const star = document.createElement('span');
+          star.className = 'best-star';
+          star.innerHTML = '&#9733; ' + best.best + '%';
+          item.appendChild(star);
+        }
+      }
+
       item.addEventListener('click', function() {
         toggleSubjectSelection(key, displayName, item);
       });
@@ -275,10 +286,26 @@ const JAMB_QUESTIONS = (function() {
   function updateSubjectUI() {
     const countEl = utils.$('selectedCount');
     const costEl = utils.$('quizCost');
-    
+
     if (countEl) countEl.textContent = state.getSelectedSubjectCount();
     if (costEl) costEl.textContent = state.getSelectedSubjectCount() * POINTS_CONFIG.QUIZ_COST;
-    
+
+    // Show best scores for selected subjects
+    const infoEl = utils.$('bestScoresInfo');
+    if (infoEl && history) {
+      const selected = state.getSelectedSubjects();
+      if (selected.length > 0) {
+        const parts = selected.map(function(key) {
+          const best = history.getBest(key);
+          const name = getSubjectName(key).split(' ')[0];
+          return best ? name + ' ' + best.best + '%' : name + ' -';
+        });
+        infoEl.innerHTML = '<i class="fas fa-trophy"></i> Your best: ' + parts.join(' &middot; ');
+      } else {
+        infoEl.innerHTML = '';
+      }
+    }
+
     updateStartButtonState();
   }
 
@@ -352,6 +379,9 @@ const JAMB_QUESTIONS = (function() {
   // ============================================
   // QUIZ ENGINE
   // ============================================
+
+  // Import history (loaded via separate script tag)
+  const history = (typeof JAMB_HISTORY !== 'undefined') ? JAMB_HISTORY : null;
 
   let currentQuestions = [];
   let currentIndex = 0;
@@ -603,6 +633,22 @@ const JAMB_QUESTIONS = (function() {
     }
 
     points.addPoints(score.pointsEarned);
+
+    // Record best score per subject and show badge if new record
+    if (history) {
+      const quiz = state.getCurrentQuiz();
+      const subjects = quiz ? quiz.subjectKeys : [];
+      const newBests = history.recordQuiz(subjects, score);
+      const badge = utils.$('bestBadge');
+      if (badge) {
+        if (newBests.length > 0) {
+          badge.classList.add('show');
+          utils.showToast('New personal best in ' + newBests.map(function(s){ return getSubjectName(s); }).join(', ') + '!', 'green');
+        } else {
+          badge.classList.remove('show');
+        }
+      }
+    }
   }
 
   function restartQuiz() {
