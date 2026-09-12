@@ -306,34 +306,14 @@ const JAMB_QUESTIONS = (function() {
     updateStartButtonState();
   }
 
-    // Update the start quiz button state - NEVER disabled, always clickable
+      // Update start quiz button - ALWAYS just opens modal, never disabled
   function updateStartButtonState() {
     const btn = utils.$('startQuizBtn');
     if (!btn) return;
 
-    // Button is NEVER disabled - always clickable
+    // Button is NEVER disabled - just opens the modal
     btn.disabled = false;
-
-    const selectedCount = state.getSelectedSubjectCount();
-    const cost = selectedCount * POINTS_CONFIG.QUIZ_COST;
-    const pts = points.getPoints();
-
-    if (!state.isUnlocked()) {
-      btn.innerHTML = '<i class="fas fa-lock"></i> Join channels to unlock';
-      return;
-    }
-
-    if (selectedCount === 0) {
-      btn.innerHTML = '<i class="fas fa-play"></i> Start Quiz (0 subjects selected)';
-      return;
-    }
-
-    if (pts < cost) {
-      btn.innerHTML = '<i class="fas fa-play"></i> Start Quiz (−' + cost + ' pts) — need more points';
-      return;
-    }
-
-    btn.innerHTML = '<i class="fas fa-play"></i> Start Quiz (−' + cost + ' pts)';
+    btn.innerHTML = '<i class="fas fa-play"></i> Start Quiz';
   }
 
   // Generate quiz questions from selected subjects

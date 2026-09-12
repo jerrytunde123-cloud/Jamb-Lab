@@ -222,42 +222,14 @@ const JAMB_APP = (function() {
     }
   }
 
-    function updateStartButtonState() {
-    // Button state handled entirely by questions.js
-    // This function is kept for backwards compatibility but does nothing -
-    // the button is ALWAYS clickable, never disabled
+      function updateStartButtonState() {
+    // Button ALWAYS opens modal - just delegates to questions module
     questionsModule.updateStartButtonState();
   }
 
   function onStartQuiz() {
-    if (!state.isUnlocked()) {
-      showUnlockModal();
-      return;
-    }
-    if (!state.getQuestionBank()) {
-      utils.showToast('Question bank not loaded', 'red');
-      return;
-    }
-    var selected = state.getSelectedSubjects();
-    if (selected.length === 0) {
-      utils.showToast('Select at least 1 subject', 'red');
-      return;
-    }
-    var cost = selected.length * state.getConfig().POINTS.QUIZ_COST;
-    if (!points.deductPoints(cost)) {
-      utils.showToast('Not enough points', 'red');
-      return;
-    }
-    var quizQuestions = questionsModule.generateQuizQuestions(selected);
-    if (quizQuestions.length === 0) {
-      utils.showToast('No questions available', 'red');
-      points.addPoints(cost);
-      return;
-    }
-    var displayNames = selected.map(function(key) { return questionsModule.getSubjectName(key); });
-    utils.showToast('Good luck!', 'green');
-    questionsModule.startQuiz(selected);
-    questionsModule.beginQuiz(displayNames);
+    // Start Quiz button ALWAYS opens the modal - nothing else
+    showUnlockModal();
   }
 
   function setupShareButtons() {
