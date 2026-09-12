@@ -78,8 +78,8 @@ const JAMB_APP = (function() {
 
     // Channel join buttons -> award daily bonus points
     wireChannelBonus('tgChannelBtn', 'bonusRowTg', 'tg_channel', 'jamb_tg');
-    wireChannelBonus('waecChannelBtn', 'bonusRowWaec', 'waec_tutorial');
-    wireChannelBonus('jambTutChannelBtn', 'bonusRowJambTut', 'jamb_tutorial');
+    wireChannelBonus('waecChannelBtn', 'bonusRowWaec', 'waec_tutorial', 'jamb_wa');
+    wireChannelBonus('jambTutChannelBtn', 'bonusRowJambTut', 'jamb_tutorial', 'jamb_wa');
     wireChannelBonus('fbPageBtn', 'bonusRowFb', 'fb_page');
   }
 
