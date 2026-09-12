@@ -128,7 +128,7 @@ const JAMB_APP = (function() {
   function showUnlockModal() {
     const modal = utils.$('unlockModal');
     if (modal) {
-      modal.classList.add('active');
+      modal.classList.add('show');
       // Restore join state from localStorage
       modalChannel1Joined = localStorage.getItem('jamb_modal_ch1') === 'yes';
       modalChannel2Joined = localStorage.getItem('jamb_modal_ch2') === 'yes';
@@ -138,7 +138,7 @@ const JAMB_APP = (function() {
 
   function hideUnlockModal() {
     const modal = utils.$('unlockModal');
-    if (modal) modal.classList.remove('active');
+    if (modal) modal.classList.remove('show');
   }
 
   function updateModalProgress() {
