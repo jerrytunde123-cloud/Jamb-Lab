@@ -86,6 +86,67 @@ const JAMB_UTILS = (function() {
     return 'assets/' + image.replace(/^\//, '');
   }
 
+  function formatMathFallback(str) {
+    if (!str && str !== 0) return '';
+    return String(str)
+      .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '($1)/($2)')
+      .replace(/\\times/g, '×')
+      .replace(/\\div/g, '÷')
+      .replace(/\\neq/g, '≠')
+      .replace(/\\pi/g, 'π')
+      .replace(/\\sqrt\{([^{}]+)\}/g, '√($1)')
+      .replace(/\\sqrt/g, '√')
+      .replace(/\\geq|\\ge/g, '≥')
+      .replace(/\\leq|\\le/g, '≤')
+      .replace(/\\Delta/g, 'Δ')
+      .replace(/\\rightarrow/g, '→')
+      .replace(/\\log_\{([^{}]+)\}/g, 'log<sub>$1</sub>')
+      .replace(/\\log_([a-zA-Z0-9])/g, 'log<sub>$1</sub>')
+      .replace(/\^\{([^{}]+)\}/g, '<sup>$1</sup>')
+      .replace(/_\{([^{}]+)\}/g, '<sub>$1</sub>')
+      .replace(/\^([0-9a-zA-Z+-]+)/g, '<sup>$1</sup>')
+      .replace(/_([0-9a-zA-Z+-]+)/g, '<sub>$1</sub>')
+      .replace(/\\\(|\\\)|\\\[|\\\]/g, '');
+  }
+
+  function renderFormattedText(container, rawText) {
+    if (!container) return;
+    if (!rawText && rawText !== 0) {
+      container.innerHTML = '';
+      return;
+    }
+
+    let formatted = String(rawText);
+
+    // Convert newlines to <br>
+    formatted = formatted.replace(/\r\n|\n|\r/g, '<br>');
+
+    container.innerHTML = formatted;
+
+    // Typeset with KaTeX if available
+    if (typeof window !== 'undefined' && typeof window.renderMathInElement === 'function') {
+      try {
+        window.renderMathInElement(container, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '\\[', right: '\\]', display: true },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '$', right: '$', display: false }
+          ],
+          throwOnError: false
+        });
+        return;
+      } catch (e) {
+        // Fall back on error
+      }
+    }
+
+    // Clean fallback if KaTeX is not loaded
+    if (formatted.indexOf('\\(') !== -1 || formatted.indexOf('\\[') !== -1) {
+      container.innerHTML = formatMathFallback(formatted);
+    }
+  }
+
   return {
     todayKey: todayKey,
     isToday: isToday,
@@ -97,7 +158,9 @@ const JAMB_UTILS = (function() {
     $: $,
     getAll: getAll,
     createEl: createEl,
-    imageSrc: imageSrc
+    imageSrc: imageSrc,
+    formatMathFallback: formatMathFallback,
+    renderFormattedText: renderFormattedText
   };
 })();
 

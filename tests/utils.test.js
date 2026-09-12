@@ -151,4 +151,31 @@ describe('JAMB_UTILS - Utility Functions', function() {
       expect(JAMB_UTILS.imageSrc(null)).toBe('');
     });
   });
+
+  describe('formatMathFallback() & renderFormattedText()', function() {
+    it('converts fractions and basic LaTeX symbols in fallback mode', function() {
+      const res = JAMB_UTILS.formatMathFallback('\\(\\frac{22}{7}\\) \\times 4');
+      expect(res).toContain('(22)/(7)');
+      expect(res).toContain('× 4');
+      expect(res).not.toContain('\\(');
+    });
+
+    it('converts exponents and subscripts in fallback mode', function() {
+      const res = JAMB_UTILS.formatMathFallback('x^{2} + 213\\(_4\\)');
+      expect(res).toContain('x<sup>2</sup>');
+      expect(res).toContain('213<sub>4</sub>');
+    });
+
+    it('renders text with newlines as <br>', function() {
+      const el = document.createElement('div');
+      JAMB_UTILS.renderFormattedText(el, 'Line 1\nLine 2');
+      expect(el.innerHTML).toBe('Line 1<br>Line 2');
+    });
+
+    it('preserves safe formatting tags like <u> and <b>', function() {
+      const el = document.createElement('div');
+      JAMB_UTILS.renderFormattedText(el, 'Choose the <u>correct</u> word');
+      expect(el.innerHTML).toBe('Choose the <u>correct</u> word');
+    });
+  });
 });

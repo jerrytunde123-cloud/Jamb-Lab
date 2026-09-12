@@ -72,7 +72,8 @@ h1 small { font-size: 1rem; font-weight: 500; color: #2a6f8f; background: #e5f0f
 .progress-bar { width: 100%; height: 8px; background: #e9edf2; border-radius: 10px; overflow: hidden; margin-bottom: 1rem; }
 .progress-fill { height: 100%; background: #1a5f7a; width: 0%; transition: width 0.3s; }
 .question-counter { font-size: 0.8rem; color: #3f637a; font-weight: 600; margin-bottom: 0.5rem; }
-.question-text { font-size: 1.05rem; color: #0b2b40; font-weight: 600; line-height: 1.5; margin-bottom: 1.2rem; padding: 0.9rem; background: #f8fafc; border-radius: 1rem; border-left: 4px solid #1a5f7a; }
+.question-text { font-size: 1.05rem; color: #0b2b40; font-weight: 600; line-height: 1.6; margin-bottom: 1.2rem; padding: 0.9rem; background: #f8fafc; border-radius: 1rem; border-left: 4px solid #1a5f7a; word-break: break-word; }
+.question-text u, .option-text u, .review-item u { text-decoration: underline; text-underline-offset: 3px; font-weight: 700; }
 .question-image { display: block; max-width: 100%; max-height: 280px; margin: 0.9rem auto 0; border-radius: 0.8rem; background: white; }
 .options { display: flex; flex-direction: column; gap: 10px; }
 .option { background: white; border: 2px solid #dee8f0; border-radius: 1rem; padding: 0.9rem 1rem; font-size: 0.95rem; color: #1d3b4f; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 12px; }
@@ -80,6 +81,12 @@ h1 small { font-size: 1rem; font-weight: 500; color: #2a6f8f; background: #e5f0f
 .option.selected { background: #1a5f7a; color: white; border-color: #1a5f7a; }
 .option .letter { background: #eaf0f5; color: #1a5f7a; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
 .option.selected .letter { background: white; color: #1a5f7a; }
+.option-text { flex: 1; word-break: break-word; line-height: 1.4; }
+.katex { font-size: 1.05em; font-weight: normal; }
+.option.selected .katex, .option.selected .katex * { color: white !important; }
+sub, sup { font-size: 75%; line-height: 0; position: relative; vertical-align: baseline; }
+sup { top: -0.5em; }
+sub { bottom: -0.25em; }
 .quiz-nav { display: flex; gap: 10px; margin-top: 1.5rem; }
 .quiz-nav button { flex: 1; padding: 0.9rem; border-radius: 60px; border: none; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: 0.15s; }
 .btn-next { background: #1a5f7a; color: white; }

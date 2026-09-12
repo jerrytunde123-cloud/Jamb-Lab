@@ -337,7 +337,7 @@ const JAMB_QUESTIONS = (function() {
 
     const questionEl = utils.$('questionText');
     if (questionEl) {
-      questionEl.textContent = q.question;
+      utils.renderFormattedText(questionEl, q.question);
       if (q.image) {
         const img = document.createElement('img');
         img.className = 'question-image';
@@ -364,7 +364,8 @@ const JAMB_QUESTIONS = (function() {
         letter.className = 'letter';
         letter.textContent = letters[i] || String(i + 1);
         const text = document.createElement('span');
-        text.textContent = opt;
+        text.className = 'option-text';
+        utils.renderFormattedText(text, opt);
         div.appendChild(letter);
         div.appendChild(text);
         div.addEventListener('click', function() { selectOption(i); });
@@ -516,7 +517,12 @@ const JAMB_QUESTIONS = (function() {
 
         const qEl = document.createElement('div');
         qEl.className = 'q';
-        qEl.appendChild(document.createTextNode((overallIndex + 1) + '. ' + q.question + ' '));
+        const qNum = document.createElement('span');
+        qNum.textContent = (overallIndex + 1) + '. ';
+        qEl.appendChild(qNum);
+        const qText = document.createElement('span');
+        utils.renderFormattedText(qText, q.question + ' ');
+        qEl.appendChild(qText);
         if (q._subject) {
           const sub = document.createElement('span');
           sub.className = 'q-subject';
@@ -534,7 +540,10 @@ const JAMB_QUESTIONS = (function() {
           userSpan.textContent = 'Not answered';
         } else {
           const idx = userAnswers[overallIndex];
-          userSpan.textContent = (letters[idx] || '') + '. ' + q.options[idx];
+          userSpan.appendChild(document.createTextNode((letters[idx] || '') + '. '));
+          const optSpan = document.createElement('span');
+          utils.renderFormattedText(optSpan, q.options[idx]);
+          userSpan.appendChild(optSpan);
         }
         ans.appendChild(userSpan);
         item.appendChild(ans);
@@ -545,7 +554,10 @@ const JAMB_QUESTIONS = (function() {
           ca.appendChild(document.createTextNode('Correct: '));
           const caSpan = document.createElement('span');
           caSpan.className = 'correct-ans';
-          caSpan.textContent = (letters[q.correct] || '') + '. ' + q.options[q.correct];
+          caSpan.appendChild(document.createTextNode((letters[q.correct] || '') + '. '));
+          const optSpan = document.createElement('span');
+          utils.renderFormattedText(optSpan, q.options[q.correct]);
+          caSpan.appendChild(optSpan);
           ca.appendChild(caSpan);
           item.appendChild(ca);
         }
