@@ -306,34 +306,33 @@ const JAMB_QUESTIONS = (function() {
     updateStartButtonState();
   }
 
-  // Update the start quiz button state
+    // Update the start quiz button state - NEVER disabled, always clickable
   function updateStartButtonState() {
     const btn = utils.$('startQuizBtn');
     if (!btn) return;
-    
+
+    // Button is NEVER disabled - always clickable
+    btn.disabled = false;
+
     const selectedCount = state.getSelectedSubjectCount();
     const cost = selectedCount * POINTS_CONFIG.QUIZ_COST;
     const pts = points.getPoints();
-    
+
     if (!state.isUnlocked()) {
-      btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-lock"></i> Join channels to unlock';
       return;
     }
-    
+
     if (selectedCount === 0) {
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-play"></i> Select at least 1 subject';
+      btn.innerHTML = '<i class="fas fa-play"></i> Start Quiz (0 subjects selected)';
       return;
     }
-    
+
     if (pts < cost) {
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-play"></i> Need ' + cost + ' pts (you have ' + pts + ')';
+      btn.innerHTML = '<i class="fas fa-play"></i> Start Quiz (−' + cost + ' pts) — need more points';
       return;
     }
-    
-    btn.disabled = false;
+
     btn.innerHTML = '<i class="fas fa-play"></i> Start Quiz (−' + cost + ' pts)';
   }
 

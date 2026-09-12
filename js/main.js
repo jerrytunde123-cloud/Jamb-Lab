@@ -222,18 +222,11 @@ const JAMB_APP = (function() {
     }
   }
 
-  function updateStartButtonState() {
-    const btn = utils.$('startQuizBtn');
-    if (!btn) return;
-    if (state.isUnlocked()) {
-      btn.textContent = 'Start Quiz';
-      btn.disabled = false;
-      btn.classList.remove('locked');
-    } else {
-      btn.textContent = '🔐 Join channels to unlock';
-      btn.disabled = false;
-      btn.classList.add('locked');
-    }
+    function updateStartButtonState() {
+    // Button state handled entirely by questions.js
+    // This function is kept for backwards compatibility but does nothing -
+    // the button is ALWAYS clickable, never disabled
+    questionsModule.updateStartButtonState();
   }
 
   function onStartQuiz() {
