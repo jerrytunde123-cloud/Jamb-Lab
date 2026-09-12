@@ -84,6 +84,73 @@ const JAMB_QUESTIONS = (function() {
     return SUBJECT_ICONS[key] || 'fas fa-book';
   }
 
+  // Subjects ranked by how common/important they are for JAMB UTME
+  // (most common first; anything not listed falls back to alphabetical after)
+  const SUBJECT_PRIORITY = [
+    // Core (compulsory for nearly all candidates)
+    'english',            // English Language - compulsory
+    'mathematics',        // Mathematics - compulsory for most
+    // Science track
+    'biology',
+    'chemistry',
+    'physics',
+    // Commercial / management track
+    'economics',
+    'commerce',
+    'financialAccounting',
+    // Arts / social sciences
+    'literature',
+    'government',
+    'geography',
+    'civicEducation',
+    'history',
+    'crs',
+    'irk',
+    // Mathematics extension
+    'furtherMathematics',
+    // Technology / ICT
+    'computerStudies',
+    'dataProcessing',
+    // Agriculture
+    'agriculturalScience',
+    'animalHusbandry',
+    // Nigerian languages
+    'hausa',
+    'igbo',
+    'yoruba',
+    // Foreign languages
+    'french',
+    'arabic',
+    // Business / vocational
+    'marketing',
+    'insurance',
+    'officePractice',
+    'cateringCraftPractice',
+    // Home / other electives
+    'homeEconomics',
+    'physicalEducation',
+    'fineArts',
+    'music'
+  ];
+
+  const PRIORITY_INDEX = (function() {
+    const map = {};
+    SUBJECT_PRIORITY.forEach(function(key, i) { map[key] = i; });
+    return map;
+  })();
+
+  // Sort subjects: priority order first, unknown keys alphabetically after
+  function sortSubjectsByImportance(keys) {
+    return keys.slice().sort(function(a, b) {
+      const ai = PRIORITY_INDEX[a];
+      const bi = PRIORITY_INDEX[b];
+      if (ai !== undefined && bi !== undefined) return ai - bi;
+      if (ai !== undefined) return -1;
+      if (bi !== undefined) return 1;
+      return a.localeCompare(b);
+    });
+  }
+
   function shuffleArray(arr) {
     const a = arr.slice();
     for (let i = a.length - 1; i > 0; i--) {
@@ -143,7 +210,7 @@ const JAMB_QUESTIONS = (function() {
     const questionBank = state.getQuestionBank();
     if (!questionBank) return;
     
-    const subjects = Object.keys(questionBank).sort();
+    const subjects = sortSubjectsByImportance(Object.keys(questionBank));
     const showMore = state.getShowMoreSubjects();
     const visibleSubjects = showMore ? subjects : subjects.slice(0, 12);
     
