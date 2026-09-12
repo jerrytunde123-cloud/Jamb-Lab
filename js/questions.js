@@ -269,7 +269,8 @@ const JAMB_QUESTIONS = (function() {
       if (item) item.classList.add('selected');
     }
     
-    updateSubjectUI();
+        updateSubjectUI();
+    updateStartButtonState();
   }
 
   // Select a subject (wrapper for toggle)
