@@ -239,9 +239,50 @@ const JAMB_APP = (function() {
     questionsModule.updateStartButtonState();
   }
 
+  function showUnlockModal() {
+    const modal = utils.$('unlockModal');
+    const proceedBtn = utils.$('modalProceedBtn');
+    if (modal) {
+      // Restore join state from localStorage
+      modalChannel1Joined = localStorage.getItem('jamb_modal_ch1') === 'yes';
+      modalChannel2Joined = localStorage.getItem('jamb_modal_ch2') === 'yes';
+      updateModalUI();
+      modal.classList.add('show');
+    }
+  }
+
+  function hideUnlockModal() {
+    const modal = utils.$('unlockModal');
+    if (modal) modal.classList.remove('show');
+  }
+
+  function updateModalUI() {
+    const progress = utils.$('modalUnlockProgress');
+    const proceedBtn = utils.$('modalProceedBtn');
+    if (!progress || !proceedBtn) return;
+    let count = 0;
+    if (modalChannel1Joined) count++;
+    if (modalChannel2Joined) count++;
+    if (count === 2) {
+      progress.innerHTML = '✅ Both channels joined';
+      progress.classList.add('done');
+      proceedBtn.disabled = false;
+      proceedBtn.textContent = 'Proceed to Quiz';
+    } else {
+      progress.innerHTML = 'Joined: ' + count + ' / 2 channels';
+      progress.classList.remove('done');
+      proceedBtn.disabled = true;
+      proceedBtn.textContent = 'Join both channels to proceed';
+    }
+  }
+
   function onStartQuiz() {
     // Start Quiz button ALWAYS opens the modal - nothing else
-    showUnlockModal();
+    if (state.isUnlocked()) {
+      startQuizAfterUnlock();
+    } else {
+      showUnlockModal();
+    }
   }
 
   function setupShareButtons() {
