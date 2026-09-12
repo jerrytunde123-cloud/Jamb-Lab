@@ -315,7 +315,7 @@ const JAMB_QUESTIONS = (function() {
     const pts = points.getPoints();
     
     if (!state.isUnlocked()) {
-      btn.disabled = true;
+      btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-lock"></i> Join channels to unlock';
       return;
     }
