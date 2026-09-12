@@ -19,6 +19,7 @@ const JAMB_APP = (function() {
     referrals.getUserId();
     referrals.handleIncomingReferral();
     awardReferralToCurrent();
+    referrals.setupReferralUI();
     const refCountEl = utils.$('refCount');
     if (refCountEl) refCountEl.textContent = localStorage.getItem('jamb_ref_count') || '0';
     points.updateUI();

@@ -82,6 +82,60 @@ const JAMB_REFERRALS = (function() {
   }
 
   // ============================================
+  // REFERRAL SHARE UI
+  // ============================================
+  function setupReferralUI() {
+    const link = buildReferralLink();
+
+    // Fill the readonly input with the user's referral link
+    const input = utils.$('referralLink');
+    if (input) input.value = link;
+
+    // Copy button
+    const copyBtn = utils.$('copyRefBtn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function() {
+        copyLink(link);
+      });
+    }
+
+    // WhatsApp share button
+    const shareBtn = utils.$('shareRefBtn');
+    if (shareBtn) {
+      shareBtn.href = 'https://wa.me/?text=' + encodeURIComponent(
+        '🎓 Practice JAMB questions with me on JAMB Lab! ' + link
+      );
+    }
+  }
+
+  function copyLink(link) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(function() {
+        utils.showToast('📋 Referral link copied!', 'green');
+      }).catch(function() {
+        fallbackCopy(link);
+      });
+    } else {
+      fallbackCopy(link);
+    }
+  }
+
+  function fallbackCopy(link) {
+    const input = utils.$('referralLink');
+    if (!input) return;
+    input.removeAttribute('readonly');
+    input.select();
+    try {
+      document.execCommand('copy');
+      utils.showToast('📋 Referral link copied!', 'green');
+    } catch (e) {
+      utils.showToast('Could not copy - please copy manually', 'orange');
+    }
+    input.setAttribute('readonly', '');
+    window.getSelection().removeAllRanges();
+  }
+
+  // ============================================
   // PUBLIC API
   // ============================================
   return {
@@ -89,6 +143,7 @@ const JAMB_REFERRALS = (function() {
     generateUserId: generateUserId,
     buildReferralLink: buildReferralLink,
     handleIncomingReferral: handleIncomingReferral,
-    awardReferralReward: awardReferralReward
+    awardReferralReward: awardReferralReward,
+    setupReferralUI: setupReferralUI
   };
 })();
