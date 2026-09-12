@@ -1,6 +1,6 @@
 /**
  * JAMB Quiz - Unlock System
- * Quizzes unlock after both required WhatsApp channels are joined.
+ * Quizzes unlock after WhatsApp and Telegram channels are joined.
  */
 
 const JAMB_UNLOCK = (function() {
@@ -10,31 +10,25 @@ const JAMB_UNLOCK = (function() {
   const utils = typeof JAMB_UTILS !== 'undefined' ? JAMB_UTILS : require('./utils.js');
   const points = typeof JAMB_POINTS !== 'undefined' ? JAMB_POINTS : require('./points.js');
 
-  function isChannel1Joined() {
-    return localStorage.getItem('jamb_ch1') === 'yes';
+  function isWhatsAppJoined() {
+    return localStorage.getItem('jamb_ch1') === 'yes' || localStorage.getItem('jamb_wa') === 'yes';
   }
 
-  function isChannel2Joined() {
-    return localStorage.getItem('jamb_ch2') === 'yes';
-  }
-
-  function isLegacyUnlocked() {
-    return localStorage.getItem('jamb_tg') === 'yes' && localStorage.getItem('jamb_wa') === 'yes';
+  function isTelegramJoined() {
+    return localStorage.getItem('jamb_ch2') === 'yes' || localStorage.getItem('jamb_tg') === 'yes';
   }
 
   function joinedCount() {
-    return (isChannel1Joined() ? 1 : 0) + (isChannel2Joined() ? 1 : 0);
+    return (isWhatsAppJoined() ? 1 : 0) + (isTelegramJoined() ? 1 : 0);
   }
 
   function isFullyUnlocked() {
-    return (isChannel1Joined() && isChannel2Joined()) || isLegacyUnlocked();
+    return isWhatsAppJoined() && isTelegramJoined();
   }
 
   function awardUnlockBonusOnce() {
     if (localStorage.getItem('jamb_unlock_bonus') === 'yes') return;
     localStorage.setItem('jamb_unlock_bonus', 'yes');
-    // Already unlocked under the old Telegram + WhatsApp flags — don't pay twice.
-    if (isLegacyUnlocked() && localStorage.getItem('jamb_ch1') !== 'yes') return;
     points.addPoints(state.getConfig().POINTS.UNLOCK_BONUS);
     utils.showToast('Quizzes unlocked! +' + state.getConfig().POINTS.UNLOCK_BONUS + ' points', 'green');
   }
@@ -70,8 +64,14 @@ const JAMB_UNLOCK = (function() {
   }
 
   function markChannelJoined(which) {
-    if (which === 1) localStorage.setItem('jamb_ch1', 'yes');
-    if (which === 2) localStorage.setItem('jamb_ch2', 'yes');
+    if (which === 1) {
+      localStorage.setItem('jamb_ch1', 'yes');
+      localStorage.setItem('jamb_wa', 'yes');
+    }
+    if (which === 2) {
+      localStorage.setItem('jamb_ch2', 'yes');
+      localStorage.setItem('jamb_tg', 'yes');
+    }
     checkUnlock();
     updateModalUI();
   }
@@ -95,15 +95,15 @@ const JAMB_UNLOCK = (function() {
 
     const count = joinedCount();
     if (isFullyUnlocked() || count === 2) {
-      progress.textContent = 'Both channels joined';
+      progress.textContent = 'WhatsApp and Telegram joined';
       progress.classList.add('done');
       proceedBtn.disabled = false;
-      proceedBtn.textContent = 'Proceed to Quiz';
+      proceedBtn.innerHTML = '<i class="fas fa-play"></i> Proceed to Quiz';
     } else {
-      progress.textContent = 'Joined: ' + count + ' / 2 channels';
+      progress.textContent = 'Joined: ' + count + ' / 2 · WhatsApp + Telegram';
       progress.classList.remove('done');
       proceedBtn.disabled = true;
-      proceedBtn.textContent = 'Join both channels to proceed';
+      proceedBtn.innerHTML = '<i class="fas fa-lock"></i> Join both channels to proceed';
     }
   }
 
@@ -111,8 +111,8 @@ const JAMB_UNLOCK = (function() {
     checkUnlock: checkUnlock,
     updateUnlockUI: updateUnlockUI,
     markChannelJoined: markChannelJoined,
-    isChannel1Joined: isChannel1Joined,
-    isChannel2Joined: isChannel2Joined,
+    isChannel1Joined: isWhatsAppJoined,
+    isChannel2Joined: isTelegramJoined,
     showUnlockModal: showUnlockModal,
     hideUnlockModal: hideUnlockModal,
     updateModalUI: updateModalUI

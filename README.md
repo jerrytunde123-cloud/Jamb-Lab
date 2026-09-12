@@ -6,7 +6,7 @@ A browser-based UTME/JAMB practice quiz for Nigerian students.
 - **Timed sessions** — 20 questions, 25 minutes, split equally across selected subjects
 - **Question images** for diagram questions
 - **Points** to start a quiz, earned from channels, daily shares, referrals, and quiz scores
-- **Unlock** by joining two WhatsApp channels
+- **Unlock** by joining the WhatsApp and Telegram channels
 - **Personal bests** stored per subject in `localStorage`
 
 ## Run it
@@ -43,7 +43,7 @@ Jamb-Lab/
 │   ├── utils.js        # dates, shuffle, toast, DOM helpers
 │   ├── points.js       # balance, spend, start-button, daily top-up
 │   ├── referrals.js    # user id + welcome bonus for ?ref=
-│   ├── unlock.js       # two WhatsApp channels
+│   ├── unlock.js       # WhatsApp + Telegram unlock
 │   ├── history.js      # best scores per subject
 │   ├── questions.js    # subject grid + quiz engine
 │   └── main.js         # wires the UI

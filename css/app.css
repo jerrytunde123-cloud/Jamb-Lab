@@ -117,9 +117,36 @@ h1 small { font-size: 1rem; font-weight: 500; color: #2a6f8f; background: #e5f0f
 @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 .modal h3 { color: #0b2b40; margin-bottom: 0.5rem; }
 .modal p { color: #3f637a; font-size: 0.9rem; margin-bottom: 1rem; }
-.modal .btn-whatsapp { width: 100%; margin-bottom: 0.5rem; }
-.modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem; }
-.modal .unlock-progress { font-size: 0.8rem; margin: 0.8rem 0; font-weight: 600; }
+.modal .btn-whatsapp { width: 100%; max-width: none; margin-bottom: 0.5rem; }
+.modal-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 0.85rem; }
+.modal-actions .btn-primary {
+  width: 100%;
+  border: none;
+  padding: 0.95rem 1.2rem;
+  border-radius: 60px;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(26, 95, 122, 0.35);
+}
+.modal-actions .btn-primary:not(:disabled) {
+  background: linear-gradient(135deg, #1a5f7a, #25D366);
+  box-shadow: 0 8px 20px rgba(37, 211, 102, 0.35);
+}
+.modal-actions .btn-primary:not(:disabled):active { transform: scale(0.97); }
+.modal-actions .btn-secondary {
+  width: 100%;
+  background: transparent;
+  color: #6f8b9c;
+  box-shadow: none;
+  padding: 0.55rem;
+  text-decoration: underline;
+}
+.modal .unlock-progress { font-size: 0.8rem; margin: 0.8rem 0 0.2rem; font-weight: 600; }
 .modal .unlock-progress.done { color: #1a7f5a; }
 .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #0b2b40; color: white; padding: 0.7rem 1.3rem; border-radius: 30px; font-size: 0.85rem; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.25); opacity: 0; transition: all 0.3s; z-index: 999; display: flex; align-items: center; gap: 8px; max-width: 90vw; pointer-events: none; }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }

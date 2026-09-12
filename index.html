@@ -37,11 +37,11 @@
     <div class="unlock-box" id="unlockBox">
       <p><i class="fas fa-lock"></i> <strong>Join & unlock</strong> — earn points to start quizzes</p>
       <div class="bonus-grid">
-        <a href="https://whatsapp.com/channel/0029VbCJXuCDeON8S6aCk43B" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" id="channel1Btn"><i class="fab fa-whatsapp"></i> Join WhatsApp Channel 1</a>
-        <a href="https://whatsapp.com/channel/0029Vb8HCZE6rsR1fthNok1P" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" id="channel2Btn" style="background: #128C7E; box-shadow: 0 6px 14px rgba(18, 140, 126, 0.25);"><i class="fab fa-whatsapp"></i> Join WhatsApp Channel 2</a>
+        <a href="https://whatsapp.com/channel/0029VbCJXuCDeON8S6aCk43B" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" id="channel1Btn"><i class="fab fa-whatsapp"></i> Join WhatsApp Channel</a>
+        <a href="https://t.me/jambvip" target="_blank" rel="noopener noreferrer" class="btn-whatsapp btn-telegram" id="channel2Btn"><i class="fab fa-telegram"></i> Join Telegram Channel</a>
         <div style="margin: 8px 0 2px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;">
           <span class="badge-unlocked" id="unlockStatus" style="background: #8fabbc;"><i class="fas fa-lock"></i> locked</span>
-          <span class="text-small">join both WhatsApp channels to start</span>
+          <span class="text-small">join WhatsApp and Telegram to start</span>
         </div>
         <div class="bonus-row" id="bonusRowUnlock"><i class="fas fa-star"></i> 15 pts bonus for both channels</div>
       </div>
@@ -163,13 +163,13 @@
 <div class="modal-overlay" id="unlockModal">
   <div class="modal">
     <h3><i class="fas fa-lock" style="color: #f59e0b;"></i> Unlock Quizzes</h3>
-    <p>Join <strong>both</strong> WhatsApp channels below to start practicing.</p>
-    <a href="https://whatsapp.com/channel/0029VbCJXuCDeON8S6aCk43B" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" id="modalChannel1Btn"><i class="fab fa-whatsapp"></i> Join WhatsApp Channel 1</a>
-    <a href="https://whatsapp.com/channel/0029Vb8HCZE6rsR1fthNok1P" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" id="modalChannel2Btn" style="background: #128C7E;"><i class="fab fa-whatsapp"></i> Join WhatsApp Channel 2</a>
+    <p>Join the <strong>WhatsApp</strong> and <strong>Telegram</strong> channels below to start practicing.</p>
+    <a href="https://whatsapp.com/channel/0029VbCJXuCDeON8S6aCk43B" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" id="modalChannel1Btn"><i class="fab fa-whatsapp"></i> Join WhatsApp Channel</a>
+    <a href="https://t.me/jambvip" target="_blank" rel="noopener noreferrer" class="btn-whatsapp btn-telegram" id="modalChannel2Btn"><i class="fab fa-telegram"></i> Join Telegram Channel</a>
     <div class="unlock-progress" id="modalUnlockProgress">Joined: 0 / 2 channels</div>
     <div class="modal-actions">
+      <button class="btn-block btn-primary" id="modalProceedBtn" type="button" disabled><i class="fas fa-lock"></i> Join both channels to proceed</button>
       <button class="btn-secondary" id="modalCancelBtn" type="button">Cancel</button>
-      <button class="btn-primary" id="modalProceedBtn" type="button" disabled>Join both channels to proceed</button>
     </div>
   </div>
 </div>
