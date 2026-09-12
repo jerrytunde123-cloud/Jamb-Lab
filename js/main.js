@@ -9,8 +9,15 @@ const JAMB_APP = (function() {
   const daily = JAMB_DAILY;
   const questionsModule = JAMB_QUESTIONS;
 
+  // Unlocked modal channel state - restored from localStorage on init
+  let modalChannel1Joined = false;
+  let modalChannel2Joined = false;
+
   function init() {
     console.log('Initializing JAMB Quiz App...');
+    // Restore modal join state from localStorage
+    modalChannel1Joined = localStorage.getItem('jamb_modal_ch1') === 'yes';
+    modalChannel2Joined = localStorage.getItem('jamb_modal_ch2') === 'yes';
     referrals.getUserId();
     referrals.handleIncomingReferral();
     awardReferralToCurrent();
@@ -23,6 +30,7 @@ const JAMB_APP = (function() {
     questionsModule.updateSubjectUI();
     daily.dailyTopUp();
     questionsModule.loadQuestionBank();
+    updateStartButtonState();
     console.log('JAMB Quiz app ready');
   }
 
@@ -83,94 +91,70 @@ const JAMB_APP = (function() {
     btn.addEventListener('click', function() {
       localStorage.setItem(flag, 'yes');
       unlock.checkUnlock();
-      utils.showToast('Channel joined! Keep going...', 'green');
+      updateStartButtonState();
+      points.updateUI();
+      utils.showToast('Joined! You can now start quizzes.', 'green');
     });
   }
 
-  function wireChannelBonus(btnId, rowId, taskKey, unlockKey) {
+  function wireChannelBonus(btnId, rowId, bonusKey, unlockKey) {
     const btn = utils.$(btnId);
-    if (!btn) return;
-    btn.addEventListener('click', function() {
-      if (utils.isToday(taskKey)) {
-        utils.showToast('Already claimed today', 'orange');
-        return;
-      }
-      const cfg = state.getConfig().POINTS;
-      const rewards = {
-        tg_channel: cfg.TG_CHANNEL_BONUS,
-        waec_tutorial: cfg.WAEC_CHANNEL_BONUS,
-        jamb_tutorial: cfg.JAMB_TUTORIAL_BONUS,
-        fb_page: cfg.FACEBOOK_BONUS
-      };
-      const pts = rewards[taskKey];
-      if (!pts) return;
-      if (unlockKey) {
-        localStorage.setItem(unlockKey, 'yes');
-        unlock.checkUnlock();
-      }
-      points.addPoints(pts);
-      utils.markToday(taskKey);
-      markRowClaimed(rowId, pts);
-      daily.refreshDailyTasks();
-      utils.showToast('+' + pts + ' points earned!', 'green');
-    });
-    if (utils.isToday(taskKey)) {
-      const cfg = state.getConfig().POINTS;
-      const rewards = { tg_channel: cfg.TG_CHANNEL_BONUS, waec_tutorial: cfg.WAEC_CHANNEL_BONUS, jamb_tutorial: cfg.JAMB_TUTORIAL_BONUS, fb_page: cfg.FACEBOOK_BONUS };
-      markRowClaimed(rowId, rewards[taskKey] || 0);
+    const row = utils.$(rowId);
+    if (!btn || !row) return;
+    if (localStorage.getItem(bonusKey) === 'yes') {
+      row.classList.add('claimed');
+      btn.textContent = '✅ Claimed';
+      btn.disabled = true;
+    } else {
+      btn.addEventListener('click', function() {
+        localStorage.setItem(bonusKey, 'yes');
+        row.classList.add('claimed');
+        btn.textContent = '✅ Claimed';
+        btn.disabled = true;
+        points.addPoints(15);
+        points.updateUI();
+        utils.showToast('+15 points!', 'green');
+        if (unlockKey) {
+          localStorage.setItem(unlockKey, 'yes');
+          unlock.checkUnlock();
+          updateStartButtonState();
+        }
+      });
     }
   }
 
-  function markRowClaimed(rowId, pts) {
-    const row = utils.$(rowId);
-    if (!row) return;
-    row.classList.add('claimed');
-    row.innerHTML += ' <span style="margin-left:auto;">\u2713</span>';
-  }
-
-  function setupShareButtons() {
-    const shareBtns = document.querySelectorAll('.share-btn[data-share]');
-    shareBtns.forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        if (utils.isToday('share')) {
-          utils.showToast('Already claimed today', 'orange');
-          return;
-        }
-        points.addPoints(state.getConfig().POINTS.SHARE_REWARD);
-        utils.markToday('share');
-        daily.refreshDailyTasks();
-        utils.showToast('Share reward claimed! +' + state.getConfig().POINTS.SHARE_REWARD + ' pts', 'green');
-      });
-    });
-  }
-
-  // ===== UNLOCK MODAL =====
-  var modalChannel1Joined = false;
-  var modalChannel2Joined = false;
+  // --- Unlock Modal Functions ---
 
   function showUnlockModal() {
-    modalChannel1Joined = localStorage.getItem('jamb_modal_ch1') === 'yes';
-    modalChannel2Joined = localStorage.getItem('jamb_modal_ch2') === 'yes';
-    updateModalProgress();
-    var modal = utils.$('unlockModal');
-    if (modal) modal.classList.add('show');
+    const modal = utils.$('unlockModal');
+    if (modal) {
+      modal.classList.add('active');
+      // Restore join state from localStorage
+      modalChannel1Joined = localStorage.getItem('jamb_modal_ch1') === 'yes';
+      modalChannel2Joined = localStorage.getItem('jamb_modal_ch2') === 'yes';
+      updateModalProgress();
+    }
   }
 
   function hideUnlockModal() {
-    var modal = utils.$('unlockModal');
-    if (modal) modal.classList.remove('show');
+    const modal = utils.$('unlockModal');
+    if (modal) modal.classList.remove('active');
   }
 
   function updateModalProgress() {
-    var count = (modalChannel1Joined ? 1 : 0) + (modalChannel2Joined ? 1 : 0);
-    var prog = utils.$('modalUnlockProgress');
+    const prog = utils.$('modalProgress');
     if (!prog) return;
+    let count = 0;
+    if (modalChannel1Joined) count++;
+    if (modalChannel2Joined) count++;
     if (count === 2) {
-      prog.innerHTML = '\u2705 Both channels joined - you are unlocked!';
+      prog.innerHTML = '✅ Both channels joined - you are unlocked!';
       prog.classList.add('done');
       localStorage.setItem('jamb_wa', 'yes');
       localStorage.setItem('jamb_tg', 'yes');
       unlock.checkUnlock();
+      updateStartButtonState();
+      points.updateUI();
       setTimeout(function() {
         hideUnlockModal();
         utils.showToast('Quizzes unlocked! Starting your quiz...', 'green');
@@ -197,7 +181,6 @@ const JAMB_APP = (function() {
       utils.showToast('Not enough points', 'red');
       return;
     }
-    utils.showToast('Good luck!', 'green');
     var quizQuestions = questionsModule.generateQuizQuestions(selected);
     if (quizQuestions.length === 0) {
       utils.showToast('No questions available', 'red');
@@ -205,6 +188,7 @@ const JAMB_APP = (function() {
       return;
     }
     var displayNames = selected.map(function(key) { return questionsModule.getSubjectName(key); });
+    utils.showToast('Good luck!', 'green');
     questionsModule.startQuiz(selected);
     questionsModule.beginQuiz(displayNames);
   }
@@ -217,6 +201,9 @@ const JAMB_APP = (function() {
       ch1.addEventListener('click', function() {
         localStorage.setItem('jamb_modal_ch1', 'yes');
         modalChannel1Joined = true;
+        points.addPoints(15);
+        points.updateUI();
+        utils.showToast('+15 points!', 'green');
         setTimeout(updateModalProgress, 500);
       });
     }
@@ -224,11 +211,28 @@ const JAMB_APP = (function() {
       ch2.addEventListener('click', function() {
         localStorage.setItem('jamb_modal_ch2', 'yes');
         modalChannel2Joined = true;
+        points.addPoints(15);
+        points.updateUI();
+        utils.showToast('+15 points!', 'green');
         setTimeout(updateModalProgress, 500);
       });
     }
     if (closeBtn) {
       closeBtn.addEventListener('click', hideUnlockModal);
+    }
+  }
+
+  function updateStartButtonState() {
+    const btn = utils.$('startQuizBtn');
+    if (!btn) return;
+    if (state.isUnlocked()) {
+      btn.textContent = 'Start Quiz';
+      btn.disabled = false;
+      btn.classList.remove('locked');
+    } else {
+      btn.textContent = '🔐 Join channels to unlock';
+      btn.disabled = false;
+      btn.classList.add('locked');
     }
   }
 
@@ -251,7 +255,6 @@ const JAMB_APP = (function() {
       utils.showToast('Not enough points', 'red');
       return;
     }
-    utils.showToast('Good luck!', 'green');
     var quizQuestions = questionsModule.generateQuizQuestions(selected);
     if (quizQuestions.length === 0) {
       utils.showToast('No questions available', 'red');
@@ -259,8 +262,34 @@ const JAMB_APP = (function() {
       return;
     }
     var displayNames = selected.map(function(key) { return questionsModule.getSubjectName(key); });
+    utils.showToast('Good luck!', 'green');
     questionsModule.startQuiz(selected);
     questionsModule.beginQuiz(displayNames);
+  }
+
+  function setupShareButtons() {
+    const shareButtons = [
+      { id: 'shareFriendsBtn', key: 'jamb_share_friends' },
+      { id: 'shareGroupsBtn', key: 'jamb_share_groups' },
+      { id: 'shareClassBtn', key: 'jamb_share_class' }
+    ];
+    shareButtons.forEach(function(item) {
+      const btn = utils.$(item.id);
+      if (!btn) return;
+      if (localStorage.getItem(item.key) === 'yes') {
+        btn.textContent = '✅ Shared';
+        btn.disabled = true;
+      } else {
+        btn.addEventListener('click', function() {
+          localStorage.setItem(item.key, 'yes');
+          btn.textContent = '✅ Shared';
+          btn.disabled = true;
+          points.addPoints(10);
+          points.updateUI();
+          utils.showToast('+10 points!', 'green');
+        });
+      }
+    });
   }
 
   return {
