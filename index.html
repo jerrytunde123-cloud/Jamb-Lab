@@ -374,8 +374,11 @@
         <p>Join <strong>both</strong> WhatsApp channels below to start practicing. It only takes a second!</p>
         <a href="https://whatsapp.com/channel/0029VbCJXuCDeON8S6aCk43B" target="_blank" class="btn-whatsapp" id="modalChannel1Btn"><i class="fab fa-whatsapp"></i> Join WhatsApp Channel 1</a>
         <a href="https://whatsapp.com/channel/0029Vb8HCZE6rsR1fthNok1P" target="_blank" class="btn-whatsapp" id="modalChannel2Btn" style="background: #128C7E;"><i class="fab fa-whatsapp"></i> Join WhatsApp Channel 2</a>
-        <div class="unlock-progress" id="modalUnlockProgress">Joined: 0 / 2 channels</div>
-        <button class="modal-close" id="modalCloseBtn">Maybe later</button>
+                <div class="unlock-progress" id="modalUnlockProgress">Joined: 0 / 2 channels</div>
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button class="btn btn-secondary" id="modalCancelBtn">Cancel</button>
+          <button class="btn btn-primary" id="modalProceedBtn" disabled>Join both channels to proceed</button>
+        </div>
       </div>
     </div>
     <script src="js/state.js"></script>

@@ -193,10 +193,11 @@ const JAMB_APP = (function() {
     questionsModule.beginQuiz(displayNames);
   }
 
-  function wireModalButtons() {
+    function wireModalButtons() {
     var ch1 = utils.$('modalChannel1Btn');
     var ch2 = utils.$('modalChannel2Btn');
-    var closeBtn = utils.$('modalCloseBtn');
+    var proceedBtn = utils.$('modalProceedBtn');
+    var cancelBtn = utils.$('modalCancelBtn');
     if (ch1) {
       ch1.addEventListener('click', function() {
         localStorage.setItem('jamb_modal_ch1', 'yes');
@@ -204,7 +205,7 @@ const JAMB_APP = (function() {
         points.addPoints(15);
         points.updateUI();
         utils.showToast('+15 points!', 'green');
-        setTimeout(updateModalProgress, 500);
+        setTimeout(updateModalUI, 500);
       });
     }
     if (ch2) {
@@ -214,16 +215,27 @@ const JAMB_APP = (function() {
         points.addPoints(15);
         points.updateUI();
         utils.showToast('+15 points!', 'green');
-        setTimeout(updateModalProgress, 500);
+        setTimeout(updateModalUI, 500);
       });
     }
-    if (closeBtn) {
-      closeBtn.addEventListener('click', hideUnlockModal);
+    if (proceedBtn) {
+      proceedBtn.addEventListener('click', function() {
+        localStorage.setItem('jamb_wa', 'yes');
+        localStorage.setItem('jamb_tg', 'yes');
+        unlock.checkUnlock();
+        updateStartButtonState();
+        points.updateUI();
+        hideUnlockModal();
+        utils.showToast('Quizzes unlocked!', 'green');
+        startQuizAfterUnlock();
+      });
+    }
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', hideUnlockModal);
     }
   }
 
-      function updateStartButtonState() {
-    // Button ALWAYS opens modal - just delegates to questions module
+        function updateStartButtonState() {
     questionsModule.updateStartButtonState();
   }
 
