@@ -1,6 +1,6 @@
 /**
  * JAMB Quiz - Unlock System
- * Quizzes unlock after WhatsApp and Telegram channels are joined.
+ * Quizzes unlock after both WhatsApp channels are joined.
  */
 
 const JAMB_UNLOCK = (function() {
@@ -71,7 +71,7 @@ const JAMB_UNLOCK = (function() {
         : '<i class="fas fa-unlock"></i> Join channels to unlock quiz access';
     }
     if (caption) {
-      caption.textContent = unlocked ? 'WhatsApp and Telegram joined' : 'join WhatsApp and Telegram to start';
+      caption.textContent = unlocked ? 'Both WhatsApp channels joined' : 'join both WhatsApp channels to start';
     }
   }
 
@@ -107,12 +107,12 @@ const JAMB_UNLOCK = (function() {
 
     const count = joinedCount();
     if (isFullyUnlocked() || count === 2) {
-      progress.textContent = 'WhatsApp and Telegram joined';
+      progress.textContent = 'Both WhatsApp channels joined';
       progress.classList.add('done');
       proceedBtn.disabled = false;
       proceedBtn.innerHTML = '<i class="fas fa-play"></i> Proceed to Quiz';
     } else {
-      progress.textContent = 'Joined: ' + count + ' / 2 · WhatsApp + Telegram';
+      progress.textContent = 'Joined: ' + count + ' / 2 WhatsApp channels';
       progress.classList.remove('done');
       proceedBtn.disabled = true;
       proceedBtn.innerHTML = '<i class="fas fa-lock"></i> Join both channels to proceed';
