@@ -306,14 +306,22 @@ const JAMB_QUESTIONS = (function() {
     updateStartButtonState();
   }
 
-      // Update start quiz button - ALWAYS just opens modal, never disabled
+        // Update start quiz button state
   function updateStartButtonState() {
     const btn = utils.$('startQuizBtn');
     if (!btn) return;
 
-    // Button is NEVER disabled - just opens the modal
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-play"></i> Start Quiz';
+    const selectedCount = state.getSelectedSubjectCount();
+
+    if (selectedCount === 0) {
+      // Disabled when no subjects selected, still calls onStartQuiz which opens modal
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-play"></i> Select subjects';
+    } else {
+      // Enabled when subjects are selected, just opens modal
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-play"></i> Start Quiz';
+    }
   }
 
   // Generate quiz questions from selected subjects
