@@ -45,21 +45,34 @@ const JAMB_UNLOCK = (function() {
     const box = utils.$('unlockBox');
     if (!box) return;
 
-    if (state.isUnlocked()) {
-      box.style.display = 'none';
-      return;
-    }
-
+    // Banner always stays visible in its position on the home screen;
+    // it just switches between locked/unlocked states.
     box.style.display = 'block';
+
+    const unlocked = isFullyUnlocked();
     const status = utils.$('unlockStatus');
     const row = utils.$('bonusRowUnlock');
+    const caption = utils.$('unlockCaption');
     const count = joinedCount();
 
     if (status) {
-      status.innerHTML = '<i class="fas fa-lock"></i> ' + count + ' / 2 joined';
-      status.style.background = count === 1 ? '#f59e0b' : '#8fabbc';
+      if (unlocked) {
+        status.innerHTML = '<i class="fas fa-check"></i> unlocked';
+        status.style.background = '#25D366';
+      } else {
+        status.innerHTML = '<i class="fas fa-lock"></i> ' + count + ' / 2 joined';
+        status.style.background = count === 1 ? '#f59e0b' : '#8fabbc';
+      }
     }
-    if (row && count > 0) row.classList.add('claimed');
+    if (row) {
+      if (count > 0) row.classList.add('claimed');
+      row.innerHTML = unlocked
+        ? '<i class="fas fa-unlock"></i> Quizzes unlocked — pick your subjects below'
+        : '<i class="fas fa-unlock"></i> Join channels to unlock quiz access';
+    }
+    if (caption) {
+      caption.textContent = unlocked ? 'WhatsApp and Telegram joined' : 'join WhatsApp and Telegram to start';
+    }
   }
 
   function markChannelJoined(which) {
