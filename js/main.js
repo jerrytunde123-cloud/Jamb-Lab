@@ -23,6 +23,7 @@ const JAMB_APP = (function() {
     points.updateUI();
     unlock.checkUnlock();
     questionsModule.updateSubjectUI();
+    points.dailyTopUp();
     questionsModule.loadQuestionBank();
     setupEventListeners();
   }

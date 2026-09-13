@@ -59,6 +59,9 @@ function answerCurrent() {
 describe('app smoke', function() {
   beforeAll(function() {
     localStorage.clear();
+    // Pre-mark today's daily top-up so the share-only points flow below
+    // starts from 0 points (daily top-up has its own unit tests).
+    JAMB_UTILS.markToday('topup');
     JAMB_APP.init();
     return JAMB_QUESTIONS.loadQuestionBank();
   });

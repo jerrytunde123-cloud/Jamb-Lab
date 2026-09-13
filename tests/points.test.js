@@ -4,6 +4,7 @@
 
 const JAMB_STATE = require('../js/state.js');
 const JAMB_POINTS = require('../js/points.js');
+const JAMB_UTILS = require('../js/utils.js');
 
 describe('JAMB_POINTS - Points System', function() {
   beforeEach(function() {
@@ -192,6 +193,36 @@ describe('JAMB_POINTS - Points System', function() {
       JAMB_STATE.setPoints(100);
       JAMB_POINTS.updateStartButtonState();
       expect(document.getElementById('startQuizBtn').innerHTML).toContain('-10 pts');
+    });
+  });
+
+  describe('dailyTopUp()', function() {
+    it('grants +10 once per day when balance is below 5', function() {
+      JAMB_POINTS.dailyTopUp();
+      expect(JAMB_POINTS.getPoints()).toBe(10);
+      expect(JAMB_POINTS.getEarned()).toBe(10);
+      expect(localStorage.getItem('jamb_daily_topup')).toBe(JAMB_UTILS.todayKey());
+      expect(localStorage.getItem('jamb_daily_topup_time')).not.toBeNull();
+    });
+
+    it('does not grant twice on the same day', function() {
+      JAMB_POINTS.dailyTopUp();
+      JAMB_POINTS.dailyTopUp();
+      expect(JAMB_POINTS.getPoints()).toBe(10);
+    });
+
+    it('does not grant when balance is at or above 5', function() {
+      JAMB_POINTS.setPoints(5);
+      JAMB_POINTS.dailyTopUp();
+      expect(JAMB_POINTS.getPoints()).toBe(5);
+      expect(localStorage.getItem('jamb_daily_topup')).toBeNull();
+    });
+
+    it('grants again on a later day', function() {
+      localStorage.setItem('jamb_daily_topup', '2000-01-01');
+      JAMB_POINTS.setPoints(3);
+      JAMB_POINTS.dailyTopUp();
+      expect(JAMB_POINTS.getPoints()).toBe(13);
     });
   });
 });

@@ -88,8 +88,21 @@ const JAMB_POINTS = (function() {
   }
 
   function dailyTopUp() {
-    // Points are only earned from sharing, not automatic top-ups
-    return;
+    // Once-per-day safety net: if the balance is below MIN_TO_TOPUP (5 pts),
+    // grant DAILY_TOPUP (10 pts) so the user can always afford a subject.
+    // The once-per-day marker is the date string stored by utils.markToday;
+    // the wall-clock timestamp goes under a separate key so it never
+    // overwrites the marker (a bug in the previous implementation).
+    const config = state.getConfig();
+    if (utils.isToday('topup')) return;
+    if (getPoints() >= config.POINTS.MIN_TO_TOPUP) return;
+
+    addPoints(config.POINTS.DAILY_TOPUP);
+    utils.markToday('topup');
+    const ts = String(Date.now());
+    state.setLastTopUpTime(ts);
+    localStorage.setItem('jamb_daily_topup_time', ts);
+    utils.showToast('Daily top-up: +' + config.POINTS.DAILY_TOPUP + ' points', 'green');
   }
 
   return {
