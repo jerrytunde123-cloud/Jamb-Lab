@@ -66,6 +66,9 @@ Jamb-Lab/
 ## Tests
 
 ```bash
+git add .
+git commit -m "Add buy points + PIN activation + daily reset + JAMB assistance card"
+git push
 npm install
 npm test
 ```
