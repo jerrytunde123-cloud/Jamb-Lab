@@ -21,6 +21,7 @@ const JAMB_STATE = (function() {
       PERFECT_BONUS: 50,
       DAILY_TOPUP: 10,
       MIN_TO_TOPUP: 5
+      PURCHASE_BONUS_PERCENT: 10
     },
     QUIZ: {
       LENGTH: 20,
