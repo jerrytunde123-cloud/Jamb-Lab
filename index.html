@@ -265,5 +265,18 @@
 <script src="js/questions.js"></script>
 <script src="js/purchase.js"></script>
 <script src="js/main.js"></script>
+<div id="debugBox" style="display:none; position:fixed; top:0; left:0; right:0; background:#dc3545; color:white; padding:12px; font-size:13px; z-index:99999; max-height:50vh; overflow:auto; font-family:monospace;"></div>
+<script>
+  window.addEventListener('error', function(e) {
+    var box = document.getElementById('debugBox');
+    box.style.display = 'block';
+    box.innerHTML += '❌ <b>' + (e.filename || 'inline').split('/').pop() + ':' + e.lineno + '</b><br>' + e.message + '<br><br>';
+  });
+  window.addEventListener('unhandledrejection', function(e) {
+    var box = document.getElementById('debugBox');
+    box.style.display = 'block';
+    box.innerHTML += '❌ Promise: ' + (e.reason && e.reason.message ? e.reason.message : JSON.stringify(e.reason)) + '<br><br>';
+  });
+</script>
 </body>
 </html>
