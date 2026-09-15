@@ -15,6 +15,7 @@ const JAMB_APP = (function() {
   let started = false;
 
   function init() {
+    if (typeof JAMB_PURCHASE !== 'undefined') JAMB_PURCHASE.init();
     if (started) return;
     started = true;
     referrals.getUserId();
