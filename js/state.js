@@ -11,6 +11,7 @@ const JAMB_STATE = (function() {
       TG_CHANNEL_BONUS: 15,
       WAEC_CHANNEL_BONUS: 10,
       JAMB_TUTORIAL_BONUS: 10,
+      JAMB_VIP_BONUS: 15,
       FACEBOOK_BONUS: 5,
       SHARE_REWARD: 10,
       REFERRAL_REWARD: 10,
@@ -20,12 +21,21 @@ const JAMB_STATE = (function() {
       ATTEND_ALL_BONUS: 20,
       PERFECT_BONUS: 50,
       DAILY_TOPUP: 10,
-      MIN_TO_TOPUP: 5
+      MIN_TO_TOPUP: 5,
+      PURCHASE_BONUS_PERCENT: 10
     },
     QUIZ: {
       LENGTH: 20,
       TIME: 25 * 60,
       MAX_SUBJECTS: 4
+    },
+    PAYMENT: {
+      ADMIN_WHATSAPP: '2347048135078',
+      ACTIVATION_PINS: {
+        "JAMB-A1B2-55":  55,
+        "JAMB-C3D4-110": 110,
+        "JAMB-E5F6-550": 550
+      }
     }
   };
 
