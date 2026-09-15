@@ -20,8 +20,9 @@ const JAMB_STATE = (function() {
       ATTEND_ALL_BONUS: 20,
       PERFECT_BONUS: 50,
       DAILY_TOPUP: 10,
-      MIN_TO_TOPUP: 5
-      PURCHASE_BONUS_PERCENT: 10
+      MIN_TO_TOPUP: 5,
+      PURCHASE_BONUS_PERCENT: 10,
+        JAMB_VIP_BONUS: 15
     },
     QUIZ: {
       LENGTH: 20,
