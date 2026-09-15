@@ -11,6 +11,7 @@ const JAMB_APP = (function() {
   const referrals = typeof JAMB_REFERRALS !== 'undefined' ? JAMB_REFERRALS : require('./referrals.js');
   const unlock = typeof JAMB_UNLOCK !== 'undefined' ? JAMB_UNLOCK : require('./unlock.js');
   const questionsModule = typeof JAMB_QUESTIONS !== 'undefined' ? JAMB_QUESTIONS : require('./questions.js');
+  const purchase = typeof JAMB_PURCHASE !== 'undefined' ? JAMB_PURCHASE : require('./purchase.js');
   const config = state.getConfig();
   let started = false;
 
@@ -26,6 +27,7 @@ const JAMB_APP = (function() {
     points.dailyTopUp();
     questionsModule.loadQuestionBank();
     setupEventListeners();
+    purchase.setupBuyPointsUI();
   }
 
   function setupEventListeners() {
@@ -81,7 +83,7 @@ const JAMB_APP = (function() {
       { btn: 'tgChannelBtn', row: 'bonusRowTg', key: 'tg_channel', amount: config.POINTS.TG_CHANNEL_BONUS },
       { btn: 'waecChannelBtn', row: 'bonusRowWaec', key: 'waec_tutorial', amount: config.POINTS.WAEC_CHANNEL_BONUS },
       { btn: 'jambTutChannelBtn', row: 'bonusRowJambTut', key: 'jamb_tutorial', amount: config.POINTS.JAMB_TUTORIAL_BONUS },
-      { btn: 'fbPageBtn', row: 'bonusRowFb', key: 'fb_page', amount: config.POINTS.FACEBOOK_BONUS }
+      { btn: 'jambVipChannelBtn', row: 'bonusRowVip', key: 'jamb_vip', amount: config.POINTS.JAMB_VIP_BONUS }
     ];
 
     bonuses.forEach(function(item) {
@@ -89,14 +91,16 @@ const JAMB_APP = (function() {
       const row = utils.$(item.row);
       if (!btn) return;
 
-      if (localStorage.getItem(item.key) === 'yes') {
+      if (localStorage.getItem('jamb_perm_' + item.key) === 'yes') {
         markClaimed(btn, row);
-        return;
       }
 
-      btn.addEventListener('click', function onClaim() {
-        if (localStorage.getItem(item.key) === 'yes') return;
-        localStorage.setItem(item.key, 'yes');
+      btn.addEventListener('click', function() {
+        if (localStorage.getItem('jamb_perm_' + item.key) === 'yes') {
+          utils.showToast('Already claimed', 'red');
+          return;
+        }
+        localStorage.setItem('jamb_perm_' + item.key, 'yes');
         markClaimed(btn, row);
         points.addPoints(item.amount);
         utils.showToast('+' + item.amount + ' points!', 'green');
@@ -120,7 +124,17 @@ const JAMB_APP = (function() {
       const btn = utils.$(item.id);
       if (!btn) return;
 
+      if (utils.isToday('share_' + item.name)) {
+        btn.classList.add('claimed');
+      }
+
       btn.addEventListener('click', function() {
+        if (utils.isToday('share_' + item.name)) {
+          utils.showToast('Already claimed today', 'red');
+          return;
+        }
+        utils.markToday('share_' + item.name);
+        btn.classList.add('claimed');
         points.addPoints(config.POINTS.SHARE_REWARD);
         utils.showToast('+' + config.POINTS.SHARE_REWARD + ' points for sharing!', 'green');
       });
