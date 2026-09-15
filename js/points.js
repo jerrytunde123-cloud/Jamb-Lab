@@ -55,6 +55,19 @@ const JAMB_POINTS = (function() {
     return true;
   }
 
+  function creditFromPin(pinValue) {
+    addPoints(pinValue);
+  }
+
+  function getPurchaseBonusPercent() {
+    return state.getConfig().POINTS.PURCHASE_BONUS_PERCENT || 10;
+  }
+
+  function calcPurchaseTotal(basePoints) {
+    const bonus = Math.floor(basePoints * getPurchaseBonusPercent() / 100);
+    return { base: basePoints, bonus: bonus, total: basePoints + bonus };
+  }
+
   function updateUI() {
     const pointsEl = utils.$('pointsValue');
     const bigEl = utils.$('pointsBig');
@@ -88,11 +101,6 @@ const JAMB_POINTS = (function() {
   }
 
   function dailyTopUp() {
-    // Once-per-day safety net: if the balance is below MIN_TO_TOPUP (5 pts),
-    // grant DAILY_TOPUP (10 pts) so the user can always afford a subject.
-    // The once-per-day marker is the date string stored by utils.markToday;
-    // the wall-clock timestamp goes under a separate key so it never
-    // overwrites the marker (a bug in the previous implementation).
     const config = state.getConfig();
     if (utils.isToday('topup')) return;
     if (getPoints() >= config.POINTS.MIN_TO_TOPUP) return;
@@ -114,6 +122,9 @@ const JAMB_POINTS = (function() {
     addSpent: addSpent,
     addPoints: addPoints,
     deductPoints: deductPoints,
+    creditFromPin: creditFromPin,
+    getPurchaseBonusPercent: getPurchaseBonusPercent,
+    calcPurchaseTotal: calcPurchaseTotal,
     updateUI: updateUI,
     updateStartButtonState: updateStartButtonState,
     dailyTopUp: dailyTopUp
