@@ -1,6 +1,7 @@
 /**
  * JAMB Quiz - Unlock System
- * Quizzes unlock after both WhatsApp channels are joined.
+ * Daily reset: must join both WhatsApp channels every day to unlock quizzes.
+ * +15 points bonus is granted ONCE EVER when both are joined for the first time.
  */
 
 const JAMB_UNLOCK = (function() {
@@ -10,26 +11,28 @@ const JAMB_UNLOCK = (function() {
   const utils = typeof JAMB_UTILS !== 'undefined' ? JAMB_UTILS : require('./utils.js');
   const points = typeof JAMB_POINTS !== 'undefined' ? JAMB_POINTS : require('./points.js');
 
-  function isWhatsAppJoined() {
-    return localStorage.getItem('jamb_ch1') === 'yes' || localStorage.getItem('jamb_wa') === 'yes';
+  function isWhatsAppJoinedToday() {
+    return utils.isToday('ch1');
   }
 
-  function isTelegramJoined() {
-    return localStorage.getItem('jamb_ch2') === 'yes' || localStorage.getItem('jamb_tg') === 'yes';
+  function isTelegramJoinedToday() {
+    return utils.isToday('ch2');
   }
 
   function joinedCount() {
-    return (isWhatsAppJoined() ? 1 : 0) + (isTelegramJoined() ? 1 : 0);
+    return (isWhatsAppJoinedToday() ? 1 : 0) + (isTelegramJoinedToday() ? 1 : 0);
   }
 
   function isFullyUnlocked() {
-    return isWhatsAppJoined() && isTelegramJoined();
+    return isWhatsAppJoinedToday() && isTelegramJoinedToday();
   }
 
   function awardUnlockBonusOnce() {
-    if (localStorage.getItem('jamb_unlock_bonus') === 'yes') return;
-    localStorage.setItem('jamb_unlock_bonus', 'yes');
-    utils.showToast('Quizzes unlocked! Share below to earn points to start.', 'green');
+    if (localStorage.getItem('jamb_unlock_bonus_perm') === 'yes') return;
+    localStorage.setItem('jamb_unlock_bonus_perm', 'yes');
+    const bonus = state.getConfig().POINTS.UNLOCK_BONUS;
+    points.addPoints(bonus);
+    utils.showToast('+' + bonus + ' points for joining both channels!', 'green');
   }
 
   function checkUnlock() {
@@ -45,8 +48,6 @@ const JAMB_UNLOCK = (function() {
     const box = utils.$('unlockBox');
     if (!box) return;
 
-    // Banner always stays visible in its position on the home screen;
-    // it just switches between locked/unlocked states.
     box.style.display = 'block';
 
     const unlocked = isFullyUnlocked();
@@ -64,25 +65,31 @@ const JAMB_UNLOCK = (function() {
         status.style.background = count === 1 ? '#f59e0b' : '#8fabbc';
       }
     }
+
+    // Bonus row reflects permanent state
     if (row) {
-      if (count > 0) row.classList.add('claimed');
-      row.innerHTML = unlocked
-        ? '<i class="fas fa-unlock"></i> Quizzes unlocked — pick your subjects below'
-        : '<i class="fas fa-unlock"></i> Join channels to unlock quiz access';
+      if (localStorage.getItem('jamb_unlock_bonus_perm') === 'yes') {
+        row.classList.add('claimed');
+      } else {
+        row.classList.remove('claimed');
+      }
     }
+
     if (caption) {
-      caption.textContent = unlocked ? 'Both WhatsApp channels joined' : 'join both WhatsApp channels to start';
+      caption.textContent = unlocked
+        ? 'Both WhatsApp channels joined today'
+        : 'join both WhatsApp channels daily to start';
     }
   }
 
   function markChannelJoined(which) {
     if (which === 1) {
-      localStorage.setItem('jamb_ch1', 'yes');
-      localStorage.setItem('jamb_wa', 'yes');
+      utils.markToday('ch1');
+      utils.showToast('Channel 1 joined. Join Channel 2 to unlock!', 'green');
     }
     if (which === 2) {
-      localStorage.setItem('jamb_ch2', 'yes');
-      localStorage.setItem('jamb_tg', 'yes');
+      utils.markToday('ch2');
+      utils.showToast('Channel 2 joined. Unlocking now…', 'green');
     }
     checkUnlock();
     updateModalUI();
@@ -123,8 +130,8 @@ const JAMB_UNLOCK = (function() {
     checkUnlock: checkUnlock,
     updateUnlockUI: updateUnlockUI,
     markChannelJoined: markChannelJoined,
-    isChannel1Joined: isWhatsAppJoined,
-    isChannel2Joined: isTelegramJoined,
+    isChannel1Joined: isWhatsAppJoinedToday,
+    isChannel2Joined: isTelegramJoinedToday,
     showUnlockModal: showUnlockModal,
     hideUnlockModal: hideUnlockModal,
     updateModalUI: updateModalUI
