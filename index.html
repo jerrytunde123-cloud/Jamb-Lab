@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script src="https://js.paystack.co/v2/inline.js"></script>
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -121,7 +122,7 @@
         <button class="btn-copy-uid" id="copyUidBtn" type="button"><i class="fas fa-copy"></i> Copy ID</button>
       </div>
 
-      <p class="text-small" style="margin-bottom: 6px;"><i class="fas fa-info-circle"></i> Select a package or enter a custom amount, then send payment + your User ID to us. We'll reply with an <strong>activation PIN</strong>.</p>
+      <p class="text-small" style="margin-bottom: 6px;"><i class="fas fa-info-circle"></i> Pay securely with card, bank transfer or USSD. Points credited automatically after payment.</p>
 
       <div class="package-grid">
         <div class="package-item" data-pts="50" data-price="500">
@@ -146,7 +147,7 @@
 
       <div class="custom-row">
         <input type="number" class="custom-input" id="customPtsInput" placeholder="Enter points needed (e.g. 250)" min="1" step="1">
-        <button class="btn-buy" id="customBuyBtn" type="button"><i class="fas fa-paper-plane"></i> Request</button>
+        <button class="btn-buy" id="customBuyBtn" type="button"><i class="fas fa-credit-card"></i> Pay Now</button>
       </div>
       <div class="custom-bonus-note" id="customBonusNote"></div>
 
@@ -156,21 +157,51 @@
           <input type="text" class="pin-input" id="pinInput" placeholder="JAMB-XXXX-100">
           <button class="btn-activate" id="activatePinBtn" type="button"><i class="fas fa-unlock"></i> Activate</button>
         </div>
-        <div class="text-small" style="margin-top: 6px;">PINs are single-use and tied to a specific amount (already includes your 10% bonus).</div>
+        <div class="text-small" style="margin-top: 6px;">PINs are single-use and tied to a specific amount.</div>
       </div>
 
       <div style="margin-top: 12px;">
-        <div class="text-small" style="margin-bottom: 6px;"><strong>Need points?</strong> Message us:</div>
+        <div class="text-small" style="margin-bottom: 6px;"><strong>Payment issues?</strong> Message us:</div>
         <div class="contact-buttons">
-          <a href="https://wa.me/2347048135078?text=I%20want%20to%20purchase%20points%20on%20JAMBLab" target="_blank" rel="noopener noreferrer" class="wa"><i class="fab fa-whatsapp"></i> WhatsApp: +234 704 813 5078</a>
+          <a href="https://wa.me/2347048135078?text=I%20need%20help%20with%20points%20purchase%20on%20JAMBLab" target="_blank" rel="noopener noreferrer" class="wa"><i class="fab fa-whatsapp"></i> WhatsApp: +234 704 813 5078</a>
           <a href="https://t.me/kingjay225" target="_blank" rel="noopener noreferrer" class="tg"><i class="fab fa-telegram"></i> Telegram us</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEND POINTS -->
+    <div class="send-card">
+      <div class="card-title"><i class="fas fa-paper-plane" style="color: #7c3aed;"></i> Send Points to a Friend</div>
+      <p class="text-small" style="margin-bottom: 8px;">Share your accumulated or purchased points with a classmate. Points are deducted from your balance and they get a claim code.</p>
+
+      <div class="send-row">
+        <input type="number" class="send-input" id="sendPtsInput" placeholder="Points to send (e.g. 20)" min="1" step="1">
+      </div>
+      <div class="send-row">
+        <input type="text" class="send-input" id="sendReceiverInput" placeholder="Friend's User ID (optional)" maxlength="12">
+      </div>
+      <div class="send-row">
+        <button class="btn-send" id="sendPtsBtn" type="button">
+          <i class="fas fa-paper-plane"></i> Generate Claim Code
+        </button>
+      </div>
+
+      <div class="send-note" id="sendNote"></div>
+
+      <div class="claim-box">
+        <div style="font-weight: 700; color: #7c3aed; font-size: 0.85rem; margin-bottom: 4px;">
+          <i class="fas fa-gift"></i> Received a code from a friend?
+        </div>
+        <div class="send-row" style="margin-top: 6px;">
+          <input type="text" class="claim-input" id="claimInput" placeholder="JAMBSEND-XXXXX-20">
+          <button class="btn-claim" id="claimBtn" type="button"><i class="fas fa-check"></i> Claim</button>
         </div>
       </div>
     </div>
 
     <!-- SELL POINTS (coming soon) -->
     <div class="sell-card">
-      <div class="card-title"><i class="fas fa-hand-holding-usd"></i> Sell Points <span style="font-size:0.7rem;background:#9ca3af;color:white;padding:2px 8px;border-radius:20px;margin-left:auto;">Coming soon</span></div>
+      <div class="card-title"><i class="fas fa-hand-holding-usd"></i> Sell Points for Cash <span style="font-size:0.7rem;background:#9ca3af;color:white;padding:2px 8px;border-radius:20px;margin-left:auto;">Coming soon</span></div>
       <p class="text-small">Sell your points back for cash. This feature is not yet available — it will be enabled in a future update.</p>
     </div>
 
