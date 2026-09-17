@@ -31,7 +31,7 @@ const JAMB_STATE = (function() {
     },
     PAYMENT: {
       ADMIN_WHATSAPP: '2347048135078',
-      PAYSTACK_PUBLIC_KEY: 'pk_test_YOUR_PUBLIC_KEY_HERE',
+      PAYSTACK_PUBLIC_KEY: 'pk_live_456f9eef46c22ffa9c1f16d000f008926ca5c043',
       ACTIVATION_PINS: {
         "JAMB-A1B2-55":  55,
         "JAMB-C3D4-110": 110,
