@@ -1,9 +1,0 @@
-{
-  "name": "jamb-lab",
-  "version": "1.0.0",
-  "private": true,
-  "description": "JAMB Quiz practice app for Nigerian students",
-  "dependencies": {
-    "paystack-sdk-node": "^1.0.0"
-  }
-}
