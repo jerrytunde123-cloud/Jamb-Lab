@@ -8,6 +8,9 @@
     "build": "echo 'Static site - no build required'",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
+  "dependencies": {
+    "paystack-sdk-node": "^1.0.0"
+  },
   "devDependencies": {
     "jest": "^29.7.0",
     "jsdom": "^22.1.0"
