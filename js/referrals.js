@@ -1,7 +1,8 @@
 /**
  * JAMB Quiz - Referral System
  * - New user gets +10 pts welcome bonus (once)
- * - Referrer gets +10 pts per referral (tracked in Vercel KV)
+ * - Referrer gets +10 pts per referral (auto-credited on next app open)
+ * - Referral count tracked in Vercel KV
  */
 
 const JAMB_REFERRALS = (function() {
@@ -46,23 +47,22 @@ const JAMB_REFERRALS = (function() {
       return;
     }
 
-    // Already claimed a referral before? Don't give again
+    // Already got welcome bonus before? Don't give again
     if (localStorage.getItem('jamb_newbie_bonus') === 'yes') {
       window.history.replaceState({}, '', window.location.pathname);
       return;
     }
 
-    // Mark as referred
     localStorage.setItem('jamb_newbie_bonus', 'yes');
     localStorage.setItem('jamb_ref_used', ref);
     state.setReferralUsed(ref);
     state.setNewbieBonusClaimed(true);
 
-    // Give welcome bonus to new user
+    // +10 pts welcome bonus to new user
     points.addPoints(WELCOME_BONUS);
     utils.showToast('🎉 Welcome! +' + WELCOME_BONUS + ' points bonus', 'green');
 
-    // Notify server so referrer gets credited
+    // Notify server: referrer gets +10
     fetch('/api/referral', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -75,7 +75,7 @@ const JAMB_REFERRALS = (function() {
     .then(function(r) { return r.json(); })
     .then(function(result) {
       if (result && result.success) {
-        console.log('Referral registered. Referrer count:', result.count);
+        console.log('✅ Referral registered. Referrer count:', result.count);
       }
     })
     .catch(function(err) {
@@ -92,7 +92,7 @@ const JAMB_REFERRALS = (function() {
     const input = utils.$('referralLink');
     if (input) input.value = link;
 
-    // Copy button
+    // ---- Copy button ----
     const copyBtn = utils.$('copyRefBtn');
     if (copyBtn) {
       copyBtn.addEventListener('click', function() {
@@ -100,23 +100,36 @@ const JAMB_REFERRALS = (function() {
       });
     }
 
-    // WhatsApp share button
+    // ---- WhatsApp share button ----
     const shareBtn = utils.$('shareRefBtn');
     if (shareBtn) {
       const message =
-        '🎓 *Join JAMB Lab* — Free JAMB & WAEC practice questions!\n\n' +
-        'Use my invite link to get a *+10 pts welcome bonus*:\n' +
+        '🎓 Join me on JAMB Quiz builder! Earn points, take quizzes and pass JAMB!\n\n' +
         link + '\n\n' +
-        '📚 Practice 2,300+ questions across 33 subjects.\n' +
-        '🎯 Timed JAMB-standard exams.\n' +
-        '🏆 Track your best scores per subject.';
-      shareBtn.href = 'https://wa.me/?text=' + encodeURIComponent(message);
+        'You get a *+10 points* welcome bonus when you join!';
+
+      // Use whatsapp:// protocol to open the app directly on mobile
+      // Falls back to wa.me for desktop
+      const encoded = encodeURIComponent(message);
+      shareBtn.href = 'https://api.whatsapp.com/send?text=' + encoded;
+      shareBtn.setAttribute('target', '_blank');
+      shareBtn.setAttribute('rel', 'noopener noreferrer');
+
+      // On mobile, try to force WhatsApp app open
+      shareBtn.addEventListener('click', function(e) {
+        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+          // Let the default href work — it opens the app via universal link
+          // (WhatsApp intercepts api.whatsapp.com/send links)
+        }
+      });
     }
 
-    // Show referral count from server
+    // ---- Load referral count ----
     loadReferralCount();
+    autoCreditReferrer();
   }
 
+  // ============ REFERRAL COUNT (from KV) ============
   function loadReferralCount() {
     const myId = getUserId();
     const el = utils.$('refCount');
@@ -126,7 +139,7 @@ const JAMB_REFERRALS = (function() {
     const cached = localStorage.getItem('jamb_ref_count') || '0';
     el.textContent = cached;
 
-    // Then fetch fresh
+    // Fetch fresh count from server
     fetch('/api/referral', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -139,7 +152,35 @@ const JAMB_REFERRALS = (function() {
         localStorage.setItem('jamb_ref_count', String(result.count || 0));
       }
     })
-    .catch(function() { /* ignore — use cached */ });
+    .catch(function(err) {
+      console.warn('Could not fetch referral count:', err.message);
+    });
+  }
+
+  // ============ AUTO-CREDIT REFERRER'S PENDING POINTS ============
+  function autoCreditReferrer() {
+    const myId = getUserId();
+
+    fetch('/api/referral', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'claim_due', userId: myId })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(result) {
+      if (result && result.success && result.points > 0) {
+        points.addPoints(result.points);
+        const friendCount = Math.floor(result.points / REFERRER_REWARD);
+        utils.showToast(
+          '🎉 +' + result.points + ' pts from ' + friendCount +
+          ' new referral' + (friendCount > 1 ? 's' : '') + '!',
+          'green'
+        );
+      }
+    })
+    .catch(function(err) {
+      console.warn('Could not claim referral pts:', err.message);
+    });
   }
 
   function copyLink(link) {
