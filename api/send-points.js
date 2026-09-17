@@ -1,6 +1,8 @@
 /**
  * Vercel Serverless Function: Send / Claim Points
  * POST /api/send-points
+ *
+ * Robust KV read/write that handles all response shapes.
  */
 
 module.exports = async function handler(req, res) {
@@ -25,36 +27,81 @@ module.exports = async function handler(req, res) {
 
   const { action, code, amount, senderId, receiverId, claimerId } = req.body || {};
 
-  // --- KV helpers using Vercel REST API ---
-  // We store plain JSON strings and let Redis handle them as raw strings.
+  // ============================================================
+  // KV HELPERS — handles all Vercel KV / Upstash response shapes
+  // ============================================================
 
+  // Use Upstash pipeline REST format (works with Vercel KV)
   async function kvSet(key, valueString) {
-    // Vercel REST: POST /set/{key} with body { value: "<string>" }
-    const r = await fetch(KV_URL + '/set/' + encodeURIComponent(key), {
+    // Command as array: ["SET", key, value]
+    const r = await fetch(KV_URL, {
       method: 'POST',
       headers: {
         Authorization: 'Bearer ' + KV_TOKEN,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ value: valueString })
+      body: JSON.stringify(['SET', key, valueString])
     });
     return r.json();
   }
 
-  async function kvGetRaw(key) {
-    const r = await fetch(KV_URL + '/get/' + encodeURIComponent(key), {
-      headers: { Authorization: 'Bearer ' + KV_TOKEN }
+  async function kvGet(key) {
+    // Command as array: ["GET", key]
+    const r = await fetch(KV_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + KV_TOKEN,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(['GET', key])
     });
     const j = await r.json();
-    return j.result; // could be string, object, or null
+    // Upstash returns { result: "value" } or { result: null }
+    if (j && typeof j === 'object' && 'result' in j) return j.result;
+    return null;
   }
 
   async function kvDel(key) {
-    await fetch(KV_URL + '/del/' + encodeURIComponent(key), {
+    await fetch(KV_URL, {
       method: 'POST',
-      headers: { Authorization: 'Bearer ' + KV_TOKEN }
+      headers: {
+        Authorization: 'Bearer ' + KV_TOKEN,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(['DEL', key])
     });
   }
+
+  // Parse whatever KV gives us into a real object
+  function parseStoredValue(raw) {
+    if (raw === null || raw === undefined) return null;
+
+    // Case 1: raw is already a plain object with amount
+    if (typeof raw === 'object' && raw !== null && 'amount' in raw) {
+      return raw;
+    }
+
+    // Case 2: raw is a string — parse it
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        // parsed could still be a string (double-encoded)
+        if (typeof parsed === 'string') {
+          try { return JSON.parse(parsed); } catch (e) { return null; }
+        }
+        if (typeof parsed === 'object' && parsed !== null) return parsed;
+        return null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+  // ============================================================
+  // ACTIONS
+  // ============================================================
 
   try {
     if (action === 'create') {
@@ -69,8 +116,10 @@ module.exports = async function handler(req, res) {
         createdAt: Date.now()
       };
 
-      // Store as a plain JSON string
-      await kvSet('send:' + code, JSON.stringify(payload));
+      const jsonString = JSON.stringify(payload);
+      await kvSet('send:' + code, jsonString);
+
+      console.log('Stored code:', code, 'payload:', jsonString);
 
       return res.status(200).json({ success: true, message: 'Code stored' });
     }
@@ -80,32 +129,20 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ success: false, message: 'Missing fields' });
       }
 
-      const raw = await kvGetRaw('send:' + code);
-      console.log('KV raw value:', raw, 'type:', typeof raw);
+      const raw = await kvGet('send:' + code);
+      console.log('KV GET raw for', code, '=>', raw, '(', typeof raw, ')');
 
-      if (raw === null || raw === undefined || raw === '') {
+      const payload = parseStoredValue(raw);
+
+      if (!payload) {
         return res.status(404).json({
           success: false,
           message: 'Invalid or already claimed code'
         });
       }
 
-      // Handle both cases: raw is a string OR already-parsed object
-      let payload = null;
-      if (typeof raw === 'string') {
-        try {
-          payload = JSON.parse(raw);
-        } catch (e) {
-          return res.status(500).json({
-            success: false,
-            message: 'Stored data corrupted'
-          });
-        }
-      } else if (typeof raw === 'object') {
-        payload = raw;
-      }
-
-      if (!payload || typeof payload.amount === 'undefined') {
+      if (typeof payload.amount === 'undefined' || payload.amount === null) {
+        console.error('Stored payload missing amount:', payload);
         return res.status(500).json({
           success: false,
           message: 'Stored data missing amount'
@@ -127,10 +164,11 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // Delete after claim
       await kvDel('send:' + code);
 
       const amt = Number(payload.amount);
+      console.log('Claim successful for', code, 'amount:', amt);
+
       return res.status(200).json({
         success: true,
         amount: amt
