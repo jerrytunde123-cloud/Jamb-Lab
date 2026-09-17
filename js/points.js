@@ -68,6 +68,13 @@ const JAMB_POINTS = (function() {
     return { base: basePoints, bonus: bonus, total: basePoints + bonus };
   }
 
+  function transferPoints(amount) {
+    if (amount < 1) return false;
+    if (getPoints() < amount) return false;
+    addPoints(-amount);
+    return true;
+  }
+
   function updateUI() {
     const pointsEl = utils.$('pointsValue');
     const bigEl = utils.$('pointsBig');
@@ -125,6 +132,7 @@ const JAMB_POINTS = (function() {
     creditFromPin: creditFromPin,
     getPurchaseBonusPercent: getPurchaseBonusPercent,
     calcPurchaseTotal: calcPurchaseTotal,
+    transferPoints: transferPoints,
     updateUI: updateUI,
     updateStartButtonState: updateStartButtonState,
     dailyTopUp: dailyTopUp
