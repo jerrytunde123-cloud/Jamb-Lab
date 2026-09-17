@@ -1,7 +1,5 @@
 /**
  * Vercel Serverless Function: Verify Paystack Payment
- * POST /api/verify-payment
- * Body: { reference: "JAMBLAB-XXX-1234567890", userId: "ABC123", basePoints: 100 }
  */
 
 const PaystackClient = require('paystack-sdk-node').default;
@@ -44,8 +42,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Verify the amount matches what we expected
-    // Amount is in kobo (smallest unit), so ₦10/pt × basePoints × 100
+    // Verify amount matches expected: ₦10/pt × basePoints × 100 kobo
     const expectedAmountKobo = basePoints * 10 * 100;
     if (tx.amount < expectedAmountKobo) {
       return res.status(400).json({
