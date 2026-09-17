@@ -6,7 +6,7 @@
 
 const PaystackClient = require('paystack-sdk-node').default;
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Method not allowed' });
@@ -25,13 +25,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Initialize Paystack client
     const client = new PaystackClient({ apiKey: secretKey });
-
-    // Verify the transaction with Paystack
     const result = await client.transactions.verify(reference);
 
-    // Check if payment was successful
     if (!result || result.status !== true || !result.data) {
       return res.status(400).json({
         success: false,
@@ -41,7 +37,6 @@ export default async function handler(req, res) {
 
     const tx = result.data;
 
-    // Double-check transaction status
     if (tx.status !== 'success') {
       return res.status(400).json({
         success: false,
@@ -50,8 +45,8 @@ export default async function handler(req, res) {
     }
 
     // Verify the amount matches what we expected
-    // Amount is in kobo (smallest unit), so multiply expected Naira by 100
-    const expectedAmountKobo = basePoints * 10 * 100; // basePoints × ₦10/pt × 100 kobo
+    // Amount is in kobo (smallest unit), so ₦10/pt × basePoints × 100
+    const expectedAmountKobo = basePoints * 10 * 100;
     if (tx.amount < expectedAmountKobo) {
       return res.status(400).json({
         success: false,
@@ -63,13 +58,12 @@ export default async function handler(req, res) {
     const bonus = Math.floor(basePoints * 0.10);
     const totalPoints = basePoints + bonus;
 
-    // Return success - frontend will credit the points
     return res.status(200).json({
       success: true,
       message: 'Payment verified',
       data: {
         reference: reference,
-        amountPaid: tx.amount / 100, // convert back to Naira
+        amountPaid: tx.amount / 100,
         basePoints: basePoints,
         bonusPoints: bonus,
         totalPoints: totalPoints,
@@ -86,4 +80,4 @@ export default async function handler(req, res) {
       message: 'Verification failed: ' + error.message
     });
   }
-}
+};
