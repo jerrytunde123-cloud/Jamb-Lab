@@ -1,5 +1,6 @@
 /**
- * JAMB Quiz - Buy Points (Paystack + PIN) + Send Points + 10% bonus
+ * JAMB Quiz - Buy Points (PIN activation) + 10% bonus
+ *             Send Points to Friend (claim code)
  */
 
 const JAMB_PURCHASE = (function() {
@@ -22,8 +23,6 @@ const JAMB_PURCHASE = (function() {
     return getPaymentConfig().ACTIVATION_PINS || {};
   }
 
-  // ==================== BUY POINTS UI ====================
-
   function setupBuyPointsUI() {
     const uidEl = utils.$('uidDisplay');
     if (uidEl) uidEl.textContent = localStorage.getItem('jamb_uid') || '------';
@@ -41,18 +40,16 @@ const JAMB_PURCHASE = (function() {
       });
     }
 
-    // Package clicks -> Paystack
     const packages = utils.getAll('.package-item');
     packages.forEach(function(item) {
       item.addEventListener('click', function() {
         const basePts = parseInt(item.dataset.pts, 10);
         const price = parseInt(item.dataset.price, 10);
         const calc = points.calcPurchaseTotal(basePts);
-        openPaystack(price, basePts, calc);
+        requestPoints(basePts, price, calc.total);
       });
     });
 
-    // Custom amount live preview
     const customInput = utils.$('customPtsInput');
     const customNote = utils.$('customBonusNote');
     if (customInput && customNote) {
@@ -71,7 +68,6 @@ const JAMB_PURCHASE = (function() {
       });
     }
 
-    // Custom button -> Paystack
     const customBtn = utils.$('customBuyBtn');
     if (customBtn && customInput) {
       customBtn.addEventListener('click', function() {
@@ -82,11 +78,10 @@ const JAMB_PURCHASE = (function() {
         }
         const calc = points.calcPurchaseTotal(raw);
         const price = raw * 10;
-        openPaystack(price, raw, calc);
+        requestPoints(raw, price, calc.total);
       });
     }
 
-    // PIN activation (backup method)
     const activateBtn = utils.$('activatePinBtn');
     const pinInput = utils.$('pinInput');
     if (activateBtn && pinInput) {
@@ -97,86 +92,16 @@ const JAMB_PURCHASE = (function() {
     }
   }
 
-  // ==================== PAYSTACK FLOW ====================
-
-  function openPaystack(amountNaira, basePts, calc) {
-    const key = getPaymentConfig().PAYSTACK_PUBLIC_KEY || '';
-    if (!key || key.indexOf('YOUR_PUBLIC_KEY') !== -1) {
-      utils.showToast('Paystack not configured yet', 'red');
-      return;
-    }
-
-    if (typeof window.PaystackPop === 'undefined') {
-      utils.showToast('Payment system still loading. Please try again.', 'red');
-      return;
-    }
-
-    const amountKobo = amountNaira * 100;
+  function requestPoints(basePts, price, totalPts) {
     const uid = localStorage.getItem('jamb_uid') || '------';
-    const reference = 'JAMBLAB-' + uid + '-' + Date.now();
-
-    const paystack = new window.PaystackPop();
-    paystack.newTransaction({
-      key: key,
-      email: 'user@jamblab.app',
-      amount: amountKobo,
-      reference: reference,
-      metadata: {
-        user_id: uid,
-        base_points: basePts,
-        bonus_points: calc.bonus,
-        total_points: calc.total
-      },
-      onSuccess: function(transaction) {
-        utils.showToast('Verifying payment...', 'green');
-
-        fetch('/api/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            reference: transaction.reference,
-            userId: uid,
-            basePoints: basePts
-          })
-        })
-        .then(function(response) { return response.json(); })
-        .then(function(result) {
-          if (result.success && result.data) {
-            const totalCredited = result.data.totalPoints;
-            points.addPoints(totalCredited);
-
-            utils.showToast(
-              '🎉 ' + totalCredited + ' points credited! (' +
-              result.data.basePoints + ' + ' + result.data.bonusPoints + ' bonus)',
-              'green'
-            );
-          } else {
-            utils.showToast('❌ Verification failed: ' + (result.message || 'Unknown'), 'red');
-
-            const msg = 'I paid on JAMBLab but points were not credited.\n\n' +
-              'Reference: ' + transaction.reference + '\n' +
-              'Amount: ₦' + amountNaira.toLocaleString() + '\n' +
-              'My User ID: ' + uid + '\n\n' +
-              'Please help me.';
-            setTimeout(function() {
-              if (confirm('Payment verification failed. Send message to admin on WhatsApp?')) {
-                window.open('https://wa.me/' + getAdminWhatsApp() + '?text=' + encodeURIComponent(msg), '_blank');
-              }
-            }, 1500);
-          }
-        })
-        .catch(function(err) {
-          console.error('Verification error:', err);
-          utils.showToast('❌ Could not verify payment. Contact support.', 'red');
-        });
-      },
-      onCancel: function() {
-        utils.showToast('Payment cancelled', 'red');
-      }
-    });
+    const msg =
+      'I want to purchase ' + basePts + ' points on JAMBLab.\n\n' +
+      'With +10% bonus → ' + totalPts + ' points\n\n' +
+      'User ID: ' + uid + '\n\n' +
+      'Please send me the activation PIN.';
+    const url = 'https://wa.me/' + getAdminWhatsApp() + '?text=' + encodeURIComponent(msg);
+    window.open(url, '_blank');
   }
-
-  // ==================== PIN ACTIVATION ====================
 
   function redeemPin(rawPin) {
     const pin = (rawPin || '').trim().toUpperCase();
@@ -201,7 +126,7 @@ const JAMB_PURCHASE = (function() {
     utils.showToast('+' + pts + ' points added (includes 10% bonus)!', 'green');
   }
 
-  // ==================== SEND POINTS ====================
+  // ============ SEND POINTS ============
 
   function generateSendCode(amount) {
     const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -300,7 +225,7 @@ const JAMB_PURCHASE = (function() {
   return {
     setupBuyPointsUI: setupBuyPointsUI,
     setupSendPointsUI: setupSendPointsUI,
-    requestPoints: openPaystack,
+    requestPoints: requestPoints,
     redeemPin: redeemPin
   };
 })();
