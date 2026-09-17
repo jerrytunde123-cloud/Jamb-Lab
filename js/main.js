@@ -28,6 +28,7 @@ const JAMB_APP = (function() {
     questionsModule.loadQuestionBank();
     setupEventListeners();
     purchase.setupBuyPointsUI();
+    purchase.setupSendPointsUI();
   }
 
   function setupEventListeners() {
