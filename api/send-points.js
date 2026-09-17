@@ -21,28 +21,41 @@ module.exports = async function handler(req, res) {
   const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 
   if (!KV_URL || !KV_TOKEN) {
-    return res.status(500).json({ success: false, message: 'KV not configured' });
+    return res.status(500).json({
+      success: false,
+      message: 'KV not configured. Enable Vercel KV in Storage tab.'
+    });
   }
 
   const { action, code, amount, senderId, receiverId, claimerId } = req.body || {};
+
+  // Send raw JSON string as the value
+  async function kvSet(key, obj) {
+    const r = await fetch(KV_URL + '/set/' + encodeURIComponent(key), {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + KV_TOKEN,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ value: JSON.stringify(obj) })
+    });
+    return r.json();
+  }
 
   async function kvGet(key) {
     const r = await fetch(KV_URL + '/get/' + encodeURIComponent(key), {
       headers: { Authorization: 'Bearer ' + KV_TOKEN }
     });
     const j = await r.json();
-    return j.result;
-  }
-
-  async function kvSet(key, value) {
-    await fetch(KV_URL + '/set/' + encodeURIComponent(key), {
-      method: 'POST',
-      headers: {
-        Authorization: 'Bearer ' + KV_TOKEN,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ value: JSON.stringify(value) })
-    });
+    if (!j || j.result === null || j.result === undefined) return null;
+    const raw = j.result;
+    // Redis returns a string; parse it
+    if (typeof raw === 'string') {
+      try { return JSON.parse(raw); } catch (e) { return null; }
+    }
+    // If somehow it was already an object
+    if (typeof raw === 'object') return raw;
+    return null;
   }
 
   async function kvDel(key) {
@@ -58,9 +71,9 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ success: false, message: 'Missing fields' });
       }
       const payload = {
-        amount: amount,
-        senderId: senderId,
-        receiverId: receiverId || 'anyone',
+        amount: Number(amount),
+        senderId: String(senderId),
+        receiverId: String(receiverId || 'anyone'),
         createdAt: Date.now()
       };
       await kvSet('send:' + code, payload);
@@ -71,23 +84,35 @@ module.exports = async function handler(req, res) {
       if (!code || !claimerId) {
         return res.status(400).json({ success: false, message: 'Missing fields' });
       }
-      const stored = await kvGet('send:' + code);
-      if (!stored) {
-        return res.status(404).json({ success: false, message: 'Invalid or already claimed code' });
-      }
-      const payload = typeof stored === 'string' ? JSON.parse(stored) : stored;
-
-      if (payload.senderId === claimerId) {
-        return res.status(400).json({ success: false, message: 'You cannot claim your own code' });
-      }
-      // Optional: enforce receiver ID match
-      if (payload.receiverId && payload.receiverId !== 'anyone' && payload.receiverId !== claimerId) {
-        return res.status(400).json({ success: false, message: 'This code was meant for a different user' });
+      const payload = await kvGet('send:' + code);
+      if (!payload) {
+        return res.status(404).json({
+          success: false,
+          message: 'Invalid or already claimed code'
+        });
       }
 
-      // Delete after claim (one-time use)
+      if (String(payload.senderId) === String(claimerId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'You cannot claim your own code'
+        });
+      }
+      if (payload.receiverId && payload.receiverId !== 'anyone' && String(payload.receiverId) !== String(claimerId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'This code was meant for a different user'
+        });
+      }
+
+      // Delete after claim (single use)
       await kvDel('send:' + code);
-      return res.status(200).json({ success: true, amount: payload.amount });
+
+      // ✅ Return amount as a number
+      return res.status(200).json({
+        success: true,
+        amount: Number(payload.amount)
+      });
     }
 
     return res.status(400).json({ success: false, message: 'Unknown action' });
