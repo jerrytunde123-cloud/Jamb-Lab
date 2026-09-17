@@ -1,11 +1,21 @@
 /**
  * Vercel Serverless Function: Verify Paystack Payment
+ * POST /api/verify-payment
+ * Body: { reference, userId, basePoints }
+ *
+ * Uses native fetch (Node 18+ on Vercel) — no external dependencies.
  */
 
-const PaystackClient = require('paystack-sdk-node').default;
-
 module.exports = async function handler(req, res) {
-  // Only allow POST
+  // CORS (so it works from any origin while testing)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Method not allowed' });
   }
@@ -23,8 +33,19 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const client = new PaystackClient({ apiKey: secretKey });
-    const result = await client.transactions.verify(reference);
+    // Call Paystack Verify API directly
+    const response = await fetch(
+      'https://api.paystack.co/transaction/verify/' + encodeURIComponent(reference),
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + secretKey,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const result = await response.json();
 
     if (!result || result.status !== true || !result.data) {
       return res.status(400).json({
@@ -42,7 +63,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Verify amount matches expected: ₦10/pt × basePoints × 100 kobo
+    // Verify the amount matches (₦10/pt × basePoints × 100 kobo)
     const expectedAmountKobo = basePoints * 10 * 100;
     if (tx.amount < expectedAmountKobo) {
       return res.status(400).json({
@@ -51,7 +72,6 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Calculate points with 10% bonus
     const bonus = Math.floor(basePoints * 0.10);
     const totalPoints = basePoints + bonus;
 
