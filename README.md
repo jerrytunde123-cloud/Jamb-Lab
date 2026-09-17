@@ -67,7 +67,7 @@ Jamb-Lab/
 
 ```bash
 git add .
-git commit -m "Add buy points + PIN activation + daily reset + JAMB assistance card"
+git commit -m "Add Paystack auto-verification"
 git push
 npm install
 npm test
