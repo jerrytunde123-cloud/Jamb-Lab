@@ -93,7 +93,7 @@ const JAMB_PURCHASE = (function() {
     }
   }
 
-  // ==================== PAYSTACK FLOW ====================
+  // ==================== PAYSTACK ====================
 
   function openPaystack(amountNaira, basePts, calc) {
     const key = getPaymentConfig().PAYSTACK_PUBLIC_KEY || '';
@@ -170,7 +170,7 @@ const JAMB_PURCHASE = (function() {
     });
   }
 
-  // ==================== PIN ACTIVATION ====================
+  // ==================== PIN ====================
 
   function redeemPin(rawPin) {
     const pin = (rawPin || '').trim().toUpperCase();
@@ -192,7 +192,7 @@ const JAMB_PURCHASE = (function() {
     localStorage.setItem('jamb_used_pin_' + pin, 'yes');
     const input = utils.$('pinInput');
     if (input) input.value = '';
-    utils.showToast('+' + pts + ' points added (includes 10% bonus)!', 'green');
+    utils.showToast('+' + pts + ' points added!', 'green');
   }
 
   // ==================== SEND POINTS ====================
@@ -223,7 +223,6 @@ const JAMB_PURCHASE = (function() {
           utils.showToast('You only have ' + balance + ' pts', 'red');
           return;
         }
-
         if (!points.transferPoints(amount)) {
           utils.showToast('Could not transfer', 'red');
           return;
@@ -320,8 +319,6 @@ const JAMB_PURCHASE = (function() {
 
           points.addPoints(amt);
           claimInput.value = '';
-
-          // ✅ correct toast
           utils.showToast('+' + amt + ' points claimed!', 'green');
 
         } catch (err) {
