@@ -347,3 +347,94 @@ sub { bottom: -0.25em; }
 }
 .sell-card .card-title i { color: #6b7280; }
 .sell-card .text-small { color: #6b7280; }
+
+/* ============ SEND POINTS ============ */
+.send-card {
+  background: linear-gradient(135deg, #f3e8ff, #ede9fe);
+  border-radius: 1.5rem;
+  padding: 1.2rem 1rem;
+  margin: 1rem 0;
+  border: 1px solid #c4b5fd;
+}
+.send-card .card-title { color: #1d3b4f; }
+.send-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.send-input {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.7rem 0.9rem;
+  border-radius: 30px;
+  border: 1px solid #c4b5fd;
+  font-size: 0.85rem;
+  outline: none;
+  color: #4c1d95;
+  font-weight: 600;
+  background: white;
+}
+.btn-send {
+  flex: 1;
+  background: #7c3aed;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 6px 14px rgba(124, 58, 237, 0.3);
+}
+.btn-send:active { background: #6d28d9; transform: scale(0.98); }
+.send-note {
+  font-size: 0.78rem;
+  color: #5b21b6;
+  font-weight: 600;
+  margin-top: 8px;
+  display: none;
+  padding: 0.5rem 0.8rem;
+  background: #faf5ff;
+  border-radius: 12px;
+  word-break: break-word;
+}
+.send-note.show { display: block; }
+.claim-box {
+  margin-top: 14px;
+  padding: 0.9rem 1rem;
+  background: white;
+  border-radius: 1rem;
+  border: 1px dashed #a78bfa;
+}
+.claim-input {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.7rem 0.9rem;
+  border-radius: 30px;
+  border: 2px solid #a78bfa;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  outline: none;
+  color: #4c1d95;
+}
+.btn-claim {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-claim:active { background: #059669; }
