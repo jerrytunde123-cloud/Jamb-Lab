@@ -1,8 +1,0 @@
-{
-  "name": "jamb-lab",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "paystack-sdk-node": "^1.0.0"
-  }
-}
