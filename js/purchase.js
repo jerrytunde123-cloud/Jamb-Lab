@@ -101,7 +101,7 @@ const JAMB_PURCHASE = (function() {
 
   function openPaystack(amountNaira, basePts, calc) {
     const key = getPaymentConfig().PAYSTACK_PUBLIC_KEY || '';
-    if (!key || key.indexOf('YOUR_PUBLIC_KEY') !== -1) {
+    if (!key || key.indexOf('pk_') !== 0) {
       utils.showToast('Paystack not configured yet', 'red');
       return;
     }
@@ -201,7 +201,7 @@ const JAMB_PURCHASE = (function() {
     utils.showToast('+' + pts + ' points added (includes 10% bonus)!', 'green');
   }
 
-  // ==================== SEND POINTS ====================
+  // ==================== SEND POINTS (cross-device via Vercel KV) ====================
 
   function generateSendCode(amount) {
     const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -216,8 +216,9 @@ const JAMB_PURCHASE = (function() {
     const claimBtn = utils.$('claimBtn');
     const claimInput = utils.$('claimInput');
 
+    // ---- SEND: create code on server ----
     if (sendBtn && sendInput) {
-      sendBtn.addEventListener('click', function() {
+      sendBtn.addEventListener('click', async function() {
         const amount = parseInt(sendInput.value, 10);
         if (!amount || amount < 1) {
           utils.showToast('Enter a valid amount', 'red');
@@ -229,70 +230,106 @@ const JAMB_PURCHASE = (function() {
           return;
         }
 
+        // Deduct from sender
         if (!points.transferPoints(amount)) {
           utils.showToast('Could not transfer', 'red');
           return;
         }
 
         const code = generateSendCode(amount);
+        const myId = localStorage.getItem('jamb_uid') || '------';
         const receiver = (receiverInput && receiverInput.value.trim()) || 'anyone';
-        const record = {
-          amount: amount,
-          senderId: localStorage.getItem('jamb_uid') || '------',
-          receiver: receiver,
-          createdAt: new Date().toISOString()
-        };
-        const codes = JSON.parse(localStorage.getItem('jamb_send_codes') || '{}');
-        codes[code] = record;
-        localStorage.setItem('jamb_send_codes', JSON.stringify(codes));
 
-        const shareText = '🎁 *JAMB Points Gift!*\n\nI just sent you ' + amount +
-          ' points on JAMBLab.\n\nClaim code: *' + code + '*\n\nOpen the app, paste the code under "Received a code?", and your points will be credited instantly!';
-        const waUrl = 'https://wa.me/?text=' + encodeURIComponent(shareText);
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-        if (sendNote) {
-          sendNote.innerHTML =
-            '✅ Sent ' + amount + ' pts (balance: ' + points.getPoints() + ' pts)<br><br>' +
-            'Your code: <strong>' + code + '</strong><br>' +
-            '<a href="' + waUrl + '" target="_blank" rel="noopener noreferrer" ' +
-            'style="display:inline-block;margin-top:8px;background:#25D366;color:white;' +
-            'padding:0.5rem 1rem;border-radius:30px;text-decoration:none;font-weight:700;font-size:0.8rem;">' +
-            '<i class="fab fa-whatsapp"></i> Share code on WhatsApp</a>';
-          sendNote.classList.add('show');
+        try {
+          const r = await fetch('/api/send-points', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'create',
+              code: code,
+              amount: amount,
+              senderId: myId,
+              receiverId: receiver
+            })
+          });
+          const result = await r.json();
+          if (!result.success) {
+            // Refund on failure
+            points.addPoints(amount);
+            utils.showToast('Could not save code: ' + (result.message || 'unknown'), 'red');
+            return;
+          }
+
+          const shareText = '🎁 *JAMB Points Gift!*\n\nI just sent you ' + amount +
+            ' points on JAMBLab.\n\nClaim code: *' + code + '*\n\nOpen the app, paste the code under "Received a code?", and your points will be credited instantly!';
+          const waUrl = 'https://wa.me/?text=' + encodeURIComponent(shareText);
+
+          if (sendNote) {
+            sendNote.innerHTML =
+              '✅ Sent ' + amount + ' pts (balance: ' + points.getPoints() + ' pts)<br><br>' +
+              'Your code: <strong>' + code + '</strong><br>' +
+              '<a href="' + waUrl + '" target="_blank" rel="noopener noreferrer" ' +
+              'style="display:inline-block;margin-top:8px;background:#25D366;color:white;' +
+              'padding:0.5rem 1rem;border-radius:30px;text-decoration:none;font-weight:700;font-size:0.8rem;">' +
+              '<i class="fab fa-whatsapp"></i> Share code on WhatsApp</a>';
+            sendNote.classList.add('show');
+          }
+
+          sendInput.value = '';
+          if (receiverInput) receiverInput.value = '';
+          utils.showToast('Code generated! Share it with your friend.', 'green');
+
+        } catch (err) {
+          points.addPoints(amount);
+          utils.showToast('Network error: ' + err.message, 'red');
+        } finally {
+          sendBtn.disabled = false;
+          sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Generate Claim Code';
         }
-
-        sendInput.value = '';
-        if (receiverInput) receiverInput.value = '';
-
-        utils.showToast('Code generated! Share it with your friend.', 'green');
       });
     }
 
+    // ---- CLAIM: fetch code from server ----
     if (claimBtn && claimInput) {
-      claimBtn.addEventListener('click', function() {
+      claimBtn.addEventListener('click', async function() {
         const raw = (claimInput.value || '').trim().toUpperCase();
         if (!raw) { utils.showToast('Enter a claim code', 'red'); return; }
 
-        const codes = JSON.parse(localStorage.getItem('jamb_send_codes') || '{}');
-        const record = codes[raw];
+        const myId = localStorage.getItem('jamb_uid') || '------';
 
-        if (!record) {
-          utils.showToast('Invalid or already claimed code', 'red');
-          return;
+        claimBtn.disabled = true;
+        claimBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Claiming...';
+
+        try {
+          const r = await fetch('/api/send-points', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'claim',
+              code: raw,
+              claimerId: myId
+            })
+          });
+          const result = await r.json();
+
+          if (!result.success) {
+            utils.showToast(result.message || 'Could not claim', 'red');
+            return;
+          }
+
+          points.addPoints(result.amount);
+          claimInput.value = '';
+          utils.showToast('+' + result.amount + ' points claimed!', 'green');
+
+        } catch (err) {
+          utils.showToast('Network error: ' + err.message, 'red');
+        } finally {
+          claimBtn.disabled = false;
+          claimBtn.innerHTML = '<i class="fas fa-check"></i> Claim';
         }
-
-        const myId = localStorage.getItem('jamb_uid') || '';
-        if (record.senderId === myId) {
-          utils.showToast('You cannot claim your own code', 'red');
-          return;
-        }
-
-        points.addPoints(record.amount);
-        delete codes[raw];
-        localStorage.setItem('jamb_send_codes', JSON.stringify(codes));
-
-        claimInput.value = '';
-        utils.showToast('+' + record.amount + ' points claimed!', 'green');
       });
     }
   }
