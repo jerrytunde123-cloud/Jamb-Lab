@@ -41,7 +41,6 @@ const JAMB_PURCHASE = (function() {
       });
     }
 
-    // Package clicks -> Paystack
     const packages = utils.getAll('.package-item');
     packages.forEach(function(item) {
       item.addEventListener('click', function() {
@@ -52,7 +51,6 @@ const JAMB_PURCHASE = (function() {
       });
     });
 
-    // Custom amount live preview
     const customInput = utils.$('customPtsInput');
     const customNote = utils.$('customBonusNote');
     if (customInput && customNote) {
@@ -71,7 +69,6 @@ const JAMB_PURCHASE = (function() {
       });
     }
 
-    // Custom button -> Paystack
     const customBtn = utils.$('customBuyBtn');
     if (customBtn && customInput) {
       customBtn.addEventListener('click', function() {
@@ -86,7 +83,6 @@ const JAMB_PURCHASE = (function() {
       });
     }
 
-    // PIN activation (backup method)
     const activateBtn = utils.$('activatePinBtn');
     const pinInput = utils.$('pinInput');
     if (activateBtn && pinInput) {
@@ -144,7 +140,6 @@ const JAMB_PURCHASE = (function() {
           if (result.success && result.data) {
             const totalCredited = result.data.totalPoints;
             points.addPoints(totalCredited);
-
             utils.showToast(
               '🎉 ' + totalCredited + ' points credited! (' +
               result.data.basePoints + ' + ' + result.data.bonusPoints + ' bonus)',
@@ -152,7 +147,6 @@ const JAMB_PURCHASE = (function() {
             );
           } else {
             utils.showToast('❌ Verification failed: ' + (result.message || 'Unknown'), 'red');
-
             const msg = 'I paid on JAMBLab but points were not credited.\n\n' +
               'Reference: ' + transaction.reference + '\n' +
               'Amount: ₦' + amountNaira.toLocaleString() + '\n' +
@@ -201,7 +195,7 @@ const JAMB_PURCHASE = (function() {
     utils.showToast('+' + pts + ' points added (includes 10% bonus)!', 'green');
   }
 
-  // ==================== SEND POINTS (cross-device via Vercel KV) ====================
+  // ==================== SEND POINTS ====================
 
   function generateSendCode(amount) {
     const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -216,7 +210,7 @@ const JAMB_PURCHASE = (function() {
     const claimBtn = utils.$('claimBtn');
     const claimInput = utils.$('claimInput');
 
-    // ---- SEND: create code on server ----
+    // ---- SEND ----
     if (sendBtn && sendInput) {
       sendBtn.addEventListener('click', async function() {
         const amount = parseInt(sendInput.value, 10);
@@ -230,7 +224,6 @@ const JAMB_PURCHASE = (function() {
           return;
         }
 
-        // Deduct from sender
         if (!points.transferPoints(amount)) {
           utils.showToast('Could not transfer', 'red');
           return;
@@ -257,8 +250,7 @@ const JAMB_PURCHASE = (function() {
           });
           const result = await r.json();
           if (!result.success) {
-            // Refund on failure
-            points.addPoints(amount);
+            points.addPoints(amount); // refund
             utils.showToast('Could not save code: ' + (result.message || 'unknown'), 'red');
             return;
           }
@@ -283,7 +275,7 @@ const JAMB_PURCHASE = (function() {
           utils.showToast('Code generated! Share it with your friend.', 'green');
 
         } catch (err) {
-          points.addPoints(amount);
+          points.addPoints(amount); // refund
           utils.showToast('Network error: ' + err.message, 'red');
         } finally {
           sendBtn.disabled = false;
@@ -292,7 +284,7 @@ const JAMB_PURCHASE = (function() {
       });
     }
 
-    // ---- CLAIM: fetch code from server ----
+    // ---- CLAIM ----
     if (claimBtn && claimInput) {
       claimBtn.addEventListener('click', async function() {
         const raw = (claimInput.value || '').trim().toUpperCase();
@@ -320,9 +312,17 @@ const JAMB_PURCHASE = (function() {
             return;
           }
 
-          points.addPoints(result.amount);
+          const amt = Number(result.amount);
+          if (!amt || isNaN(amt) || amt < 1) {
+            utils.showToast('Server returned invalid amount', 'red');
+            return;
+          }
+
+          points.addPoints(amt);
           claimInput.value = '';
-          utils.showToast('+' + result.amount + ' points claimed!', 'green');
+
+          // ✅ correct toast
+          utils.showToast('+' + amt + ' points claimed!', 'green');
 
         } catch (err) {
           utils.showToast('Network error: ' + err.message, 'red');
