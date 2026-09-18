@@ -23,6 +23,7 @@ const JAMB_APP = (function() {
     referrals.setupReferralUI();
     points.updateUI();
     unlock.checkUnlock();
+    unlock.bindChannelButtons();
     questionsModule.updateSubjectUI();
     points.dailyTopUp();
     questionsModule.loadQuestionBank();
@@ -51,8 +52,7 @@ const JAMB_APP = (function() {
     const restartBtn = utils.$('restartBtn');
     if (restartBtn) restartBtn.addEventListener('click', function() { questionsModule.restartQuiz(); });
 
-    setupUnlockButtons();
-    setupBonusChannels();
+    setupTelegramBonus();
     setupShareButtons();
     setupModal();
   }
@@ -65,44 +65,31 @@ const JAMB_APP = (function() {
     }
   }
 
-  function setupUnlockButtons() {
-    // Deep-link handlers for all channel buttons (compulsory + modal versions)
-    unlock.bindChannelButtons();
-  }
+  // Telegram is a plain link (no deep-link needed since t.me opens app automatically)
+  function setupTelegramBonus() {
+    const btn = utils.$('tgChannelBtn');
+    const row = utils.$('bonusRowTg');
+    if (!btn) return;
 
-  function setupBonusChannels() {
-    const bonuses = [
-      { btn: 'tgChannelBtn', row: 'bonusRowTg', key: 'tg_channel', amount: config.POINTS.TG_CHANNEL_BONUS },
-      { btn: 'waecChannelBtn', row: 'bonusRowWaec', key: 'waec_tutorial', amount: config.POINTS.WAEC_CHANNEL_BONUS },
-      { btn: 'jambTutChannelBtn', row: 'bonusRowJambTut', key: 'jamb_tutorial', amount: config.POINTS.JAMB_TUTORIAL_BONUS },
-      { btn: 'jambVipChannelBtn', row: 'bonusRowVip', key: 'jamb_vip', amount: config.POINTS.JAMB_VIP_BONUS }
-    ];
+    const key = 'tg_channel';
+    const amount = config.POINTS.TG_CHANNEL_BONUS;
 
-    bonuses.forEach(function(item) {
-      const btn = utils.$(item.btn);
-      const row = utils.$(item.row);
-      if (!btn) return;
+    if (localStorage.getItem('jamb_perm_' + key) === 'yes') {
+      btn.classList.add('claimed');
+      if (row) row.classList.add('claimed');
+    }
 
-      if (localStorage.getItem('jamb_perm_' + item.key) === 'yes') {
-        markClaimed(btn, row);
+    btn.addEventListener('click', function() {
+      if (localStorage.getItem('jamb_perm_' + key) === 'yes') {
+        utils.showToast('Already claimed', 'red');
+        return;
       }
-
-      btn.addEventListener('click', function() {
-        if (localStorage.getItem('jamb_perm_' + item.key) === 'yes') {
-          utils.showToast('Already claimed', 'red');
-          return;
-        }
-        localStorage.setItem('jamb_perm_' + item.key, 'yes');
-        markClaimed(btn, row);
-        points.addPoints(item.amount);
-        utils.showToast('+' + item.amount + ' points!', 'green');
-      });
+      localStorage.setItem('jamb_perm_' + key, 'yes');
+      btn.classList.add('claimed');
+      if (row) row.classList.add('claimed');
+      points.addPoints(amount);
+      utils.showToast('+' + amount + ' points!', 'green');
     });
-  }
-
-  function markClaimed(btn, row) {
-    btn.classList.add('claimed');
-    if (row) row.classList.add('claimed');
   }
 
   function setupShareButtons() {
