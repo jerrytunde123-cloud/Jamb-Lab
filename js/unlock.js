@@ -2,6 +2,9 @@
  * JAMB Quiz - Unlock System
  * Daily reset: must join both WhatsApp channels every day to unlock quizzes.
  * +15 points bonus is granted ONCE EVER when both are joined for the first time.
+ *
+ * Channel buttons use a WhatsApp deep link so they open the app directly,
+ * then auto-mark the channel as joined after 2.5 seconds.
  */
 
 const JAMB_UNLOCK = (function() {
@@ -66,7 +69,6 @@ const JAMB_UNLOCK = (function() {
       }
     }
 
-    // Bonus row reflects permanent state
     if (row) {
       if (localStorage.getItem('jamb_unlock_bonus_perm') === 'yes') {
         row.classList.add('claimed');
@@ -83,17 +85,97 @@ const JAMB_UNLOCK = (function() {
   }
 
   function markChannelJoined(which) {
-    if (which === 1) {
+    if (which === 1 || which === '1') {
+      if (utils.isToday('ch1')) return; // already marked
       utils.markToday('ch1');
-      utils.showToast('Channel 1 joined. Join Channel 2 to unlock!', 'green');
+      utils.showToast('✅ Channel 1 joined. Join Channel 2 to unlock!', 'green');
     }
-    if (which === 2) {
+    if (which === 2 || which === '2') {
+      if (utils.isToday('ch2')) return;
       utils.markToday('ch2');
-      utils.showToast('Channel 2 joined. Unlocking now…', 'green');
+      utils.showToast('✅ Channel 2 joined. Unlocking now…', 'green');
     }
     checkUnlock();
     updateModalUI();
   }
+
+  // ==================== DEEP LINK HANDLERS ====================
+
+  function isMobile() {
+    return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+  }
+
+  // Opens WhatsApp app for channels (WhatsApp uses https://whatsapp.com/channel/ID as universal link)
+  // There's no official whatsapp://channel scheme, so we use the https link and let the OS
+  // intercept it to the app.
+  function handleChannelClick(btn) {
+    if (!btn) return;
+    if (btn.dataset.deepLinkBound === 'yes') return;
+    btn.dataset.deepLinkBound = 'yes';
+
+    btn.addEventListener('click', function(e) {
+      const channelId = btn.getAttribute('data-channel-id');
+      const channelNum = btn.getAttribute('data-channel-num');
+      const platform = btn.getAttribute('data-channel-platform') || 'whatsapp';
+
+      if (!channelId) return; // let default anchor behavior work
+
+      e.preventDefault();
+
+      // 1) Try the native app deep link first (works on most devices)
+      let appUrl;
+      if (platform === 'telegram') {
+        // Telegram uses tg:// scheme
+        appUrl = 'tg://resolve?domain=' + channelId;
+      } else {
+        // WhatsApp channels — no official whatsapp:// for channels,
+        // but the https link is a universal link that opens the app on mobile
+        appUrl = 'https://whatsapp.com/channel/' + channelId;
+      }
+
+      const webUrl = platform === 'telegram'
+        ? 'https://t.me/' + channelId
+        : 'https://whatsapp.com/channel/' + channelId;
+
+      // On mobile, use window.location.href so the OS can intercept
+      // to the app via universal link. Falls back to web on desktop.
+      if (isMobile()) {
+        // For Telegram, try tg:// first
+        if (platform === 'telegram') {
+          const start = Date.now();
+          window.location.href = appUrl;
+          setTimeout(function() {
+            if (Date.now() - start < 1500) {
+              window.open(webUrl, '_blank');
+            }
+          }, 800);
+        } else {
+          // WhatsApp — universal link handles app-open automatically
+          window.location.href = webUrl;
+        }
+      } else {
+        // Desktop — just open the web page in a new tab
+        window.open(webUrl, '_blank');
+      }
+
+      // 2) Auto-mark as joined after 2.5 seconds (user is in the app now)
+      //    Only for the two compulsory channels (ch1 and ch2), not the bonus ones.
+      if (channelNum === '1' || channelNum === '2') {
+        setTimeout(function() {
+          markChannelJoined(channelNum);
+        }, 2500);
+      }
+    });
+  }
+
+  function bindChannelButtons() {
+    const btns = document.querySelectorAll('.channel-btn');
+    btns.forEach(function(btn) {
+      handleChannelClick(btn);
+    });
+  }
+
+  // ==================== MODAL ====================
 
   function showUnlockModal() {
     const modal = utils.$('unlockModal');
@@ -130,6 +212,7 @@ const JAMB_UNLOCK = (function() {
     checkUnlock: checkUnlock,
     updateUnlockUI: updateUnlockUI,
     markChannelJoined: markChannelJoined,
+    bindChannelButtons: bindChannelButtons,
     isChannel1Joined: isWhatsAppJoinedToday,
     isChannel2Joined: isTelegramJoinedToday,
     showUnlockModal: showUnlockModal,
