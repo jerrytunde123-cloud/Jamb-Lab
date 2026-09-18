@@ -1,10 +1,11 @@
 /**
  * JAMB Quiz - Unlock System
- * Daily reset: must join both WhatsApp channels every day to unlock quizzes.
- * +15 points bonus is granted ONCE EVER when both are joined for the first time.
  *
- * Channel buttons use a WhatsApp deep link so they open the app directly,
- * then auto-mark the channel as joined after 2.5 seconds.
+ * Two types of channel buttons:
+ *   1. Compulsory unlock channels (data-channel-num="1|2") → daily join to unlock quiz
+ *   2. Bonus channels (data-bonus-key="...") → one-time bonus points
+ *
+ * Both use WhatsApp deep links to open the app directly.
  */
 
 const JAMB_UNLOCK = (function() {
@@ -50,7 +51,6 @@ const JAMB_UNLOCK = (function() {
   function updateUnlockUI() {
     const box = utils.$('unlockBox');
     if (!box) return;
-
     box.style.display = 'block';
 
     const unlocked = isFullyUnlocked();
@@ -85,97 +85,117 @@ const JAMB_UNLOCK = (function() {
   }
 
   function markChannelJoined(which) {
-    if (which === 1 || which === '1') {
-      if (utils.isToday('ch1')) return; // already marked
-      utils.markToday('ch1');
-      utils.showToast('✅ Channel 1 joined. Join Channel 2 to unlock!', 'green');
-    }
-    if (which === 2 || which === '2') {
-      if (utils.isToday('ch2')) return;
-      utils.markToday('ch2');
-      utils.showToast('✅ Channel 2 joined. Unlocking now…', 'green');
-    }
+    if (which === 1) utils.markToday('ch1');
+    if (which === 2) utils.markToday('ch2');
     checkUnlock();
     updateModalUI();
+    utils.showToast('✅ Channel ' + which + ' marked as joined!', 'green');
   }
 
-  // ==================== DEEP LINK HANDLERS ====================
+  // ============ WHATSAPP DEEP-LINK HANDLING ============
 
   function isMobile() {
     return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
   }
 
-  // Opens WhatsApp app for channels (WhatsApp uses https://whatsapp.com/channel/ID as universal link)
-  // There's no official whatsapp://channel scheme, so we use the https link and let the OS
-  // intercept it to the app.
-  function handleChannelClick(btn) {
-    if (!btn) return;
-    if (btn.dataset.deepLinkBound === 'yes') return;
+  function openWhatsAppChannel(channelId) {
+    const appUrl = 'whatsapp://channel/' + channelId;
+    const webUrl = 'https://whatsapp.com/channel/' + channelId;
+
+    let opened = false;
+    try {
+      if (isMobile()) {
+        const start = Date.now();
+        window.location.href = appUrl;
+        setTimeout(function() {
+          if (Date.now() - start < 1500) {
+            window.open(webUrl, '_blank');
+          }
+        }, 1200);
+        opened = true;
+      }
+    } catch (err) { /* ignore */ }
+
+    if (!opened) {
+      window.open(webUrl, '_blank');
+    }
+  }
+
+  // Compulsory unlock channel click
+  function handleUnlockChannelClick(btn) {
+    if (!btn || btn.dataset.deepLinkBound === 'yes') return;
     btn.dataset.deepLinkBound = 'yes';
 
+    const channelId = btn.getAttribute('data-channel-id');
+    const channelNum = parseInt(btn.getAttribute('data-channel-num'), 10);
+    if (!channelId || !channelNum) return;
+
     btn.addEventListener('click', function(e) {
-      const channelId = btn.getAttribute('data-channel-id');
-      const channelNum = btn.getAttribute('data-channel-num');
-      const platform = btn.getAttribute('data-channel-platform') || 'whatsapp';
+      e.preventDefault();
+      openWhatsAppChannel(channelId);
 
-      if (!channelId) return; // let default anchor behavior work
+      setTimeout(function() {
+        markChannelJoined(channelNum);
+      }, 2500);
+    });
+  }
 
+  // Bonus channel click (claim points once)
+  function handleBonusChannelClick(btn) {
+    if (!btn || btn.dataset.deepLinkBound === 'yes') return;
+    btn.dataset.deepLinkBound = 'yes';
+
+    const channelId = btn.getAttribute('data-channel-id');
+    const key = btn.getAttribute('data-bonus-key');
+    const amount = parseInt(btn.getAttribute('data-bonus-amount'), 10);
+    const rowId = btn.getAttribute('data-bonus-row');
+    if (!channelId || !key || !amount) return;
+
+    // Reflect claim state on load
+    if (localStorage.getItem('jamb_perm_' + key) === 'yes') {
+      btn.classList.add('claimed');
+      const row = document.getElementById(rowId);
+      if (row) row.classList.add('claimed');
+    }
+
+    btn.addEventListener('click', function(e) {
       e.preventDefault();
 
-      // 1) Try the native app deep link first (works on most devices)
-      let appUrl;
-      if (platform === 'telegram') {
-        // Telegram uses tg:// scheme
-        appUrl = 'tg://resolve?domain=' + channelId;
-      } else {
-        // WhatsApp channels — no official whatsapp:// for channels,
-        // but the https link is a universal link that opens the app on mobile
-        appUrl = 'https://whatsapp.com/channel/' + channelId;
-      }
+      // Open WhatsApp
+      openWhatsAppChannel(channelId);
 
-      const webUrl = platform === 'telegram'
-        ? 'https://t.me/' + channelId
-        : 'https://whatsapp.com/channel/' + channelId;
-
-      // On mobile, use window.location.href so the OS can intercept
-      // to the app via universal link. Falls back to web on desktop.
-      if (isMobile()) {
-        // For Telegram, try tg:// first
-        if (platform === 'telegram') {
-          const start = Date.now();
-          window.location.href = appUrl;
-          setTimeout(function() {
-            if (Date.now() - start < 1500) {
-              window.open(webUrl, '_blank');
-            }
-          }, 800);
-        } else {
-          // WhatsApp — universal link handles app-open automatically
-          window.location.href = webUrl;
-        }
-      } else {
-        // Desktop — just open the web page in a new tab
-        window.open(webUrl, '_blank');
-      }
-
-      // 2) Auto-mark as joined after 2.5 seconds (user is in the app now)
-      //    Only for the two compulsory channels (ch1 and ch2), not the bonus ones.
-      if (channelNum === '1' || channelNum === '2') {
+      // Award once
+      if (localStorage.getItem('jamb_perm_' + key) !== 'yes') {
+        localStorage.setItem('jamb_perm_' + key, 'yes');
         setTimeout(function() {
-          markChannelJoined(channelNum);
+          btn.classList.add('claimed');
+          const row = document.getElementById(rowId);
+          if (row) row.classList.add('claimed');
+          points.addPoints(amount);
+          utils.showToast('+' + amount + ' points!', 'green');
         }, 2500);
       }
     });
   }
 
+  // Bind every WhatsApp channel button on the page
   function bindChannelButtons() {
     const btns = document.querySelectorAll('.channel-btn');
     btns.forEach(function(btn) {
-      handleChannelClick(btn);
+      const num = btn.getAttribute('data-channel-num');
+      const bonusKey = btn.getAttribute('data-bonus-key');
+
+      if (num) {
+        // Compulsory unlock channel
+        handleUnlockChannelClick(btn);
+      } else if (bonusKey) {
+        // Bonus channel
+        handleBonusChannelClick(btn);
+      }
     });
   }
 
-  // ==================== MODAL ====================
+  // ============ MODAL ============
 
   function showUnlockModal() {
     const modal = utils.$('unlockModal');
