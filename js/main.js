@@ -66,17 +66,8 @@ const JAMB_APP = (function() {
   }
 
   function setupUnlockButtons() {
-    function wire(id, channel) {
-      const btn = utils.$(id);
-      if (!btn) return;
-      btn.addEventListener('click', function() {
-        unlock.markChannelJoined(channel);
-      });
-    }
-    wire('channel1Btn', 1);
-    wire('channel2Btn', 2);
-    wire('modalChannel1Btn', 1);
-    wire('modalChannel2Btn', 2);
+    // Deep-link handlers for all channel buttons (compulsory + modal versions)
+    unlock.bindChannelButtons();
   }
 
   function setupBonusChannels() {
