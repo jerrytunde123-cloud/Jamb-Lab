@@ -5,7 +5,10 @@
  *   1. Compulsory unlock channels (data-channel-num="1|2") → daily join to unlock quiz
  *   2. Bonus channels (data-bonus-key="...") → one-time bonus points
  *
- * Both use WhatsApp deep links to open the app directly.
+ * Rewards logic:
+ *   - First-time both compulsory channels joined → +15 pts (once ever)
+ *   - Every NEW DAY both compulsory channels joined → +5 pts daily check-in
+ *   - Bonus channels → one-time point rewards
  */
 
 const JAMB_UNLOCK = (function() {
@@ -14,6 +17,8 @@ const JAMB_UNLOCK = (function() {
   const state = typeof JAMB_STATE !== 'undefined' ? JAMB_STATE : require('./state.js');
   const utils = typeof JAMB_UTILS !== 'undefined' ? JAMB_UTILS : require('./utils.js');
   const points = typeof JAMB_POINTS !== 'undefined' ? JAMB_POINTS : require('./points.js');
+
+  const DAILY_CHECKIN_BONUS = 5;
 
   function isWhatsAppJoinedToday() {
     return utils.isToday('ch1');
@@ -31,18 +36,30 @@ const JAMB_UNLOCK = (function() {
     return isWhatsAppJoinedToday() && isTelegramJoinedToday();
   }
 
+  // First-time reward: +15 pts once EVER
   function awardUnlockBonusOnce() {
     if (localStorage.getItem('jamb_unlock_bonus_perm') === 'yes') return;
     localStorage.setItem('jamb_unlock_bonus_perm', 'yes');
     const bonus = state.getConfig().POINTS.UNLOCK_BONUS;
     points.addPoints(bonus);
-    utils.showToast('+' + bonus + ' points for joining both channels!', 'green');
+    utils.showToast('🎉 +' + bonus + ' points for joining both channels for the first time!', 'green');
+  }
+
+  // Daily reward: +5 pts EVERY DAY both channels are joined
+  function awardDailyCheckin() {
+    if (localStorage.getItem('jamb_daily_checkin') === utils.todayKey()) return;
+    localStorage.setItem('jamb_daily_checkin', utils.todayKey());
+    points.addPoints(DAILY_CHECKIN_BONUS);
+    utils.showToast('✅ Daily check-in: +' + DAILY_CHECKIN_BONUS + ' pts!', 'green');
   }
 
   function checkUnlock() {
     const unlocked = isFullyUnlocked();
     state.setUnlocked(unlocked);
-    if (unlocked) awardUnlockBonusOnce();
+    if (unlocked) {
+      awardUnlockBonusOnce();   // once ever
+      awardDailyCheckin();      // once per day
+    }
     updateUnlockUI();
     points.updateStartButtonState();
     return unlocked;
@@ -70,11 +87,7 @@ const JAMB_UNLOCK = (function() {
     }
 
     if (row) {
-      if (localStorage.getItem('jamb_unlock_bonus_perm') === 'yes') {
-        row.classList.add('claimed');
-      } else {
-        row.classList.remove('claimed');
-      }
+      row.classList.add('claimed');
     }
 
     if (caption) {
@@ -121,7 +134,6 @@ const JAMB_UNLOCK = (function() {
     }
   }
 
-  // Compulsory unlock channel click
   function handleUnlockChannelClick(btn) {
     if (!btn || btn.dataset.deepLinkBound === 'yes') return;
     btn.dataset.deepLinkBound = 'yes';
@@ -133,14 +145,12 @@ const JAMB_UNLOCK = (function() {
     btn.addEventListener('click', function(e) {
       e.preventDefault();
       openWhatsAppChannel(channelId);
-
       setTimeout(function() {
         markChannelJoined(channelNum);
       }, 2500);
     });
   }
 
-  // Bonus channel click (claim points once)
   function handleBonusChannelClick(btn) {
     if (!btn || btn.dataset.deepLinkBound === 'yes') return;
     btn.dataset.deepLinkBound = 'yes';
@@ -151,7 +161,6 @@ const JAMB_UNLOCK = (function() {
     const rowId = btn.getAttribute('data-bonus-row');
     if (!channelId || !key || !amount) return;
 
-    // Reflect claim state on load
     if (localStorage.getItem('jamb_perm_' + key) === 'yes') {
       btn.classList.add('claimed');
       const row = document.getElementById(rowId);
@@ -160,11 +169,8 @@ const JAMB_UNLOCK = (function() {
 
     btn.addEventListener('click', function(e) {
       e.preventDefault();
-
-      // Open WhatsApp
       openWhatsAppChannel(channelId);
 
-      // Award once
       if (localStorage.getItem('jamb_perm_' + key) !== 'yes') {
         localStorage.setItem('jamb_perm_' + key, 'yes');
         setTimeout(function() {
@@ -178,7 +184,6 @@ const JAMB_UNLOCK = (function() {
     });
   }
 
-  // Bind every WhatsApp channel button on the page
   function bindChannelButtons() {
     const btns = document.querySelectorAll('.channel-btn');
     btns.forEach(function(btn) {
@@ -186,12 +191,31 @@ const JAMB_UNLOCK = (function() {
       const bonusKey = btn.getAttribute('data-bonus-key');
 
       if (num) {
-        // Compulsory unlock channel
         handleUnlockChannelClick(btn);
       } else if (bonusKey) {
-        // Bonus channel
         handleBonusChannelClick(btn);
       }
+    });
+  }
+
+  // ============ SHOW MORE CHANNELS ============
+
+  let channelsExpanded = false;
+
+  function setupShowMoreChannels() {
+    const btn = utils.$('showMoreChannelsBtn');
+    if (!btn) return;
+
+    btn.addEventListener('click', function() {
+      channelsExpanded = !channelsExpanded;
+      const hidden = document.querySelectorAll('.hidden-channel');
+      hidden.forEach(function(el) {
+        if (channelsExpanded) el.classList.add('show');
+        else el.classList.remove('show');
+      });
+      btn.innerHTML = channelsExpanded
+        ? '<i class="fas fa-minus"></i> Show less channels'
+        : '<i class="fas fa-plus"></i> Show more channels';
     });
   }
 
@@ -233,6 +257,7 @@ const JAMB_UNLOCK = (function() {
     updateUnlockUI: updateUnlockUI,
     markChannelJoined: markChannelJoined,
     bindChannelButtons: bindChannelButtons,
+    setupShowMoreChannels: setupShowMoreChannels,
     isChannel1Joined: isWhatsAppJoinedToday,
     isChannel2Joined: isTelegramJoinedToday,
     showUnlockModal: showUnlockModal,
