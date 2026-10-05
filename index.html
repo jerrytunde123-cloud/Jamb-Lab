@@ -16,12 +16,17 @@
 <div class="app" id="app">
 
   <div id="mainScreen">
-    <header>
-      <h1><i class="fas fa-graduation-cap" style="color: #1a5f7a;"></i> JAMB<span style="font-weight: 300; margin-left: 2px;">Lab</span><small>UTME</small></h1>
-      <div class="subhead">
-        <span><i class="fas fa-calendar-alt" style="color: #2a7f9f;"></i> 2026/2027</span>
-        <span class="points-badge" id="pointsBadge"><i class="fas fa-star"></i> <span id="pointsValue">0</span> pts</span>
+    <header class="brand-header">
+      <div class="brand-left">
+        <div class="brand-crest">
+          <img src="assets/jamb-crest.png" alt="JAMB Crest" onerror="this.style.display='none'">
+        </div>
+        <div class="brand-text">
+          <h1>JAMB<span>Lab</span></h1>
+          <div class="brand-tag">UTME Prep · 2026/2027</div>
+        </div>
       </div>
+      <div class="points-badge" id="pointsBadge"><i class="fas fa-star"></i> <span id="pointsValue">0</span> pts</div>
     </header>
 
     <div class="card points-card">
@@ -47,7 +52,7 @@
           <span class="badge-unlocked" id="unlockStatus" style="background: #8fabbc;"><i class="fas fa-lock"></i> locked</span>
           <span class="text-small" id="unlockCaption">join both WhatsApp channels daily to start</span>
         </div>
-        <div class="bonus-row" id="bonusRowUnlock"><i class="fas fa-unlock"></i> 15 pts bonus for both channels (once only)</div>
+        <div class="bonus-row" id="bonusRowUnlock"><i class="fas fa-unlock"></i> 15 pts first-time + 5 pts daily check-in</div>
       </div>
     </div>
 
@@ -95,14 +100,18 @@
     <div class="card bonus-channels">
       <div class="card-title"><i class="fas fa-gift" style="color: #0284c7;"></i> More channels · earn bonus points</div>
       <p class="text-small" style="margin-bottom: 10px;"><strong>Join AND share</strong> these channels to your friends — invite them so everyone can participate and earn together. Points rewarded once.</p>
-      <div class="bonus-grid">
-        <a href="https://t.me/jambvip" target="_blank" rel="noopener noreferrer" class="btn-whatsapp btn-telegram" id="tgChannelBtn"><i class="fab fa-telegram"></i> Join JAMB Telegram (+15 pts)</a>
-        <a href="https://whatsapp.com/channel/0029Vb8Fm3hH5JM3KEspIR04" data-channel-id="0029Vb8Fm3hH5JM3KEspIR04" data-bonus-key="waec_tutorial" data-bonus-amount="10" data-bonus-row="bonusRowWaec" data-bonus-btn="waecChannelBtn" target="_blank" rel="noopener noreferrer" class="btn-whatsapp channel-btn" id="waecChannelBtn" style="background: #16a34a; box-shadow: 0 6px 14px rgba(22, 163, 74, 0.25);"><i class="fab fa-whatsapp"></i> Join WAEC Tutorial Channel (+10 pts)</a>
-        <a href="https://whatsapp.com/channel/0029Vb8TtA8EVccNvTRmUI2u" data-channel-id="0029Vb8TtA8EVccNvTRmUI2u" data-bonus-key="jamb_tutorial" data-bonus-amount="10" data-bonus-row="bonusRowJambTut" data-bonus-btn="jambTutChannelBtn" target="_blank" rel="noopener noreferrer" class="btn-whatsapp channel-btn" id="jambTutChannelBtn" style="background: #0e7490; box-shadow: 0 6px 14px rgba(14, 116, 144, 0.25);"><i class="fab fa-whatsapp"></i> Join JAMB Tutorial Channel (+10 pts)</a>
-        <a href="https://whatsapp.com/channel/0029VbCY2pvGOj9k8pFXod0o" data-channel-id="0029VbCY2pvGOj9k8pFXod0o" data-bonus-key="jamb_vip" data-bonus-amount="15" data-bonus-row="bonusRowVip" data-bonus-btn="jambVipChannelBtn" target="_blank" rel="noopener noreferrer" class="btn-whatsapp channel-btn" id="jambVipChannelBtn" style="background: #7c3aed; box-shadow: 0 6px 14px rgba(124, 58, 237, 0.3);"><i class="fab fa-whatsapp"></i> Join JAMB VIP Channel (+15 pts)</a>
-        <a href="https://whatsapp.com/channel/0029Vb8HCZE6rsR1fthNok1P" data-channel-id="0029Vb8HCZE6rsR1fthNok1P" data-bonus-key="jamb_class_lesson" data-bonus-amount="10" data-bonus-row="bonusRowJambClass" data-bonus-btn="jambClassChannelBtn" target="_blank" rel="noopener noreferrer" class="btn-whatsapp channel-btn" id="jambClassChannelBtn" style="background: #0891b2; box-shadow: 0 6px 14px rgba(8, 145, 178, 0.3);"><i class="fab fa-whatsapp"></i> Join JAMB Class &amp; Lesson (+10 pts)</a>
-        <a href="https://whatsapp.com/channel/0029VbChCYxEwEk2d3yXn02X" data-channel-id="0029VbChCYxEwEk2d3yXn02X" data-bonus-key="waec_vvip" data-bonus-amount="15" data-bonus-row="bonusRowWaecVvip" data-bonus-btn="waecVvipChannelBtn" target="_blank" rel="noopener noreferrer" class="btn-whatsapp channel-btn" id="waecVvipChannelBtn" style="background: #dc2626; box-shadow: 0 6px 14px rgba(220, 38, 38, 0.3);"><i class="fab fa-whatsapp"></i> Join WAEC VVIP Channel (+15 pts)</a>
+      <div class="bonus-grid" id="bonusChannelsGrid">
+        <a href="https://t.me/jambvip" target="_blank" rel="noopener noreferrer" class="btn-whatsapp btn-telegram bonus-channel-item" id="tgChannelBtn"><i class="fab fa-telegram"></i> Join JAMB Telegram (+15 pts)</a>
+        <a href="https://whatsapp.com/channel/0029Vb8Fm3hH5JM3KEspIR04" data-channel-id="0029Vb8Fm3hH5JM3KEspIR04" data-bonus-key="waec_tutorial" data-bonus-amount="10" data-bonus-row="bonusRowWaec" data-bonus-btn="waecChannelBtn" target="_blank" rel="noopener noreferrer" class="btn-whatsapp channel-btn bonus-channel-item" id="waecChannelBtn" style="background: #16a34a; box-shadow: 0 6px 14px rgba(22, 163, 74, 0.25);"><i class="fab fa-whatsapp"></i> Join WAEC Tutorial Channel (+10 pts)</a>
+        <a href="https://whatsapp.com/channel/0029Vb8TtA8EVccNvTRmUI2u" data-channel-id="0029Vb8TtA8EVccNvTRmUI2u" data-bonus-key="jamb_tutorial" data-bonus-amount="10" data-bonus-row="bonusRowJambTut" data-bonus-btn="jambTutChannelBtn" target="_blank" rel="noopener noreferrer" class="btn-whatsapp channel-btn bonus-channel-item" id="jambTutChannelBtn" style="background: #0e7490; box-shadow: 0 6px 14px rgba(14, 116, 144, 0.25);"><i class="fab fa-whatsapp"></i> Join JAMB Tutorial Channel (+10 pts)</a>
+        <a href="https://whatsapp.com/channel/0029VbCY2pvGOj9k8pFXod0o" data-channel-id="0029VbCY2pvGOj9k8pFXod0o" data-bonus-key="jamb_vip" data-bonus-amount="15" data-bonus-row="bonusRowVip" data-bonus-btn="jambVipChannelBtn" target="_blank" rel="noopener noreferrer" class="btn-whatsapp channel-btn bonus-channel-item hidden-channel" id="jambVipChannelBtn" style="background: #7c3aed; box-shadow: 0 6px 14px rgba(124, 58, 237, 0.3);"><i class="fab fa-whatsapp"></i> Join JAMB VIP Channel (+15 pts)</a>
+        <a href="https://whatsapp.com/channel/0029Vb8HCZE6rsR1fthNok1P" data-channel-id="0029Vb8HCZE6rsR1fthNok1P" data-bonus-key="jamb_class_lesson" data-bonus-amount="10" data-bonus-row="bonusRowJambClass" data-bonus-btn="jambClassChannelBtn" target="_blank" rel="noopener noreferrer" class="btn-whatsapp channel-btn bonus-channel-item hidden-channel" id="jambClassChannelBtn" style="background: #0891b2; box-shadow: 0 6px 14px rgba(8, 145, 178, 0.3);"><i class="fab fa-whatsapp"></i> Join JAMB Class &amp; Lesson (+10 pts)</a>
+        <a href="https://whatsapp.com/channel/0029VbChCYxEwEk2d3yXn02X" data-channel-id="0029VbChCYxEwEk2d3yXn02X" data-bonus-key="waec_vvip" data-bonus-amount="15" data-bonus-row="bonusRowWaecVvip" data-bonus-btn="waecVvipChannelBtn" target="_blank" rel="noopener noreferrer" class="btn-whatsapp channel-btn bonus-channel-item hidden-channel" id="waecVvipChannelBtn" style="background: #dc2626; box-shadow: 0 6px 14px rgba(220, 38, 38, 0.3);"><i class="fab fa-whatsapp"></i> Join WAEC VVIP Channel (+15 pts)</a>
+      </div>
 
+      <button class="btn-block" id="showMoreChannelsBtn" type="button"><i class="fas fa-plus"></i> Show more channels</button>
+
+      <div class="bonus-grid" style="margin-top: 12px;">
         <div class="bonus-row" id="bonusRowTg"><i class="fas fa-paper-plane"></i> 15 pts for JAMB Telegram</div>
         <div class="bonus-row" id="bonusRowWaec"><i class="fas fa-graduation-cap"></i> 10 pts for WAEC Tutorial</div>
         <div class="bonus-row" id="bonusRowJambTut"><i class="fas fa-chalkboard-teacher"></i> 10 pts for JAMB Tutorial</div>
