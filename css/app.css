@@ -1,10 +1,63 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif; }
 body { background: #f4f7fb; min-height: 100vh; display: flex; justify-content: center; padding: 1rem; }
 .app { max-width: 720px; width: 100%; background: white; border-radius: 2rem 2rem 1.5rem 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.08); overflow: hidden; padding: 1.5rem 1.2rem 2rem; position: relative; margin: 0.5rem 0; }
-h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; color: #0b2b40; margin-bottom: 0.2rem; }
-h1 small { font-size: 1rem; font-weight: 500; color: #2a6f8f; background: #e5f0f8; padding: 0.2rem 0.9rem; border-radius: 40px; margin-left: auto; }
+
+/* ============ BRAND HEADER (NEW) ============ */
+.brand-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 0.5rem 0 1rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #e9edf2;
+  flex-wrap: wrap;
+}
+.brand-left { display: flex; align-items: center; gap: 12px; }
+.brand-crest {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25);
+  border: 2px solid #a7f3d0;
+  flex-shrink: 0;
+}
+.brand-crest img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.brand-text h1 {
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  line-height: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  color: #0b2b40;
+  margin: 0;
+}
+.brand-text h1 span {
+  font-weight: 300;
+  color: #1a5f7a;
+}
+.brand-tag {
+  font-size: 0.7rem;
+  color: #2a7f9f;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
 .points-badge { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 0.35rem 1rem; border-radius: 30px; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.35); }
-.subhead { display: flex; justify-content: space-between; align-items: center; color: #3a5e73; margin-bottom: 1.2rem; border-bottom: 1px solid #e9edf2; padding-bottom: 0.75rem; flex-wrap: wrap; gap: 8px; }
 .card { background: #ffffff; border-radius: 1.5rem; padding: 1.2rem 1rem; box-shadow: 0 4px 12px rgba(0, 20, 30, 0.05); margin: 1rem 0; border: 1px solid #eef3f8; }
 .card-title { font-weight: 600; color: #1d3b4f; font-size: 1rem; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .card-title i { color: #2a7f9f; width: 1.5rem; }
@@ -24,6 +77,27 @@ h1 small { font-size: 1rem; font-weight: 500; color: #2a6f8f; background: #e5f0f
 .bonus-row { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 600; color: #1d4b62; background: white; padding: 0.3rem 0.8rem; border-radius: 30px; border: 1px dashed #3f8db0; }
 .bonus-row.claimed { background: #d4edda; border-color: #25D366; color: #1a7f5a; border-style: solid; }
 .bonus-row.claimed::after { content: ' ✓'; font-weight: 700; }
+
+/* Hidden channel items (revealed by Show More) */
+.bonus-channel-item.hidden-channel { display: none; }
+.bonus-channel-item.hidden-channel.show { display: inline-flex; }
+
+#showMoreChannelsBtn {
+  padding: 0.5rem 1.2rem;
+  font-size: 0.82rem;
+  border-radius: 30px;
+  max-width: 260px;
+  width: auto;
+  margin: 12px auto 0;
+  background: #eaf0f5;
+  color: #1d4b62;
+  box-shadow: none;
+  border: 1px solid #d0dde8;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+#showMoreChannelsBtn:hover { background: #d0dde8; }
+
 .subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin: 12px 0 8px; }
 .subject-item { background: #f8fafc; border-radius: 30px; padding: 0.6rem 0.2rem; text-align: center; font-size: 0.8rem; font-weight: 500; color: #1d3b4f; border: 1px solid #dee8f0; transition: all 0.1s; box-shadow: 0 1px 3px rgba(0,0,0,0.02); cursor: pointer; position: relative; }
 .subject-item i { color: #2a7f9f; margin-right: 4px; }
