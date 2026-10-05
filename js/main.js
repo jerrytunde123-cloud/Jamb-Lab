@@ -24,6 +24,7 @@ const JAMB_APP = (function() {
     points.updateUI();
     unlock.checkUnlock();
     unlock.bindChannelButtons();
+    unlock.setupShowMoreChannels();
     questionsModule.updateSubjectUI();
     points.dailyTopUp();
     questionsModule.loadQuestionBank();
@@ -65,7 +66,6 @@ const JAMB_APP = (function() {
     }
   }
 
-  // Telegram is a plain link (no deep-link needed since t.me opens app automatically)
   function setupTelegramBonus() {
     const btn = utils.$('tgChannelBtn');
     const row = utils.$('bonusRowTg');
