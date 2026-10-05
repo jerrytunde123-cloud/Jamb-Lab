@@ -18,12 +18,14 @@ const JAMB_APP = (function() {
   function init() {
     if (started) return;
     started = true;
+    
       // 🌐 Anonymous ping for admin traffic tracking
   fetch('https://jamb-utme-lab.vercel.app/api/ping', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ uid: localStorage.getItem('jamb_uid') || 'anon' })
   }).catch(function() {});
+    
     referrals.getUserId();
     referrals.handleIncomingReferral();
     referrals.setupReferralUI();
