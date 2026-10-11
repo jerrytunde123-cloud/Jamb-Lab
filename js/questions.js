@@ -6,7 +6,7 @@ import JAMB_STATE from './state.js';
 import JAMB_UTILS from './utils.js';
 import JAMB_POINTS from './points.js';
 import JAMB_HISTORY from './history.js';
-import { apiEnabled, fetchApiBank } from './api.js';
+import { apiEnabled, catalogEnabled, fetchApiBank, fetchApiSubjects, mergeCatalog } from './api.js';
 
 const JAMB_QUESTIONS = (function() {
   'use strict';
@@ -90,7 +90,7 @@ const JAMB_QUESTIONS = (function() {
       loadingEl.textContent = 'Loading subjects from question bank...';
     }
 
-    // The local bank always loads first: it carries subject names, icons
+    // The local bank always loads first: it carries display names, icons
     // and the fallback rows for anything the API cannot serve.
     return fetch(bankUrl('question-bank.json'))
       .then(function(response) {
@@ -98,9 +98,19 @@ const JAMB_QUESTIONS = (function() {
         return response.json();
       })
       .then(function(bank) {
+        // The catalog decides which subjects exist (public, no key).
+        if (!catalogEnabled()) return bank;
+        if (loadingEl) loadingEl.textContent = 'Loading subjects from the API...';
+        return fetchApiSubjects().then(function(apiSubjects) {
+          return mergeCatalog(bank, apiSubjects);
+        }, function() {
+          return bank;
+        });
+      })
+      .then(function(bank) {
+        // Question rows overlay per subject; a failed subject keeps locals.
         if (!apiEnabled()) return bank;
         if (loadingEl) loadingEl.textContent = 'Updating questions from the API...';
-        // Overlay API rows per subject; a failed subject keeps local rows.
         return fetchApiBank().then(function(overlay) {
           Object.keys(overlay).forEach(function(key) {
             if (bank[key]) bank[key].questions = overlay[key].questions;

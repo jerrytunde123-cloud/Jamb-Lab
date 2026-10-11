@@ -3,7 +3,7 @@
  */
 
 import { vi } from 'vitest';
-import { apiEnabled, fetchApiBank } from '../js/api.js';
+import { apiEnabled, catalogEnabled, fetchApiBank, fetchApiSubjects, mergeCatalog } from '../js/api.js';
 
 function rendered(id, answerId) {
   return {
@@ -84,5 +84,43 @@ describe('api adapter', function() {
     const overlay = await fetchApiBank();
     expect(overlay.yoruba).toBeUndefined();
     expect(overlay.mathematics.questions.length).toBe(1);
+  });
+
+  it('loads the subject list from the public catalog without a key', async function() {
+    const seen = {};
+    vi.stubGlobal('fetch', vi.fn(function(url, opts) {
+      seen.url = url;
+      seen.headers = (opts && opts.headers) || {};
+      return Promise.resolve({ ok: true, json: function() {
+        return Promise.resolve({ exam: 'JAMB', subjects: [
+          { slug: 'mathematics', exam: 'JAMB', name: 'Mathematics' },
+        ] });
+      } });
+    }));
+    const subjects = await fetchApiSubjects();
+    expect(subjects.length).toBe(1);
+    expect(subjects[0].slug).toBe('mathematics');
+    expect(seen.headers['x-api-key']).toBeUndefined();
+  });
+
+  it('lets the API catalog decide which subjects exist', function() {
+    const local = {
+      mathematics: { name: 'Mathematics', icon: 'fa-calculator', questions: [{ id: 'old' }] },
+      civicEducation: { name: 'Civic Education', icon: 'fa-book', questions: [] },
+    };
+    const merged = mergeCatalog(local, [
+      { slug: 'mathematics', name: 'Mathematics' },
+      { slug: 'yoruba', name: 'Yoruba' },
+    ]);
+    expect(Object.keys(merged).sort()).toEqual(['civicEducation', 'mathematics', 'yoruba']);
+    expect(merged.mathematics.questions.length).toBe(1); // locals kept until overlay
+    expect(merged.yoruba).toMatchObject({ name: 'Yoruba', questions: [] });
+    expect(merged.civicEducation.questions).toEqual([]);
+  });
+
+  it('leaves catalogEnabled on for keyless clients with a base set', function() {
+    expect(catalogEnabled()).toBe(true);
+    vi.stubEnv('VITE_API_BASE', '');
+    expect(catalogEnabled()).toBe(false);
   });
 });

@@ -46,3 +46,8 @@ export const LOCAL_ONLY = [
   'marketing',
   'officePractice',
 ];
+
+// Reverse lookup: API slug -> app key.
+export const SLUG_TO_KEY = Object.fromEntries(
+  SUBJECT_MAP.map(function([appKey, slug]) { return [slug, appKey]; }),
+);

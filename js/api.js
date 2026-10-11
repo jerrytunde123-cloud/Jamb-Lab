@@ -20,7 +20,7 @@
  * bank, per subject. A subject the API cannot serve keeps working.
  */
 
-import { SUBJECT_MAP } from './subject-map.js';
+import { SLUG_TO_KEY, SUBJECT_MAP } from './subject-map.js';
 
 const EXAM = import.meta.env.VITE_EXAM || 'JAMB';
 const PER_PAGE = 200; // server cap (D3/D30)
@@ -32,6 +32,12 @@ function apiKey() { return import.meta.env.VITE_API_KEY || ''; }
 
 export function apiEnabled() {
   return Boolean(apiBase() && apiKey());
+}
+
+// The catalog is public (no key): which subjects exist is API data even
+// for keyless clients. Question rows still need the key (see apiEnabled).
+export function catalogEnabled() {
+  return Boolean(apiBase());
 }
 
 async function getJSON(path) {
@@ -78,6 +84,41 @@ async function fetchSubjectQuestions(slug) {
   return out;
 }
 
+/**
+ * The exam's subject list, straight from the catalog. Public endpoint —
+ * no key sent. Throws on any failure or malformed payload; the caller
+ * keeps the local list.
+ */
+export async function fetchApiSubjects() {
+  const exam = encodeURIComponent(EXAM);
+  const res = await fetch(apiBase() + '/api/v1/exams/' + exam + '/subjects');
+  if (!res.ok) throw new Error('API ' + res.status + ' for subjects');
+  const data = await res.json();
+  if (!data || !Array.isArray(data.subjects)) throw new Error('bad subjects payload');
+  return data.subjects;
+}
+
+/**
+ * Merge the API catalog into the local bank shape. The API decides which
+ * subjects exist; the local bank keeps providing display names, icons and
+ * fallback rows. An API subject with no local entry yet gets a fresh one
+ * (questions arrive via the overlay); a local subject the API does not
+ * list keeps working untouched.
+ */
+export function mergeCatalog(bank, apiSubjects) {
+  const merged = Object.assign({}, bank);
+  apiSubjects.forEach(function(s) {
+    if (!s || !s.slug) return;
+    const key = SLUG_TO_KEY[s.slug];
+    if (!key) return;
+    if (merged[key]) {
+      merged[key] = Object.assign({}, merged[key], { apiSlug: s.slug });
+    } else {
+      merged[key] = { name: s.name || key, icon: 'fa-book', questions: [], apiSlug: s.slug };
+    }
+  });
+  return merged;
+}
 /**
  * Returns `{ appKey: { questions } }` for every mapped subject that served
  * at least one scorable question. Never throws — a failed subject is simply
