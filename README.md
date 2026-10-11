@@ -18,13 +18,13 @@ npm run dev                  # http://localhost:8000
 ```
 
 `npm run build` outputs a static `dist/` (preview with `npm run preview`).
-On Vercel, set `VITE_API_BASE` / `VITE_API_KEY` in the project dashboard —
-Vercel auto-detects Vite, no extra config needed.
+On Vercel, set only `VITE_UTMELAB_API_KEY` in the project dashboard —
+the API base is hardcoded in `js/api.js`. Vercel auto-detects Vite, no extra config needed.
 
 ### Question source
 
 Subjects mapped in `js/subject-map.js` load live from the utmelab-api
-(`VITE_API_BASE`, key in `VITE_API_KEY`); anything unmapped or unreachable
+(key in `VITE_UTMELAB_API_KEY`); anything unmapped or unreachable
 falls back to the bundled `public/question-bank.json`. Without a key the app
 runs fully offline on the local bank.
 

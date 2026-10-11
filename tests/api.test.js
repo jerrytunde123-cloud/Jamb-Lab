@@ -30,8 +30,7 @@ function page(questions, totalPages) {
 describe('api adapter', function() {
   beforeEach(function() {
     vi.unstubAllGlobals();
-    vi.stubEnv('VITE_API_BASE', 'http://api.test');
-    vi.stubEnv('VITE_API_KEY', 'sk_test');
+    vi.stubEnv('VITE_UTMELAB_API_KEY', 'sk_test');
   });
 
   afterEach(function() {
@@ -41,7 +40,7 @@ describe('api adapter', function() {
 
   it('is disabled without a base or key', function() {
     expect(apiEnabled()).toBe(true);
-    vi.stubEnv('VITE_API_KEY', '');
+    vi.stubEnv('VITE_UTMELAB_API_KEY', '');
     expect(apiEnabled()).toBe(false);
   });
 
@@ -117,9 +116,7 @@ describe('api adapter', function() {
     expect(merged.civicEducation.questions).toEqual([]);
   });
 
-  it('leaves catalogEnabled on for keyless clients with a base set', function() {
+  it('leaves the catalog on: the base is hardcoded, only the key is env', function() {
     expect(catalogEnabled()).toBe(true);
-    vi.stubEnv('VITE_API_BASE', '');
-    expect(catalogEnabled()).toBe(false);
   });
 });
