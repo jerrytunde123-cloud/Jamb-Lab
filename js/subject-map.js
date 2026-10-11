@@ -35,19 +35,21 @@ export const SUBJECT_MAP = [
   ['yoruba', 'yoruba'],
 ];
 
-// App keys with no API subject: served from the local bank verbatim.
-export const LOCAL_ONLY = [
-  'animalHusbandry',
-  'cateringCraftPractice',
-  'civicEducation',
-  'dataProcessing',
-  'furtherMathematics',
-  'insurance',
-  'marketing',
-  'officePractice',
-];
-
 // Reverse lookup: API slug -> app key.
 export const SLUG_TO_KEY = Object.fromEntries(
   SUBJECT_MAP.map(function([appKey, slug]) { return [slug, appKey]; }),
 );
+
+// The app's subject universe: exactly the JAMB offering. The local bank
+// historically carried extra (NECO) subjects — stale rows that must never
+// reach the grid, online or off. Anything outside this set is dropped at
+// load, before render.
+export const APP_KEYS = new Set(SUBJECT_MAP.map(function([appKey]) { return appKey; }));
+
+export function retainJambSubjects(bank) {
+  const kept = {};
+  Object.keys(bank || {}).forEach(function(key) {
+    if (APP_KEYS.has(key)) kept[key] = bank[key];
+  });
+  return kept;
+}

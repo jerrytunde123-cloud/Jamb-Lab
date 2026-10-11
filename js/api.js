@@ -106,8 +106,8 @@ export async function fetchApiSubjects() {
  * Merge the API catalog into the local bank shape. The API decides which
  * subjects exist; the local bank keeps providing display names, icons and
  * fallback rows. An API subject with no local entry yet gets a fresh one
- * (questions arrive via the overlay); a local subject the API does not
- * list keeps working untouched.
+ * (questions arrive via the overlay). Non-JAMB subjects never get this far
+ * — the caller drops them at load (see retainJambSubjects).
  */
 export function mergeCatalog(bank, apiSubjects) {
   const merged = Object.assign({}, bank);

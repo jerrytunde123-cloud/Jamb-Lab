@@ -23,10 +23,11 @@ the API base is hardcoded in `js/api.js`. Vercel auto-detects Vite, no extra con
 
 ### Question source
 
-Subjects mapped in `js/subject-map.js` load live from the utmelab-api
-(key in `VITE_UTMELAB_API_KEY`); anything unmapped or unreachable
-falls back to the bundled `public/question-bank.json`. Without a key the app
-runs fully offline on the local bank.
+Subjects mapped in `js/subject-map.js` — exactly the JAMB offering — load
+live from the utmelab-api (key in `VITE_UTMELAB_API_KEY`); anything
+unreachable falls back to the bundled `public/question-bank.json`.
+Without a key the app runs fully offline on the local bank. Stale
+non-JAMB subjects in the local file are dropped at load and never shown.
 
 ### Vercel
 

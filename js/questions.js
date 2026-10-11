@@ -7,6 +7,7 @@ import JAMB_UTILS from './utils.js';
 import JAMB_POINTS from './points.js';
 import JAMB_HISTORY from './history.js';
 import { apiEnabled, catalogEnabled, fetchApiBank, fetchApiSubjects, mergeCatalog } from './api.js';
+import { retainJambSubjects } from './subject-map.js';
 
 const JAMB_QUESTIONS = (function() {
   'use strict';
@@ -91,11 +92,15 @@ const JAMB_QUESTIONS = (function() {
     }
 
     // The local bank always loads first: it carries display names, icons
-    // and the fallback rows for anything the API cannot serve.
+    // and the fallback rows for anything the API cannot serve. Stale
+    // (non-JAMB) subjects are dropped before anything renders.
     return fetch(bankUrl('question-bank.json'))
       .then(function(response) {
         if (!response.ok) throw new Error('Failed to load question bank');
         return response.json();
+      })
+      .then(function(bank) {
+        return retainJambSubjects(bank);
       })
       .then(function(bank) {
         // The catalog decides which subjects exist (public, no key).

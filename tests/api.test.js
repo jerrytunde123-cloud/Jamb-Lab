@@ -4,6 +4,7 @@
 
 import { vi } from 'vitest';
 import { apiEnabled, catalogEnabled, fetchApiBank, fetchApiSubjects, mergeCatalog } from '../js/api.js';
+import { retainJambSubjects } from '../js/subject-map.js';
 
 function rendered(id, answerId) {
   return {
@@ -118,5 +119,14 @@ describe('api adapter', function() {
 
   it('leaves the catalog on: the base is hardcoded, only the key is env', function() {
     expect(catalogEnabled()).toBe(true);
+  });
+
+  it('drops stale non-JAMB subjects before anything renders', function() {
+    const bank = {
+      mathematics: { name: 'Mathematics', questions: [] },
+      civicEducation: { name: 'Civic Education', questions: [] },
+      marketing: { name: 'Marketing', questions: [] },
+    };
+    expect(Object.keys(retainJambSubjects(bank))).toEqual(['mathematics']);
   });
 });
