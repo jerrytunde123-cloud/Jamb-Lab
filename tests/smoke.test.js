@@ -60,7 +60,7 @@ function makePage(slug) {
   return { questions: questions, page: 1, per_page: 200, total_pages: 1, total_records: 20 };
 }
 
-vi.stubGlobal('fetch', vi.fn(function(url) {
+const fetchMock = vi.fn(function(url) {
   const u = String(url);
   const payload = u.indexOf('/subjects') !== -1
     ? makeCatalog()
@@ -69,7 +69,8 @@ vi.stubGlobal('fetch', vi.fn(function(url) {
     ok: true,
     json: function() { return Promise.resolve(payload); }
   });
-}));
+});
+vi.stubGlobal('fetch', fetchMock);
 
 window.scrollTo = function() {};
 
@@ -101,6 +102,7 @@ describe('app smoke', function() {
     const items = document.querySelectorAll('.subject-item');
     expect(items.length).toBe(2);
     expect(items[0].textContent).toContain('Use of English');
+    expect(document.querySelectorAll('#subjectGrid .subject-skel').length).toBe(0);
   });
 
   it('keeps Start Quiz disabled until a subject is selected', function() {
@@ -196,5 +198,15 @@ describe('app smoke', function() {
     expect(document.getElementById('startQuizBtn').disabled).toBe(true);
     // Points remained used up, no auto top-up
     expect(JAMB_POINTS.getPoints()).toBe(25);
+  });
+
+  it('shows an honest error when the catalog cannot load', async function() {
+    fetchMock.mockRejectedValueOnce(new Error('network down'));
+    const result = await JAMB_QUESTIONS.loadQuestionBank();
+    expect(result).toBeNull();
+    expect(document.querySelectorAll('#subjectGrid .subject-skel').length).toBe(0);
+    expect(document.querySelectorAll('#subjectGrid .subject-item').length).toBe(0);
+    expect(document.getElementById('subjectLoadingText').textContent)
+      .toBe('Failed to load questions. Please refresh.');
   });
 });

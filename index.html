@@ -59,8 +59,17 @@
     <div class="card" style="margin-top: 0.2rem;">
       <div class="card-title"><i class="fas fa-book-open"></i> Choose subjects · JAMB syllabus</div>
       <p class="text-small" style="margin-bottom: 8px;"><i class="fas fa-info-circle"></i> Select up to <strong>4 subjects</strong>. Each subject costs <strong>5 points</strong>. Quiz = 20 questions (shared equally).</p>
-      <div class="subject-grid" id="subjectGrid"></div>
-      <div id="subjectLoading" class="text-small" style="text-align: center; padding: 1rem;">Loading subjects from question bank...</div>
+      <div class="subject-grid" id="subjectGrid" aria-busy="true">
+        <div class="subject-skel" aria-hidden="true"></div>
+        <div class="subject-skel" aria-hidden="true"></div>
+        <div class="subject-skel" aria-hidden="true"></div>
+        <div class="subject-skel" aria-hidden="true"></div>
+        <div class="subject-skel" aria-hidden="true"></div>
+        <div class="subject-skel" aria-hidden="true"></div>
+        <div class="subject-skel" aria-hidden="true"></div>
+        <div class="subject-skel" aria-hidden="true"></div>
+      </div>
+      <div id="subjectLoading" class="text-small" style="text-align: center; padding: 1rem;"><span class="spinner" aria-hidden="true"></span> <span id="subjectLoadingText">Loading subjects…</span></div>
       <div class="subject-info">
         <span>Selected: <strong id="selectedCount">0</strong> / 4</span>
         <span>Cost: <strong id="quizCost">0</strong> pts</span>

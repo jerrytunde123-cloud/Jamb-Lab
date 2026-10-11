@@ -78,12 +78,17 @@ const JAMB_QUESTIONS = (function() {
     });
   }
 
+  function setLoadingText(msg) {
+    // The text span holds the message so the spinner sibling survives;
+    // fall back to the container for older markup.
+    const textEl = utils.$('subjectLoadingText') || utils.$('subjectLoading');
+    if (textEl) textEl.textContent = msg;
+  }
+
   function loadQuestionBank() {
     const loadingEl = utils.$('subjectLoading');
-    if (loadingEl) {
-      loadingEl.style.display = 'block';
-      loadingEl.textContent = 'Loading subjects...';
-    }
+    if (loadingEl) loadingEl.style.display = 'block';
+    setLoadingText('Loading subjects…');
 
     // Subjects come from the API catalog (public, keyless); rows come from
     // the metered questions endpoint when a key is configured. There is no
@@ -93,7 +98,7 @@ const JAMB_QUESTIONS = (function() {
       .then(function(apiSubjects) {
         const bank = buildBankFromCatalog(apiSubjects);
         if (!apiEnabled()) return bank;
-        if (loadingEl) loadingEl.textContent = 'Loading questions...';
+        setLoadingText('Loading questions…');
         return fetchApiBank().then(function(overlay) {
           Object.keys(overlay).forEach(function(key) {
             if (bank[key]) bank[key].questions = overlay[key].questions;
@@ -111,10 +116,13 @@ const JAMB_QUESTIONS = (function() {
         return bank;
       })
       .catch(function() {
-        if (loadingEl) {
-          loadingEl.textContent = 'Failed to load questions. Please refresh.';
-          loadingEl.style.display = 'block';
+        const grid = utils.$('subjectGrid');
+        if (grid) {
+          grid.innerHTML = '';
+          grid.setAttribute('aria-busy', 'false');
         }
+        if (loadingEl) loadingEl.style.display = 'block';
+        setLoadingText('Failed to load questions. Please refresh.');
         utils.showToast('Could not load quiz data', 'red');
         return null;
       });
@@ -125,6 +133,7 @@ const JAMB_QUESTIONS = (function() {
     if (!grid) return;
 
     grid.innerHTML = '';
+    grid.setAttribute('aria-busy', 'false');
     const questionBank = state.getQuestionBank();
     if (!questionBank) return;
 
