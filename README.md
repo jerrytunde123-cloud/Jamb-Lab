@@ -23,11 +23,12 @@ the API base is hardcoded in `js/api.js`. Vercel auto-detects Vite, no extra con
 
 ### Question source
 
-Subjects mapped in `js/subject-map.js` — exactly the JAMB offering — load
-live from the utmelab-api (key in `VITE_UTMELAB_API_KEY`); anything
-unreachable falls back to the bundled `public/question-bank.json`.
-Without a key the app runs fully offline on the local bank. Stale
-non-JAMB subjects in the local file are dropped at load and never shown.
+All subjects and questions load live from the utmelab-api
+(`js/subject-map.js` holds the subject keys, names come from the catalog,
+icons from a static map). Key in `VITE_UTMELAB_API_KEY`; without one the
+subject grid still renders (the catalog is public) but quizzes have no
+rows. There is no local question bank — stale fallback rows are worse
+than an honest load error.
 
 ### Vercel
 
@@ -54,12 +55,13 @@ Jamb-Lab/
 │   ├── referrals.js    # user id + welcome bonus for ?ref=
 │   ├── unlock.js       # WhatsApp + Telegram unlock
 │   ├── history.js      # best scores per subject
+│   ├── api.js          # utmelab-api adapter (catalog + questions)
+│   ├── subject-map.js  # subject keys, API slugs, icons
 │   ├── questions.js    # subject grid + quiz engine
 │   └── main.js         # wires the UI
 ├── assets/
 │   ├── favicon.svg
-│   └── images/         # diagrams referenced by question-bank.json
-├── question-bank.json
+│   └── jamb-crest.png
 ├── tests/
 └── vercel.json
 ```

@@ -16,11 +16,12 @@
  * Rows whose answer id matches no option are dropped — an unscorable
  * question must never reach the quiz.
  *
- * Anything unmapped, unreachable, or unscorable falls back to the local
- * bank, per subject. A subject the API cannot serve keeps working.
+ * There is no local fallback bank: stale rows are worse than an honest
+ * error, so a subject the API cannot serve stays empty and the loader
+ * says so instead of serving rot.
  */
 
-import { SLUG_TO_KEY, SUBJECT_MAP } from './subject-map.js';
+import { ICONS, SLUG_TO_KEY, SUBJECT_MAP } from './subject-map.js';
 
 // Single-exam app: the API is exam-scoped and this client only serves
 // JAMB, so the exam is a constant — not a third env var to configure.
@@ -103,30 +104,30 @@ export async function fetchApiSubjects() {
 }
 
 /**
- * Merge the API catalog into the local bank shape. The API decides which
- * subjects exist; the local bank keeps providing display names, icons and
- * fallback rows. An API subject with no local entry yet gets a fresh one
- * (questions arrive via the overlay). Non-JAMB subjects never get this far
- * — the caller drops them at load (see retainJambSubjects).
+ * Build the app's bank shape straight from the API catalog. Names come
+ * from the catalog (JAMB's own spelling); icons from the static map —
+ * the catalog carries none. Every subject starts with zero questions;
+ * rows arrive via the overlay.
  */
-export function mergeCatalog(bank, apiSubjects) {
-  const merged = Object.assign({}, bank);
-  apiSubjects.forEach(function(s) {
+export function buildBankFromCatalog(apiSubjects) {
+  const bank = {};
+  (apiSubjects || []).forEach(function(s) {
     if (!s || !s.slug) return;
     const key = SLUG_TO_KEY[s.slug];
     if (!key) return;
-    if (merged[key]) {
-      merged[key] = Object.assign({}, merged[key], { apiSlug: s.slug });
-    } else {
-      merged[key] = { name: s.name || key, icon: 'fa-book', questions: [], apiSlug: s.slug };
-    }
+    bank[key] = {
+      name: s.name || key,
+      icon: ICONS[key] || 'fa-book',
+      questions: [],
+      apiSlug: s.slug,
+    };
   });
-  return merged;
+  return bank;
 }
 /**
  * Returns `{ appKey: { questions } }` for every mapped subject that served
  * at least one scorable question. Never throws — a failed subject is simply
- * absent, and the caller keeps its local rows.
+ * absent, and the caller leaves it empty (see the module note above).
  */
 export async function fetchApiBank() {
   const overlay = {};

@@ -6,8 +6,7 @@ import JAMB_STATE from './state.js';
 import JAMB_UTILS from './utils.js';
 import JAMB_POINTS from './points.js';
 import JAMB_HISTORY from './history.js';
-import { apiEnabled, catalogEnabled, fetchApiBank, fetchApiSubjects, mergeCatalog } from './api.js';
-import { retainJambSubjects } from './subject-map.js';
+import { apiEnabled, buildBankFromCatalog, fetchApiBank, fetchApiSubjects } from './api.js';
 
 const JAMB_QUESTIONS = (function() {
   'use strict';
@@ -79,43 +78,22 @@ const JAMB_QUESTIONS = (function() {
     });
   }
 
-  function bankUrl(name) {
-    const base = (import.meta.env && import.meta.env.BASE_URL) || '/';
-    return base + name;
-  }
-
   function loadQuestionBank() {
     const loadingEl = utils.$('subjectLoading');
     if (loadingEl) {
       loadingEl.style.display = 'block';
-      loadingEl.textContent = 'Loading subjects from question bank...';
+      loadingEl.textContent = 'Loading subjects...';
     }
 
-    // The local bank always loads first: it carries display names, icons
-    // and the fallback rows for anything the API cannot serve. Stale
-    // (non-JAMB) subjects are dropped before anything renders.
-    return fetch(bankUrl('question-bank.json'))
-      .then(function(response) {
-        if (!response.ok) throw new Error('Failed to load question bank');
-        return response.json();
-      })
-      .then(function(bank) {
-        return retainJambSubjects(bank);
-      })
-      .then(function(bank) {
-        // The catalog decides which subjects exist (public, no key).
-        if (!catalogEnabled()) return bank;
-        if (loadingEl) loadingEl.textContent = 'Loading subjects from the API...';
-        return fetchApiSubjects().then(function(apiSubjects) {
-          return mergeCatalog(bank, apiSubjects);
-        }, function() {
-          return bank;
-        });
-      })
-      .then(function(bank) {
-        // Question rows overlay per subject; a failed subject keeps locals.
+    // Subjects come from the API catalog (public, keyless); rows come from
+    // the metered questions endpoint when a key is configured. There is no
+    // local bank: stale fallback rows are worse than an honest error, so a
+    // catalog failure fails the load instead of serving rot.
+    return fetchApiSubjects()
+      .then(function(apiSubjects) {
+        const bank = buildBankFromCatalog(apiSubjects);
         if (!apiEnabled()) return bank;
-        if (loadingEl) loadingEl.textContent = 'Updating questions from the API...';
+        if (loadingEl) loadingEl.textContent = 'Loading questions...';
         return fetchApiBank().then(function(overlay) {
           Object.keys(overlay).forEach(function(key) {
             if (bank[key]) bank[key].questions = overlay[key].questions;

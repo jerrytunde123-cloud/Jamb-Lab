@@ -38,7 +38,7 @@ describe('JAMB_QUESTIONS', function() {
     JAMB_STATE.setQuestionBank(makeBank());
   });
 
-  it('uses question-bank names instead of hardcoded keys', function() {
+  it('uses bank names instead of hardcoded keys', function() {
     expect(JAMB_QUESTIONS.getSubjectName('english')).toBe('English Language');
     expect(JAMB_QUESTIONS.getSubjectIcon('english')).toBe('fas fa-book');
   });

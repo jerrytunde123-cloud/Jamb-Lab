@@ -21,34 +21,53 @@ document.documentElement.innerHTML = '<head></head><body>' +
   bodyMatch[1].replace(/<script[\s\S]*?<\/script>/gi, '') +
   '</body>';
 
-function makeQuestion(id, opts) {
+function makeApiQuestion(id, opts) {
   opts = opts || {};
   return {
     id: id,
-    question: 'Question ' + id,
-    options: ['Alpha', 'Beta', 'Gamma', 'Delta'],
-    correct: 1,
-    image: opts.image || null
+    exam: 'JAMB',
+    subject: 'mathematics',
+    year: 2025,
+    source: 'authored',
+    text: 'Question ' + id,
+    options: [
+      { id: 'a', text: 'Alpha' },
+      { id: 'b', text: 'Beta' },
+      { id: 'c', text: 'Gamma' },
+      { id: 'd', text: 'Delta' },
+    ],
+    answer: 'b',
+    image: opts.image || null,
   };
 }
 
-function makeBank() {
-  const bank = {
-    english: { name: 'English Language', icon: 'fa-language', questions: [] },
-    mathematics: { name: 'Mathematics', icon: 'fa-calculator', questions: [] }
+function makeCatalog() {
+  return {
+    exam: 'JAMB',
+    subjects: [
+      { slug: 'use-of-english', exam: 'JAMB', name: 'Use of English' },
+      { slug: 'mathematics', exam: 'JAMB', name: 'Mathematics' },
+    ],
   };
+}
+
+function makePage(slug) {
+  const questions = [];
   for (let i = 0; i < 20; i++) {
-    bank.english.questions.push(makeQuestion('en-' + i, { image: 'images/diagram.png' }));
-    bank.mathematics.questions.push(makeQuestion('ma-' + i));
+    questions.push(makeApiQuestion(slug + '-' + i,
+      slug === 'use-of-english' ? { image: 'images/diagram.png' } : {}));
   }
-  return bank;
+  return { questions: questions, page: 1, per_page: 200, total_pages: 1, total_records: 20 };
 }
 
-const bank = makeBank();
-vi.stubGlobal('fetch', vi.fn(function() {
+vi.stubGlobal('fetch', vi.fn(function(url) {
+  const u = String(url);
+  const payload = u.indexOf('/subjects') !== -1
+    ? makeCatalog()
+    : makePage((/subject=([^&]*)/.exec(u) || [])[1] || 'mathematics');
   return Promise.resolve({
     ok: true,
-    json: function() { return Promise.resolve(bank); }
+    json: function() { return Promise.resolve(payload); }
   });
 }));
 
@@ -61,6 +80,7 @@ function answerCurrent() {
 
 describe('app smoke', function() {
   beforeAll(function() {
+    vi.stubEnv('VITE_UTMELAB_API_KEY', 'sk_test');
     localStorage.clear();
     // Pre-mark today's daily top-up so the share-only points flow below
     // starts from 0 points (daily top-up has its own unit tests).
@@ -80,7 +100,7 @@ describe('app smoke', function() {
   it('renders subjects from the question bank', function() {
     const items = document.querySelectorAll('.subject-item');
     expect(items.length).toBe(2);
-    expect(items[0].textContent).toContain('English Language');
+    expect(items[0].textContent).toContain('Use of English');
   });
 
   it('keeps Start Quiz disabled until a subject is selected', function() {

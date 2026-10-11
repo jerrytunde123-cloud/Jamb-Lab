@@ -3,8 +3,7 @@
  */
 
 import { vi } from 'vitest';
-import { apiEnabled, catalogEnabled, fetchApiBank, fetchApiSubjects, mergeCatalog } from '../js/api.js';
-import { retainJambSubjects } from '../js/subject-map.js';
+import { apiEnabled, buildBankFromCatalog, catalogEnabled, fetchApiBank, fetchApiSubjects } from '../js/api.js';
 
 function rendered(id, answerId) {
   return {
@@ -102,31 +101,18 @@ describe('api adapter', function() {
     expect(seen.headers['x-api-key']).toBeUndefined();
   });
 
-  it('lets the API catalog decide which subjects exist', function() {
-    const local = {
-      mathematics: { name: 'Mathematics', icon: 'fa-calculator', questions: [{ id: 'old' }] },
-      civicEducation: { name: 'Civic Education', icon: 'fa-book', questions: [] },
-    };
-    const merged = mergeCatalog(local, [
+  it('builds the bank from the catalog: names from JAMB, icons static', function() {
+    const bank = buildBankFromCatalog([
       { slug: 'mathematics', name: 'Mathematics' },
-      { slug: 'yoruba', name: 'Yoruba' },
+      { slug: 'use-of-english', name: 'Use of English' },
+      { slug: 'civic-education', name: 'Civic Education' },
     ]);
-    expect(Object.keys(merged).sort()).toEqual(['civicEducation', 'mathematics', 'yoruba']);
-    expect(merged.mathematics.questions.length).toBe(1); // locals kept until overlay
-    expect(merged.yoruba).toMatchObject({ name: 'Yoruba', questions: [] });
-    expect(merged.civicEducation.questions).toEqual([]);
+    expect(Object.keys(bank).sort()).toEqual(['english', 'mathematics']);
+    expect(bank.mathematics).toMatchObject({ name: 'Mathematics', icon: 'fa-calculator', questions: [] });
+    expect(bank.english).toMatchObject({ name: 'Use of English', icon: 'fa-font', questions: [] });
   });
 
   it('leaves the catalog on: the base is hardcoded, only the key is env', function() {
     expect(catalogEnabled()).toBe(true);
-  });
-
-  it('drops stale non-JAMB subjects before anything renders', function() {
-    const bank = {
-      mathematics: { name: 'Mathematics', questions: [] },
-      civicEducation: { name: 'Civic Education', questions: [] },
-      marketing: { name: 'Marketing', questions: [] },
-    };
-    expect(Object.keys(retainJambSubjects(bank))).toEqual(['mathematics']);
   });
 });

@@ -1,9 +1,11 @@
 /**
- * JAMB Quiz - subject key mapping.
+ * JAMB Quiz - subject catalog knowledge.
  *
- * Maps this app's question-bank keys (camelCase, historical) to the
- * utmelab-api catalog slugs (kebab-case, JAMB's own spelling).
- * Subjects with no API equivalent stay on the local bank — see api.js.
+ * The API is the source of truth for which subjects exist and what they
+ * are called. This file holds only what the API cannot provide:
+ * this app's stable internal keys (history and best scores in existing
+ * users' localStorage are keyed by them — never rename) and the display
+ * icons (the catalog carries no icon field).
  */
 
 // [appKey, apiSlug]
@@ -40,16 +42,31 @@ export const SLUG_TO_KEY = Object.fromEntries(
   SUBJECT_MAP.map(function([appKey, slug]) { return [slug, appKey]; }),
 );
 
-// The app's subject universe: exactly the JAMB offering. The local bank
-// historically carried extra (NECO) subjects — stale rows that must never
-// reach the grid, online or off. Anything outside this set is dropped at
-// load, before render.
-export const APP_KEYS = new Set(SUBJECT_MAP.map(function([appKey]) { return appKey; }));
-
-export function retainJambSubjects(bank) {
-  const kept = {};
-  Object.keys(bank || {}).forEach(function(key) {
-    if (APP_KEYS.has(key)) kept[key] = bank[key];
-  });
-  return kept;
-}
+// Display icons by app key. FontAwesome classes, as before.
+export const ICONS = {
+  agriculturalScience: 'fa-leaf',
+  arabic: 'fa-language',
+  biology: 'fa-dna',
+  chemistry: 'fa-flask',
+  commerce: 'fa-store',
+  computerStudies: 'fa-laptop-code',
+  crs: 'fa-bible',
+  economics: 'fa-chart-line',
+  english: 'fa-font',
+  financialAccounting: 'fa-coins',
+  fineArts: 'fa-palette',
+  french: 'fa-language',
+  geography: 'fa-globe-africa',
+  government: 'fa-gavel',
+  hausa: 'fa-language',
+  history: 'fa-landmark',
+  homeEconomics: 'fa-home',
+  igbo: 'fa-language',
+  irk: 'fa-moon',
+  literature: 'fa-feather-alt',
+  mathematics: 'fa-calculator',
+  music: 'fa-music',
+  physicalEducation: 'fa-running',
+  physics: 'fa-atom',
+  yoruba: 'fa-language',
+};
