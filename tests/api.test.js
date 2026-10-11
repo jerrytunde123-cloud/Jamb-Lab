@@ -70,8 +70,27 @@ describe('api adapter', function() {
     expect(overlay.mathematics.questions[0].id).toBe('q1');
   });
 
-  it('keeps local rows for subjects the API cannot serve', async function() {
-    vi.stubGlobal('fetch', vi.fn(function(url) {
+  it('retries once after the told delay on 429, then serves', async function() {
+    let calls = 0;
+    vi.stubGlobal('fetch', vi.fn(function() {
+      calls += 1;
+      if (calls === 1) {
+        return Promise.resolve({
+          ok: false,
+          status: 429,
+          headers: new Headers({ 'retry-after': '0' }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: function() {
+        return Promise.resolve(page([rendered('q1', 'a')]));
+      } });
+    }));
+    const overlay = await fetchApiBank([['mathematics', 'mathematics']]);
+    expect(overlay.mathematics.questions.length).toBe(1);
+    expect(calls).toBeGreaterThan(1);
+  });
+
+  it('keeps local rows for subjects the API cannot serve', async function() {    vi.stubGlobal('fetch', vi.fn(function(url) {
       if (url.indexOf('subject=yoruba') !== -1) {
         return Promise.resolve({ ok: false, status: 429 });
       }

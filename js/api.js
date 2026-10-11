@@ -45,12 +45,29 @@ export function catalogEnabled() {
   return Boolean(apiBase());
 }
 
-async function getJSON(path) {
+async function getJSON(path, attempt) {
   const res = await fetch(apiBase() + path, {
     headers: { 'x-api-key': apiKey() },
   });
+  // The deployment key is shared by every visitor at 60 req/min, so a
+  // fresh boot (~26 requests) can legitimately 429 under concurrency.
+  // The API answers 429 with Retry-After (and only on 429s, D43) plus
+  // X-RateLimit-Reset — wait as told, then retry twice, then give up.
+  if (res.status === 429 && (attempt || 0) < 2) {
+    await new Promise(function(resolve) { setTimeout(resolve, retryDelayMs(res.headers)); });
+    return getJSON(path, (attempt || 0) + 1);
+  }
   if (!res.ok) throw new Error('API ' + res.status + ' for ' + path);
   return res.json();
+}
+
+function retryDelayMs(headers) {
+  const cap = 15000;
+  const after = headers && parseFloat(headers.get('retry-after'));
+  if (!isNaN(after)) return Math.min(Math.max(after * 1000, 0), cap);
+  const reset = headers && parseFloat(headers.get('x-ratelimit-reset'));
+  if (!isNaN(reset)) return Math.min(Math.max(reset * 1000 - Date.now(), 0), cap);
+  return 2000;
 }
 
 function toLocalQuestion(rq) {
