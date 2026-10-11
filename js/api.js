@@ -31,7 +31,7 @@ const PER_PAGE = 200; // server cap (D3/D30)
 // values always reflect the running build.
 // Hardcoded: this client talks to one API. When it gets a public URL,
 // change it here and rebuild — no per-environment config for the base.
-function apiBase() { return 'http://127.0.0.1:8080'; }
+function apiBase() { return 'https://api.utmelab.com'; }
 function apiKey() { return import.meta.env.VITE_UTMELAB_API_KEY || ''; }
 
 export function apiEnabled() {
