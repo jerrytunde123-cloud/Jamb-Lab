@@ -1,6 +1,13 @@
 # Dependencies
 node_modules/
 
+# Vite build output
+dist/
+
+# Local-only env (secrets). .env itself holds non-secret defaults.
+.env.local
+.env.*.local
+
 # Logs
 *.log
 npm-debug.log*

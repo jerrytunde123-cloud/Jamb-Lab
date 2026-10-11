@@ -2,11 +2,16 @@
  * JAMB Quiz - Points System
  */
 
+import JAMB_STATE from './state.js';
+import JAMB_UTILS from './utils.js';
+
 const JAMB_POINTS = (function() {
   'use strict';
 
-  const state = typeof JAMB_STATE !== 'undefined' ? JAMB_STATE : require('./state.js');
-  const utils = typeof JAMB_UTILS !== 'undefined' ? JAMB_UTILS : require('./utils.js');
+  // NOTE: the IIFE below closes over the imported module bindings via
+  // local aliases so the rest of this file is untouched by the ESM move.
+  const state = JAMB_STATE;
+  const utils = JAMB_UTILS;
 
   function readNumber(key) {
     const n = parseInt(localStorage.getItem(key) || '0', 10);
@@ -139,6 +144,4 @@ const JAMB_POINTS = (function() {
   };
 })();
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = JAMB_POINTS;
-}
+export default JAMB_POINTS;

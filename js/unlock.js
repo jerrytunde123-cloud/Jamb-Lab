@@ -11,12 +11,16 @@
  *   - Bonus channels → one-time point rewards
  */
 
+import JAMB_STATE from './state.js';
+import JAMB_UTILS from './utils.js';
+import JAMB_POINTS from './points.js';
+
 const JAMB_UNLOCK = (function() {
   'use strict';
 
-  const state = typeof JAMB_STATE !== 'undefined' ? JAMB_STATE : require('./state.js');
-  const utils = typeof JAMB_UTILS !== 'undefined' ? JAMB_UTILS : require('./utils.js');
-  const points = typeof JAMB_POINTS !== 'undefined' ? JAMB_POINTS : require('./points.js');
+  const state = JAMB_STATE;
+  const utils = JAMB_UTILS;
+  const points = JAMB_POINTS;
 
   const DAILY_CHECKIN_BONUS = 5;
 
@@ -266,6 +270,4 @@ const JAMB_UNLOCK = (function() {
   };
 })();
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = JAMB_UNLOCK;
-}
+export default JAMB_UNLOCK;

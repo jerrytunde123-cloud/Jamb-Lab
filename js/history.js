@@ -62,6 +62,4 @@ const JAMB_HISTORY = (function() {
   };
 })();
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = JAMB_HISTORY;
-}
+export default JAMB_HISTORY;

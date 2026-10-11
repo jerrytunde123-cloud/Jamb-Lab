@@ -2,12 +2,16 @@
  * JAMB Quiz - Buy Points (Paystack + PIN) + Send Points + 10% bonus
  */
 
+import JAMB_STATE from './state.js';
+import JAMB_UTILS from './utils.js';
+import JAMB_POINTS from './points.js';
+
 const JAMB_PURCHASE = (function() {
   'use strict';
 
-  const state = typeof JAMB_STATE !== 'undefined' ? JAMB_STATE : require('./state.js');
-  const utils = typeof JAMB_UTILS !== 'undefined' ? JAMB_UTILS : require('./utils.js');
-  const points = typeof JAMB_POINTS !== 'undefined' ? JAMB_POINTS : require('./points.js');
+  const state = JAMB_STATE;
+  const utils = JAMB_UTILS;
+  const points = JAMB_POINTS;
 
   function getPaymentConfig() {
     const cfg = state.getConfig();
@@ -339,6 +343,4 @@ const JAMB_PURCHASE = (function() {
   };
 })();
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = JAMB_PURCHASE;
-}
+export default JAMB_PURCHASE;

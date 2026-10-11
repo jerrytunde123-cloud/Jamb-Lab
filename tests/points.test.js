@@ -2,9 +2,9 @@
  * JAMB Quiz - Points System Tests
  */
 
-const JAMB_STATE = require('../js/state.js');
-const JAMB_POINTS = require('../js/points.js');
-const JAMB_UTILS = require('../js/utils.js');
+import JAMB_STATE from '../js/state.js';
+import JAMB_POINTS from '../js/points.js';
+import JAMB_UTILS from '../js/utils.js';
 
 describe('JAMB_POINTS - Points System', function() {
   beforeEach(function() {

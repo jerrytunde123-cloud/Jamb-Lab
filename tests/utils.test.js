@@ -2,7 +2,7 @@
  * JAMB Quiz - Utility Functions Tests
  */
 
-const JAMB_UTILS = require('../js/utils.js');
+import JAMB_UTILS from '../js/utils.js';
 
 describe('JAMB_UTILS - Utility Functions', function() {
   beforeEach(function() {
@@ -139,8 +139,12 @@ describe('JAMB_UTILS - Utility Functions', function() {
   });
 
   describe('imageSrc()', function() {
-    it('prefixes local image paths with assets/', function() {
-      expect(JAMB_UTILS.imageSrc('images/foo.jpg')).toBe('assets/images/foo.jpg');
+    it('resolves local image paths against the app base', function() {
+      expect(JAMB_UTILS.imageSrc('images/foo.jpg')).toBe('/images/foo.jpg');
+    });
+
+    it('rewrites the legacy assets/images/ prefix to the public path', function() {
+      expect(JAMB_UTILS.imageSrc('assets/images/foo.jpg')).toBe('/images/foo.jpg');
     });
 
     it('leaves absolute URLs unchanged', function() {

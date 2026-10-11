@@ -2,9 +2,9 @@
  * JAMB Quiz - Question generation and subject helpers
  */
 
-const JAMB_STATE = require('../js/state.js');
-const JAMB_UTILS = require('../js/utils.js');
-const JAMB_QUESTIONS = require('../js/questions.js');
+import JAMB_STATE from '../js/state.js';
+import JAMB_UTILS from '../js/utils.js';
+import JAMB_QUESTIONS from '../js/questions.js';
 
 function makeQuestion(id, correct) {
   return {
@@ -80,8 +80,8 @@ describe('JAMB_QUESTIONS', function() {
 });
 
 describe('JAMB_UTILS.imageSrc', function() {
-  it('prefixes local image paths with assets/', function() {
-    expect(JAMB_UTILS.imageSrc('images/foo.jpg')).toBe('assets/images/foo.jpg');
+  it('resolves local image paths against the app base', function() {
+    expect(JAMB_UTILS.imageSrc('images/foo.jpg')).toBe('/images/foo.jpg');
   });
 
   it('leaves absolute URLs unchanged', function() {

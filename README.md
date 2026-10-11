@@ -11,14 +11,22 @@ A browser-based UTME/JAMB practice quiz for Nigerian students.
 
 ## Run it
 
-The app is static. Serve the folder (fetch needs a real origin):
-
 ```bash
-python3 -m http.server 8000
-# open http://localhost:8000
+npm install
+cp .env.example .env.local   # then put your API key in .env.local
+npm run dev                  # http://localhost:8000
 ```
 
-Or deploy the folder to Netlify, Vercel, or GitHub Pages.
+`npm run build` outputs a static `dist/` (preview with `npm run preview`).
+On Vercel, set `VITE_API_BASE` / `VITE_API_KEY` in the project dashboard —
+Vercel auto-detects Vite, no extra config needed.
+
+### Question source
+
+Subjects mapped in `js/subject-map.js` load live from the utmelab-api
+(`VITE_API_BASE`, key in `VITE_API_KEY`); anything unmapped or unreachable
+falls back to the bundled `public/question-bank.json`. Without a key the app
+runs fully offline on the local bank.
 
 ### Vercel
 

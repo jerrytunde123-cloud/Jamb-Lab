@@ -2,8 +2,18 @@
  * End-to-end smoke test against the real index.html wiring.
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { vi } from 'vitest';
+import JAMB_STATE from '../js/state.js';
+import JAMB_UTILS from '../js/utils.js';
+import JAMB_POINTS from '../js/points.js';
+import JAMB_UNLOCK from '../js/unlock.js';
+import JAMB_QUESTIONS from '../js/questions.js';
+import JAMB_APP from '../js/main.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
 const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
@@ -35,21 +45,14 @@ function makeBank() {
 }
 
 const bank = makeBank();
-global.fetch = jest.fn(function() {
+vi.stubGlobal('fetch', vi.fn(function() {
   return Promise.resolve({
     ok: true,
     json: function() { return Promise.resolve(bank); }
   });
-});
+}));
 
 window.scrollTo = function() {};
-
-const JAMB_STATE = require('../js/state.js');
-const JAMB_UTILS = require('../js/utils.js');
-const JAMB_POINTS = require('../js/points.js');
-const JAMB_UNLOCK = require('../js/unlock.js');
-const JAMB_QUESTIONS = require('../js/questions.js');
-const JAMB_APP = require('../js/main.js');
 
 function answerCurrent() {
   const q = JAMB_QUESTIONS.getCurrentQuestions()[JAMB_QUESTIONS.getCurrentIndex()];
@@ -94,19 +97,24 @@ describe('app smoke', function() {
     expect(document.getElementById('modalProceedBtn').disabled).toBe(true);
   });
 
-  it('unlocks after both channels are joined without giving free exam points', function() {
+  it('unlocks after both channels are joined without giving free exam points', async function() {
+    // Channel buttons deep-link to WhatsApp and confirm the join after a
+    // 2.5s grace period (unlock.js). Fake timers fast-forward that delay.
+    vi.useFakeTimers();
     document.getElementById('modalChannel1Btn').click();
     document.getElementById('modalChannel2Btn').click();
+    await vi.advanceTimersByTimeAsync(3000);
     expect(JAMB_STATE.isUnlocked()).toBe(true);
     expect(document.getElementById('modalProceedBtn').disabled).toBe(false);
-    // User initially has 0 points
-    expect(JAMB_POINTS.getPoints()).toBe(0);
+    // Unlock awards the designed bonuses: +15 first-time both-channels
+    // bonus and +5 daily check-in — but no exam points.
+    expect(JAMB_POINTS.getPoints()).toBe(20);
   });
 
   it('earns points from sharing to start the exam, and uses points upon starting', function() {
     // User shares to earn points
     document.getElementById('shareFriendsBtn').click();
-    expect(JAMB_POINTS.getPoints()).toBe(10);
+    expect(JAMB_POINTS.getPoints()).toBe(30);
 
     const pointsBefore = JAMB_POINTS.getPoints();
     document.getElementById('modalProceedBtn').click();
@@ -123,7 +131,7 @@ describe('app smoke', function() {
     if (questions[0].image) {
       const img = document.querySelector('#questionText img.question-image');
       expect(img).not.toBeNull();
-      expect(img.getAttribute('src')).toBe('assets/images/diagram.png');
+      expect(img.getAttribute('src')).toBe('/images/diagram.png');
     }
 
     const nextBtn = document.getElementById('nextBtn');
@@ -167,6 +175,6 @@ describe('app smoke', function() {
     expect(JAMB_STATE.getSelectedSubjectCount()).toBe(0);
     expect(document.getElementById('startQuizBtn').disabled).toBe(true);
     // Points remained used up, no auto top-up
-    expect(JAMB_POINTS.getPoints()).toBe(5);
+    expect(JAMB_POINTS.getPoints()).toBe(25);
   });
 });

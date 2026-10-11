@@ -2,16 +2,24 @@
  * JAMB Quiz - Application entry point
  */
 
+import JAMB_STATE from './state.js';
+import JAMB_UTILS from './utils.js';
+import JAMB_POINTS from './points.js';
+import JAMB_REFERRALS from './referrals.js';
+import JAMB_UNLOCK from './unlock.js';
+import JAMB_QUESTIONS from './questions.js';
+import JAMB_PURCHASE from './purchase.js';
+
 const JAMB_APP = (function() {
   'use strict';
 
-  const state = typeof JAMB_STATE !== 'undefined' ? JAMB_STATE : require('./state.js');
-  const utils = typeof JAMB_UTILS !== 'undefined' ? JAMB_UTILS : require('./utils.js');
-  const points = typeof JAMB_POINTS !== 'undefined' ? JAMB_POINTS : require('./points.js');
-  const referrals = typeof JAMB_REFERRALS !== 'undefined' ? JAMB_REFERRALS : require('./referrals.js');
-  const unlock = typeof JAMB_UNLOCK !== 'undefined' ? JAMB_UNLOCK : require('./unlock.js');
-  const questionsModule = typeof JAMB_QUESTIONS !== 'undefined' ? JAMB_QUESTIONS : require('./questions.js');
-  const purchase = typeof JAMB_PURCHASE !== 'undefined' ? JAMB_PURCHASE : require('./purchase.js');
+  const state = JAMB_STATE;
+  const utils = JAMB_UTILS;
+  const points = JAMB_POINTS;
+  const referrals = JAMB_REFERRALS;
+  const unlock = JAMB_UNLOCK;
+  const questionsModule = JAMB_QUESTIONS;
+  const purchase = JAMB_PURCHASE;
   const config = state.getConfig();
   let started = false;
 
@@ -174,6 +182,4 @@ document.addEventListener('DOMContentLoaded', function() {
   JAMB_APP.init();
 });
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = JAMB_APP;
-}
+export default JAMB_APP;

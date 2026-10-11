@@ -2,13 +2,19 @@
  * JAMB Quiz - Subjects, question bank, and quiz engine
  */
 
+import JAMB_STATE from './state.js';
+import JAMB_UTILS from './utils.js';
+import JAMB_POINTS from './points.js';
+import JAMB_HISTORY from './history.js';
+import { apiEnabled, fetchApiBank } from './api.js';
+
 const JAMB_QUESTIONS = (function() {
   'use strict';
 
-  const state = typeof JAMB_STATE !== 'undefined' ? JAMB_STATE : require('./state.js');
-  const utils = typeof JAMB_UTILS !== 'undefined' ? JAMB_UTILS : require('./utils.js');
-  const points = typeof JAMB_POINTS !== 'undefined' ? JAMB_POINTS : require('./points.js');
-  const history = typeof JAMB_HISTORY !== 'undefined' ? JAMB_HISTORY : (typeof require !== 'undefined' ? require('./history.js') : null);
+  const state = JAMB_STATE;
+  const utils = JAMB_UTILS;
+  const points = JAMB_POINTS;
+  const history = JAMB_HISTORY;
 
   const QUIZ_CONFIG = state.getConfig().QUIZ;
   const POINTS_CONFIG = state.getConfig().POINTS;
@@ -72,14 +78,37 @@ const JAMB_QUESTIONS = (function() {
     });
   }
 
+  function bankUrl(name) {
+    const base = (import.meta.env && import.meta.env.BASE_URL) || '/';
+    return base + name;
+  }
+
   function loadQuestionBank() {
     const loadingEl = utils.$('subjectLoading');
-    if (loadingEl) loadingEl.style.display = 'block';
+    if (loadingEl) {
+      loadingEl.style.display = 'block';
+      loadingEl.textContent = 'Loading subjects from question bank...';
+    }
 
-    return fetch('question-bank.json')
+    // The local bank always loads first: it carries subject names, icons
+    // and the fallback rows for anything the API cannot serve.
+    return fetch(bankUrl('question-bank.json'))
       .then(function(response) {
         if (!response.ok) throw new Error('Failed to load question bank');
         return response.json();
+      })
+      .then(function(bank) {
+        if (!apiEnabled()) return bank;
+        if (loadingEl) loadingEl.textContent = 'Updating questions from the API...';
+        // Overlay API rows per subject; a failed subject keeps local rows.
+        return fetchApiBank().then(function(overlay) {
+          Object.keys(overlay).forEach(function(key) {
+            if (bank[key]) bank[key].questions = overlay[key].questions;
+          });
+          return bank;
+        }, function() {
+          return bank;
+        });
       })
       .then(function(bank) {
         state.setQuestionBank(bank);
@@ -648,6 +677,4 @@ const JAMB_QUESTIONS = (function() {
   };
 })();
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = JAMB_QUESTIONS;
-}
+export default JAMB_QUESTIONS;

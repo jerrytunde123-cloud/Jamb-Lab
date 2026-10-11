@@ -81,9 +81,13 @@ const JAMB_UTILS = (function() {
   function imageSrc(image) {
     if (!image) return '';
     if (/^https?:\/\//i.test(image)) return image;
-    if (image.indexOf('assets/') === 0) return image;
-    if (image.indexOf('public/') === 0) return 'assets/' + image.slice('public/'.length);
-    return 'assets/' + image.replace(/^\//, '');
+    // Runtime image paths resolve against the app base, not the source
+    // tree: diagram files ship verbatim from public/images/.
+    const base = (import.meta.env && import.meta.env.BASE_URL) || '/';
+    let p = String(image).replace(/^\//, '');
+    if (p.indexOf('assets/images/') === 0) p = p.slice('assets/'.length); // legacy bank prefix
+    if (p.indexOf('assets/') === 0) return p; // already source-relative (dev)
+    return base + p;
   }
 
   function formatMathFallback(str) {
@@ -164,6 +168,4 @@ const JAMB_UTILS = (function() {
   };
 })();
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = JAMB_UTILS;
-}
+export default JAMB_UTILS;

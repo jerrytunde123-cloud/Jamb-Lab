@@ -117,6 +117,4 @@ const JAMB_STATE = (function() {
   };
 })();
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = JAMB_STATE;
-}
+export default JAMB_STATE;

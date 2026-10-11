@@ -5,12 +5,16 @@
  * - Referral count tracked in Vercel KV
  */
 
+import JAMB_STATE from './state.js';
+import JAMB_UTILS from './utils.js';
+import JAMB_POINTS from './points.js';
+
 const JAMB_REFERRALS = (function() {
   'use strict';
 
-  const state = typeof JAMB_STATE !== 'undefined' ? JAMB_STATE : require('./state.js');
-  const utils = typeof JAMB_UTILS !== 'undefined' ? JAMB_UTILS : require('./utils.js');
-  const points = typeof JAMB_POINTS !== 'undefined' ? JAMB_POINTS : require('./points.js');
+  const state = JAMB_STATE;
+  const utils = JAMB_UTILS;
+  const points = JAMB_POINTS;
 
   const WELCOME_BONUS = 10;
   const REFERRER_REWARD = 10;
@@ -218,6 +222,4 @@ const JAMB_REFERRALS = (function() {
   };
 })();
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = JAMB_REFERRALS;
-}
+export default JAMB_REFERRALS;

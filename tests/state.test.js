@@ -2,7 +2,7 @@
  * JAMB Quiz - State Management Tests
  */
 
-const JAMB_STATE = require('../js/state.js');
+import JAMB_STATE from '../js/state.js';
 
 describe('JAMB_STATE - Application State', function() {
   beforeEach(function() {
