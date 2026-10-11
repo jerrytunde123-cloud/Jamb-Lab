@@ -62,9 +62,11 @@ function makePage(slug) {
 
 const fetchMock = vi.fn(function(url) {
   const u = String(url);
-  const payload = u.indexOf('/subjects') !== -1
-    ? makeCatalog()
-    : makePage((/subject=([^&]*)/.exec(u) || [])[1] || 'mathematics');
+  const payload = u.indexOf('/health') !== -1
+    ? { status: 'ok', bank_version: 'smoke-v1' }
+    : u.indexOf('/subjects') !== -1
+      ? makeCatalog()
+      : makePage((/subject=([^&]*)/.exec(u) || [])[1] || 'mathematics');
   return Promise.resolve({
     ok: true,
     json: function() { return Promise.resolve(payload); }

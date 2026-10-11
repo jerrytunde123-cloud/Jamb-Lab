@@ -6,7 +6,9 @@ import JAMB_STATE from './state.js';
 import JAMB_UTILS from './utils.js';
 import JAMB_POINTS from './points.js';
 import JAMB_HISTORY from './history.js';
-import { apiEnabled, buildBankFromCatalog, fetchApiBank, fetchApiSubjects } from './api.js';
+import { apiEnabled, buildBankFromCatalog, fetchApiBank, fetchApiSubjects, fetchBankVersion } from './api.js';
+import { SUBJECT_MAP } from './subject-map.js';
+import { readCache, writeCache } from './cache.js';
 
 const JAMB_QUESTIONS = (function() {
   'use strict';
@@ -85,27 +87,58 @@ const JAMB_QUESTIONS = (function() {
     if (textEl) textEl.textContent = msg;
   }
 
+  function applyOverlay(bank, rows) {
+    Object.keys(rows).forEach(function(key) {
+      if (bank[key] && Array.isArray(rows[key])) bank[key].questions = rows[key];
+    });
+    return bank;
+  }
+
+  function freshRows(overlay) {
+    const fresh = {};
+    Object.keys(overlay).forEach(function(key) {
+      if (overlay[key] && Array.isArray(overlay[key].questions) &&
+          overlay[key].questions.length > 0) {
+        fresh[key] = overlay[key].questions;
+      }
+    });
+    return fresh;
+  }
+
   function loadQuestionBank() {
     const loadingEl = utils.$('subjectLoading');
     if (loadingEl) loadingEl.style.display = 'block';
     setLoadingText('Loading subjects…');
 
     // Subjects come from the API catalog (public, keyless); rows come from
-    // the metered questions endpoint when a key is configured. There is no
-    // local bank: stale fallback rows are worse than an honest error, so a
-    // catalog failure fails the load instead of serving rot.
+    // the metered questions endpoint when a key is configured, through a
+    // version-gated cache — one keyless health check proves last session's
+    // rows current, so a repeat visit costs zero question requests and a
+    // content fix is picked up on the very next boot. There is no local
+    // bank: stale fallback rows are worse than an honest error.
     return fetchApiSubjects()
       .then(function(apiSubjects) {
         const bank = buildBankFromCatalog(apiSubjects);
         if (!apiEnabled()) return bank;
         setLoadingText('Loading questions…');
-        return fetchApiBank().then(function(overlay) {
-          Object.keys(overlay).forEach(function(key) {
-            if (bank[key]) bank[key].questions = overlay[key].questions;
+        return fetchBankVersion().then(function(version) {
+          const cached = readCache(version);
+          const missing = SUBJECT_MAP.filter(function(pair) { return !cached[pair[0]]; });
+          if (missing.length === 0) return applyOverlay(bank, cached);
+          return fetchApiBank(missing).then(function(overlay) {
+            const fresh = freshRows(overlay);
+            writeCache(version, fresh);
+            return applyOverlay(bank, Object.assign({}, cached, fresh));
+          }, function() {
+            return applyOverlay(bank, cached);
           });
-          return bank;
         }, function() {
-          return bank;
+          // Version unknown: trust nothing cached — fetch all, store nothing.
+          return fetchApiBank().then(function(overlay) {
+            return applyOverlay(bank, freshRows(overlay));
+          }, function() {
+            return bank;
+          });
         });
       })
       .then(function(bank) {

@@ -28,7 +28,10 @@ All subjects and questions load live from the utmelab-api
 icons from a static map). Key in `VITE_UTMELAB_API_KEY`; without one the
 subject grid still renders (the catalog is public) but quizzes have no
 rows. There is no local question bank — stale fallback rows are worse
-than an honest load error.
+than an honest load error. Repeat visits are served from a
+version-gated `localStorage` cache (`bank_version` from `/health`):
+same version costs zero question requests, any content fix refetches
+on the next boot.
 
 ### Vercel
 

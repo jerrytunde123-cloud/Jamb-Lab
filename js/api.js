@@ -90,9 +90,20 @@ async function fetchSubjectQuestions(slug) {
 }
 
 /**
+ * The bank's content version. Keyless and tiny — the one request a boot
+ * always makes, so the question cache can prove itself current without
+ * re-downloading anything. Throws when unreachable or malformed.
+ */
+export async function fetchBankVersion() {
+  const res = await fetch(apiBase() + '/health');
+  if (!res.ok) throw new Error('API ' + res.status + ' for health');
+  const data = await res.json();
+  if (!data || !data.bank_version) throw new Error('bad health payload');
+  return data.bank_version;
+}
+/**
  * The exam's subject list, straight from the catalog. Public endpoint —
- * no key sent. Throws on any failure or malformed payload; the caller
- * keeps the local list.
+ * no key sent. Throws on any failure or malformed payload.
  */
 export async function fetchApiSubjects() {
   const exam = encodeURIComponent(EXAM);
@@ -125,13 +136,14 @@ export function buildBankFromCatalog(apiSubjects) {
   return bank;
 }
 /**
- * Returns `{ appKey: { questions } }` for every mapped subject that served
- * at least one scorable question. Never throws — a failed subject is simply
- * absent, and the caller leaves it empty (see the module note above).
+ * Returns `{ appKey: { questions } }` for every subject that served at
+ * least one scorable question. `pairs` defaults to the whole catalog;
+ * pass a subset to refetch only what's missing. Never throws — a failed
+ * subject is simply absent.
  */
-export async function fetchApiBank() {
+export async function fetchApiBank(pairs) {
   const overlay = {};
-  const settled = await Promise.all(SUBJECT_MAP.map(function([appKey, slug]) {
+  const settled = await Promise.all((pairs || SUBJECT_MAP).map(function([appKey, slug]) {
     return fetchSubjectQuestions(slug).then(
       function(questions) { return { appKey: appKey, questions: questions }; },
       function() { return null; },
