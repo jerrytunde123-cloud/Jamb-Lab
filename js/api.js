@@ -22,7 +22,9 @@
 
 import { SLUG_TO_KEY, SUBJECT_MAP } from './subject-map.js';
 
-const EXAM = import.meta.env.VITE_EXAM || 'JAMB';
+// Single-exam app: the API is exam-scoped and this client only serves
+// JAMB, so the exam is a constant — not a third env var to configure.
+const EXAM = 'JAMB';
 const PER_PAGE = 200; // server cap (D3/D30)
 
 // Read lazily (not at module scope) so tests can stub the env and the

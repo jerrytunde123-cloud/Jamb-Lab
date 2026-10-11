@@ -32,7 +32,6 @@ describe('api adapter', function() {
     vi.unstubAllGlobals();
     vi.stubEnv('VITE_API_BASE', 'http://api.test');
     vi.stubEnv('VITE_API_KEY', 'sk_test');
-    vi.stubEnv('VITE_EXAM', 'JAMB');
   });
 
   afterEach(function() {
