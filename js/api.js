@@ -7,9 +7,10 @@
  *
  *   API RenderedQuestion            app question
  *   ---------------------           ------------
- *   text                    ---->   question
- *   options [{id, text}]    ---->   options [text...]
- *   answer (option id)      ---->   correct (option index)
+ *   text.text                 ---->   question
+ *   options[{id, text.text}]  ---->   options [text...]
+ *   answer (option id)        ---->   correct (option index)
+ *   inline marks (image)      ---->   image (url or null)
  *
  * Answers arrive with `include_explanation=true` and are mapped back to an
  * index immediately; nothing downstream changes (shuffle, scoring, review).
@@ -70,17 +71,56 @@ function retryDelayMs(headers) {
   return 2000;
 }
 
+/**
+ * Extract plain text from a RichText object (or return string as-is).
+ * RichText shape: { text: string, inline: Inline[] }
+ */
+function richTextToString(rt) {
+  if (!rt) return '';
+  if (typeof rt === 'string') return rt;
+  return rt.text || '';
+}
+
+/**
+ * Extract image URL from RichText inline marks.
+ * Returns the first image URL found, or null.
+ */
+function extractImageFromRichText(rt) {
+  if (!rt || !Array.isArray(rt.inline)) return null;
+  for (const mark of rt.inline) {
+    if (mark.kind === 'image' && mark.url) {
+      return mark.url;
+    }
+  }
+  return null;
+}
+
 function toLocalQuestion(rq) {
   if (!rq || !Array.isArray(rq.options)) return null;
-  const options = rq.options.map(function(o) { return o.text; });
+
+  // Extract plain text from RichText objects
+  const questionText = richTextToString(rq.text);
+  const options = rq.options.map(function(o) { return richTextToString(o.text); });
+
+  // Find correct answer index by matching option id
   const correct = rq.options.findIndex(function(o) { return o.id === rq.answer; });
   if (correct < 0 || correct >= options.length) return null;
+
+  // Extract image from inline marks (question text or first option with image)
+  let image = extractImageFromRichText(rq.text);
+  if (!image) {
+    for (const opt of rq.options) {
+      image = extractImageFromRichText(opt.text);
+      if (image) break;
+    }
+  }
+
   return {
     id: rq.id,
-    question: rq.text,
+    question: questionText,
     options: options,
     correct: correct,
-    image: rq.image || null,
+    image: image,
     year: 'JAMB ' + rq.year,
     source: 'utmelab-api',
     sourceId: rq.id,
@@ -118,9 +158,11 @@ export async function fetchBankVersion() {
   if (!data || !data.bank_version) throw new Error('bad health payload');
   return data.bank_version;
 }
+
 /**
  * The exam's subject list, straight from the catalog. Public endpoint —
  * no key sent. Throws on any failure or malformed payload.
+ * Returns array of { slug, name, is_compulsory, objective_paper_questions }
  */
 export async function fetchApiSubjects() {
   const exam = encodeURIComponent(EXAM);
@@ -152,6 +194,7 @@ export function buildBankFromCatalog(apiSubjects) {
   });
   return bank;
 }
+
 /**
  * Returns `{ appKey: { questions } }` for every subject that served at
  * least one scorable question. `pairs` defaults to the whole catalog;
