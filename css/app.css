@@ -149,6 +149,12 @@ body { background: #f4f7fb; min-height: 100vh; display: flex; justify-content: c
 .question-text { font-size: 1.05rem; color: #0b2b40; font-weight: 600; line-height: 1.6; margin-bottom: 1.2rem; padding: 0.9rem; background: #f8fafc; border-radius: 1rem; border-left: 4px solid #1a5f7a; word-break: break-word; }
 .question-text u, .option-text u, .review-item u { text-decoration: underline; text-underline-offset: 3px; font-weight: 700; }
 .question-image { display: block; max-width: 100%; max-height: 280px; margin: 0.9rem auto 0; border-radius: 0.8rem; background: white; }
+.question-image:first-child { margin-top: 0; margin-bottom: 0.9rem; }
+.passage-block { background: white; border: 1px solid #dee8f0; border-radius: 0.8rem; padding: 0.9rem 1rem; margin-bottom: 1rem; max-height: 260px; overflow-y: auto; }
+.passage-head { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #1a5f7a; margin-bottom: 0.5rem; }
+.passage-text { font-size: 0.92rem; font-weight: 400; line-height: 1.65; color: #1d3b4f; }
+.option { flex-wrap: wrap; }
+.option-image { display: block; flex-basis: 100%; max-width: 100%; max-height: 180px; margin-top: 0.5rem; border-radius: 0.6rem; background: white; object-fit: contain; }
 .options { display: flex; flex-direction: column; gap: 10px; }
 .option { background: white; border: 2px solid #dee8f0; border-radius: 1rem; padding: 0.9rem 1rem; font-size: 0.95rem; color: #1d3b4f; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 12px; }
 .option:hover { border-color: #1a5f7a; background: #f0f7fe; }

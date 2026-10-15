@@ -68,6 +68,23 @@ describe('JAMB_UTILS - Utility Functions', function() {
       const q = { id: 't', question: 'x', options: ['4'], correct: 0 };
       expect(JAMB_UTILS.shuffleQuestion(q)).toEqual(q);
     });
+
+    it('should carry option images through the same shuffle as their option', function() {
+      const q = {
+        id: 'img-1',
+        question: 'Which?',
+        options: ['a1', 'b1', 'c1'],
+        correct: 2,
+        optionImages: [null, { url: 'https://cdn.example/b.png', position: 'below' }, null],
+      };
+      for (let n = 0; n < 20; n++) {
+        const shuffled = JAMB_UTILS.shuffleQuestion(q);
+        expect(shuffled.options[shuffled.correct]).toBe('c1');
+        const at = shuffled.options.indexOf('b1');
+        expect(shuffled.optionImages[at]).toEqual({ url: 'https://cdn.example/b.png', position: 'below' });
+        expect(shuffled.optionImages.length).toBe(3);
+      }
+    });
   });
 
   describe('formatTime()', function() {

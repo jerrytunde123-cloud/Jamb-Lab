@@ -33,11 +33,19 @@ const JAMB_UTILS = (function() {
 
   function shuffleQuestion(q) {
     if (!q.options || q.options.length < 2) return q;
-    const originalCorrect = q.options[q.correct];
-    const shuffled = shuffleArray(q.options);
-    let correctIndex = shuffled.indexOf(originalCorrect);
-    if (correctIndex === -1) correctIndex = 0;
-    return Object.assign({}, q, { options: shuffled, correct: correctIndex });
+    // Shuffle positions, then carry every parallel array (optionImages)
+    // through the same permutation so figures stay with their option.
+    const order = shuffleArray(q.options.map(function(opt, i) { return i; }));
+    const options = order.map(function(i) { return q.options[i]; });
+    const correctIndex = order.indexOf(q.correct);
+    const out = Object.assign({}, q, {
+      options: options,
+      correct: correctIndex === -1 ? 0 : correctIndex
+    });
+    if (Array.isArray(q.optionImages) && q.optionImages.length === q.options.length) {
+      out.optionImages = order.map(function(i) { return q.optionImages[i]; });
+    }
+    return out;
   }
 
   function formatTime(totalSeconds) {

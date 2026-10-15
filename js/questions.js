@@ -401,14 +401,39 @@ const JAMB_QUESTIONS = (function() {
 
     const questionEl = utils.$('questionText');
     if (questionEl) {
-      utils.renderFormattedText(questionEl, q.question);
-      if (q.image) {
+      questionEl.innerHTML = '';
+      // A comprehension stem without its passage cannot be answered, so
+      // rows arrive with the passage attached (see attachPassages) and it
+      // renders first — the shared stimulus, then the question on it.
+      if (q.passage && q.passage.text) {
+        const pBlock = document.createElement('div');
+        pBlock.className = 'passage-block';
+        const pHead = document.createElement('div');
+        pHead.className = 'passage-head';
+        pHead.textContent = [q.passage.kind, q.passage.title].filter(Boolean).join(' — ') || 'Reading passage';
+        pBlock.appendChild(pHead);
+        const pText = document.createElement('div');
+        pText.className = 'passage-text';
+        utils.renderFormattedText(pText, q.passage.text);
+        pBlock.appendChild(pText);
+        questionEl.appendChild(pBlock);
+      }
+      const stem = document.createElement('div');
+      utils.renderFormattedText(stem, q.question);
+      questionEl.appendChild(stem);
+      if (q.image && q.image.url) {
         const img = document.createElement('img');
         img.className = 'question-image';
         img.alt = 'Question illustration';
-        img.src = utils.imageSrc(q.image);
+        img.src = utils.imageSrc(q.image.url);
         img.addEventListener('error', function() { img.remove(); });
-        questionEl.appendChild(img);
+        // The API states the placement: above means the stem refers down
+        // ("the diagram above"), below means it refers up. Default below.
+        if (q.image.position === 'above' && stem.parentNode === questionEl) {
+          questionEl.insertBefore(img, stem);
+        } else {
+          questionEl.appendChild(img);
+        }
       }
     }
 
@@ -432,6 +457,18 @@ const JAMB_QUESTIONS = (function() {
         utils.renderFormattedText(text, opt);
         div.appendChild(letter);
         div.appendChild(text);
+        // A figure that belongs to one option renders with that option,
+        // never hoisted under the stem. Shuffling carries it along
+        // (see shuffleQuestion) so it cannot drift to another letter.
+        const optImg = q.optionImages && q.optionImages[i];
+        if (optImg && optImg.url) {
+          const img = document.createElement('img');
+          img.className = 'option-image';
+          img.alt = 'Option illustration';
+          img.src = utils.imageSrc(optImg.url);
+          img.addEventListener('error', function() { img.remove(); });
+          div.appendChild(img);
+        }
         div.addEventListener('click', function() { selectOption(i); });
         container.appendChild(div);
       });
@@ -521,8 +558,18 @@ const JAMB_QUESTIONS = (function() {
     }
   }
 
-  function bindReviewToggle() {
-    if (reviewToggleBound) return;
+  function appendOptionImage(parent, q, idx) {
+    const optImg = q.optionImages && q.optionImages[idx];
+    if (!optImg || !optImg.url) return;
+    const img = document.createElement('img');
+    img.className = 'option-image';
+    img.alt = 'Option illustration';
+    img.src = utils.imageSrc(optImg.url);
+    img.addEventListener('error', function() { img.remove(); });
+    parent.appendChild(img);
+  }
+
+  function bindReviewToggle() {    if (reviewToggleBound) return;
     const moreBtn = utils.$('showMoreQuestions');
     if (!moreBtn) return;
     reviewToggleBound = true;
@@ -598,6 +645,7 @@ const JAMB_QUESTIONS = (function() {
           const optSpan = document.createElement('span');
           utils.renderFormattedText(optSpan, q.options[idx]);
           userSpan.appendChild(optSpan);
+          appendOptionImage(userSpan, q, idx);
         }
         ans.appendChild(userSpan);
         item.appendChild(ans);
@@ -612,6 +660,7 @@ const JAMB_QUESTIONS = (function() {
           const optSpan = document.createElement('span');
           utils.renderFormattedText(optSpan, q.options[q.correct]);
           caSpan.appendChild(optSpan);
+          appendOptionImage(caSpan, q, q.correct);
           ca.appendChild(caSpan);
           item.appendChild(ca);
         }

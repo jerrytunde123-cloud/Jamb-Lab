@@ -3,7 +3,7 @@
  */
 
 import { vi } from 'vitest';
-import { apiEnabled, buildBankFromCatalog, catalogEnabled, fetchApiBank, fetchApiSubjects } from '../js/api.js';
+import { apiEnabled, attachPassages, buildBankFromCatalog, catalogEnabled, fetchApiBank, fetchApiSubjects } from '../js/api.js';
 
 function rendered(id, answerId) {
   return {
@@ -133,5 +133,64 @@ describe('api adapter', function() {
 
   it('leaves the catalog on: the base is hardcoded, only the key is env', function() {
     expect(catalogEnabled()).toBe(true);
+  });
+
+  it('keeps image placement: stem above, figures with their option', async function() {
+    function rich(text, marks) { return { text: text, inline: marks || [] }; }
+    function img(url, position) { return { start: 0, len: 0, kind: 'image', url: url, position: position }; }
+    const row = {
+      id: 'q-img', exam: 'JAMB', subject: 'physics', year: 2025, source: 'authored',
+      text: rich('See the diagram above.', [img('https://cdn.example/fig.png', 'above')]),
+      options: [
+        { id: 'a', text: rich('plain', []) },
+        { id: 'b', text: rich('with figure', [img('https://cdn.example/opt.png', 'below')]) },
+      ],
+      answer: 'b',
+    };
+    vi.stubGlobal('fetch', vi.fn(function(url) {
+      return Promise.resolve({ ok: true, json: function() {
+        return Promise.resolve(page([row]));
+      } });
+    }));
+    const overlay = await fetchApiBank([['physics', 'physics']]);
+    const q = overlay.physics.questions[0];
+    expect(q.image).toEqual({ url: 'https://cdn.example/fig.png', position: 'above' });
+    expect(q.optionImages[0]).toBeNull();
+    expect(q.optionImages[1]).toEqual({ url: 'https://cdn.example/opt.png', position: 'below' });
+  });
+
+  it('drops passage rows the API cannot serve, keeps the rest', function() {
+    const questions = [
+      { id: 'free', passageId: null },
+      { id: 'held', passageId: 'p1' },
+      { id: 'dangling', passageId: 'p-missing' },
+    ];
+    const out = attachPassages(questions, { p1: { title: 'T', author: null, kind: 'comprehension', text: 'Once...' } });
+    expect(out.map(function(q) { return q.id; })).toEqual(['free', 'held']);
+    expect(out[1].passage.text).toBe('Once...');
+  });
+
+  it('attaches fetched passages through fetchApiBank', async function() {
+    const row = {
+      id: 'q-eng', exam: 'JAMB', subject: 'use-of-english', year: 2025, source: 'past_paper',
+      text: { text: 'What is the passage about?', inline: [] },
+      options: [{ id: 'a', text: { text: 'x', inline: [] } }],
+      answer: 'a',
+      passage_id: 'p1',
+    };
+    vi.stubGlobal('fetch', vi.fn(function(url) {
+      if (String(url).indexOf('/passages/') !== -1) {
+        return Promise.resolve({ ok: true, json: function() {
+          return Promise.resolve({ passage: { id: 'p1', kind: 'comprehension', title: 'T', author: null, text: { text: 'Once...', inline: [] } } });
+        } });
+      }
+      return Promise.resolve({ ok: true, json: function() {
+        return Promise.resolve(page([row]));
+      } });
+    }));
+    const overlay = await fetchApiBank([['english', 'use-of-english']]);
+    const q = overlay.english.questions[0];
+    expect(q.passageId).toBe('p1');
+    expect(q.passage.text).toBe('Once...');
   });
 });

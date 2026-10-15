@@ -16,7 +16,7 @@
  * uncached; they never throw into the loader.
  */
 
-const PREFIX = 'jamb_qcache_v1:';
+const PREFIX = 'jamb_qcache_v2:';
 
 function storage() {
   try {

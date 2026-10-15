@@ -10,12 +10,15 @@
  *   text.text                 ---->   question
  *   options[{id, text.text}]  ---->   options [text...]
  *   answer (option id)        ---->   correct (option index)
- *   inline marks (image)      ---->   image (url or null)
+ *   inline image marks        ---->   image / optionImages (url + position)
+ *   passage_id                ---->   passage (attached, else row dropped)
  *
  * Answers arrive with `include_explanation=true` and are mapped back to an
  * index immediately; nothing downstream changes (shuffle, scoring, review).
  * Rows whose answer id matches no option are dropped — an unscorable
- * question must never reach the quiz.
+ * question must never reach the quiz. Rows pointing at a passage that
+ * cannot be fetched are dropped too — a comprehension stem without its
+ * passage is unanswerable.
  *
  * There is no local fallback bank: stale rows are worse than an honest
  * error, so a subject the API cannot serve stays empty and the loader
@@ -42,6 +45,7 @@ export function apiEnabled() {
 
 // The catalog is public (no key): which subjects exist is API data even
 // for keyless clients. Question rows still need the key (see apiEnabled).
+// Passages are public too — content to read, not answers to protect.
 export function catalogEnabled() {
   return Boolean(apiBase());
 }
@@ -82,14 +86,18 @@ function richTextToString(rt) {
 }
 
 /**
- * Extract image URL from RichText inline marks.
- * Returns the first image URL found, or null.
+ * First image mark in a RichText value, with the API's own placement.
+ * `{ url, position }` where position is 'above' or 'below' (anything
+ * else means below — the renderer only knows those two slots).
  */
-function extractImageFromRichText(rt) {
+function extractImage(rt) {
   if (!rt || !Array.isArray(rt.inline)) return null;
   for (const mark of rt.inline) {
-    if (mark.kind === 'image' && mark.url) {
-      return mark.url;
+    if (mark && mark.kind === 'image' && mark.url) {
+      return {
+        url: mark.url,
+        position: mark.position === 'above' ? 'above' : 'below',
+      };
     }
   }
   return null;
@@ -106,24 +114,22 @@ function toLocalQuestion(rq) {
   const correct = rq.options.findIndex(function(o) { return o.id === rq.answer; });
   if (correct < 0 || correct >= options.length) return null;
 
-  // Extract image from inline marks (question text or first option with image)
-  let image = extractImageFromRichText(rq.text);
-  if (!image) {
-    for (const opt of rq.options) {
-      image = extractImageFromRichText(opt.text);
-      if (image) break;
-    }
-  }
+  // Stem image keeps its placement; each option keeps its own image so a
+  // figure that belongs to option C never slides under the stem.
+  const optionImages = rq.options.map(function(o) { return extractImage(o.text); });
 
   return {
     id: rq.id,
     question: questionText,
     options: options,
     correct: correct,
-    image: image,
+    image: extractImage(rq.text),
+    optionImages: optionImages,
     year: 'JAMB ' + rq.year,
     source: 'utmelab-api',
     sourceId: rq.id,
+    passageId: rq.passage_id || null,
+    passage: null, // attached by attachPassages before the row is servable
   };
 }
 
@@ -144,6 +150,59 @@ async function fetchSubjectQuestions(slug) {
     page += 1;
   }
   return out;
+}
+
+/**
+ * One passage by id. Public endpoint — no key sent. Returns
+ * `{ title, author, kind, text }` or null on any failure. Never throws:
+ * a missing passage means its questions drop, not that the boot dies.
+ */
+async function fetchPassage(id) {
+  try {
+    const res = await fetch(apiBase() + '/api/v1/passages/' + encodeURIComponent(id));
+    if (!res.ok) return null;
+    const data = await res.json();
+    const p = data && data.passage;
+    if (!p) return null;
+    return {
+      title: p.title || null,
+      author: p.author || null,
+      kind: p.kind || null,
+      text: richTextToString(p.text),
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * `{ passageId: passage }` for every id given. Never throws — ids that
+ * fail are simply absent, and their questions are dropped downstream.
+ */
+async function fetchPassages(ids) {
+  const map = {};
+  const settled = await Promise.all((ids || []).map(function(id) {
+    return fetchPassage(id).then(function(p) { return { id: id, passage: p }; });
+  }));
+  settled.forEach(function(row) {
+    if (row && row.passage) map[row.id] = row.passage;
+  });
+  return map;
+}
+
+/**
+ * Attach passages to rows that need them. Returns only answerable rows:
+ * a row with a passageId but no fetched passage is dropped — a
+ * comprehension stem without its passage cannot be answered. Never throws.
+ */
+export function attachPassages(questions, passages) {
+  return (questions || []).filter(function(q) {
+    if (!q || !q.passageId) return true;
+    const p = passages && passages[q.passageId];
+    if (!p) return false;
+    q.passage = p;
+    return true;
+  });
 }
 
 /**
@@ -197,9 +256,11 @@ export function buildBankFromCatalog(apiSubjects) {
 
 /**
  * Returns `{ appKey: { questions } }` for every subject that served at
- * least one scorable question. `pairs` defaults to the whole catalog;
- * pass a subset to refetch only what's missing. Never throws — a failed
- * subject is simply absent.
+ * least one answerable question. `pairs` defaults to the whole catalog;
+ * pass a subset to refetch only what's missing. Passages are resolved
+ * once across all subjects and attached before rows are servable; rows
+ * left dangling are dropped. Never throws — a failed subject is simply
+ * absent.
  */
 export async function fetchApiBank(pairs) {
   const overlay = {};
@@ -209,8 +270,19 @@ export async function fetchApiBank(pairs) {
       function() { return null; },
     );
   }));
+  // One passage fetch per distinct id across all subjects — English
+  // comprehension sets share passages, so this is a handful of requests.
+  const allRows = [];
   settled.forEach(function(row) {
-    if (row && row.questions.length > 0) overlay[row.appKey] = { questions: row.questions };
+    if (row && row.questions.length > 0) allRows.push.apply(allRows, row.questions);
+  });
+  const ids = {};
+  allRows.forEach(function(q) { if (q.passageId) ids[q.passageId] = true; });
+  const passages = await fetchPassages(Object.keys(ids));
+  settled.forEach(function(row) {
+    if (!row) return;
+    const answerable = attachPassages(row.questions, passages);
+    if (answerable.length > 0) overlay[row.appKey] = { questions: answerable };
   });
   return overlay;
 }
