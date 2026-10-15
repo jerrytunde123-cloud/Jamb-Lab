@@ -9,6 +9,7 @@ import JAMB_HISTORY from './history.js';
 import { apiEnabled, buildBankFromCatalog, fetchApiBank, fetchApiSubjects, fetchBankVersion } from './api.js';
 import { SUBJECT_MAP } from './subject-map.js';
 import { readCache, writeCache } from './cache.js';
+import { addSeen, clearSeen, getSeen } from './seen.js';
 
 const JAMB_QUESTIONS = (function() {
   'use strict';
@@ -264,6 +265,37 @@ const JAMB_QUESTIONS = (function() {
     return taken;
   }
 
+  // Take up to `count` rows preferring ones this subject has not served
+  // before. Resets the subject's history when everything has been seen, so
+  // repeats happen only after exhaustion, never by luck. Taken rows leave
+  // `pool`, so the leftover stage below cannot re-add them to this quiz.
+  function takeUnseen(key, pool, count) {
+    const seen = getSeen(key);
+    let unseen = pool.filter(function(q) { return seen.indexOf(q.id) === -1; });
+    if (unseen.length === 0 && pool.length > 0) {
+      clearSeen(key);
+      unseen = pool.slice();
+    }
+    const taken = takeFromPool(unseen, count);
+    taken.forEach(function(q) {
+      const at = pool.indexOf(q);
+      if (at !== -1) pool.splice(at, 1);
+    });
+    if (taken.length < count) {
+      taken.push.apply(taken, takeFromPool(pool, count - taken.length));
+    }
+    return taken;
+  }
+
+  function markServed(selected) {
+    const byKey = {};
+    selected.forEach(function(q) {
+      if (!q || !q._key || !q.id) return;
+      (byKey[q._key] = byKey[q._key] || []).push(q.id);
+    });
+    Object.keys(byKey).forEach(function(key) { addSeen(key, byKey[key]); });
+  }
+
   function generateQuizQuestions(subjectKeys) {
     const questionBank = state.getQuestionBank();
     if (!questionBank || !subjectKeys.length) return [];
@@ -276,7 +308,7 @@ const JAMB_QUESTIONS = (function() {
       const pool = subjectData.questions.map(function(q) {
         return Object.assign({}, q, { _subject: subjectName, _key: key });
       });
-      perSubject.push(utils.shuffleArray(pool));
+      perSubject.push({ key: key, pool: utils.shuffleArray(pool) });
     });
 
     if (!perSubject.length) return [];
@@ -286,20 +318,21 @@ const JAMB_QUESTIONS = (function() {
     const base = Math.floor(target / perSubject.length);
     let remainder = target % perSubject.length;
 
-    perSubject.forEach(function(pool) {
+    perSubject.forEach(function(entry) {
       const want = base + (remainder > 0 ? 1 : 0);
       if (remainder > 0) remainder--;
-      selected.push.apply(selected, takeFromPool(pool, want));
+      selected.push.apply(selected, takeUnseen(entry.key, entry.pool, want));
     });
 
     if (selected.length < target) {
       const leftover = [];
-      perSubject.forEach(function(pool) {
-        leftover.push.apply(leftover, pool);
+      perSubject.forEach(function(entry) {
+        leftover.push.apply(leftover, entry.pool);
       });
       selected.push.apply(selected, takeFromPool(leftover, target - selected.length));
     }
 
+    markServed(selected);
     return utils.shuffleArray(selected).map(utils.shuffleQuestion);
   }
 

@@ -3,7 +3,7 @@
  */
 
 import { vi } from 'vitest';
-import { apiEnabled, attachPassages, buildBankFromCatalog, catalogEnabled, fetchApiBank, fetchApiSubjects } from '../js/api.js';
+import { apiEnabled, attachPassages, buildBankFromCatalog, catalogEnabled, dedupeQuestions, fetchApiBank, fetchApiSubjects } from '../js/api.js';
 
 function rendered(id, answerId) {
   return {
@@ -170,8 +170,7 @@ describe('api adapter', function() {
     expect(out[1].passage.text).toBe('Once...');
   });
 
-  it('attaches fetched passages through fetchApiBank', async function() {
-    const row = {
+  it('attaches fetched passages through fetchApiBank', async function() {    const row = {
       id: 'q-eng', exam: 'JAMB', subject: 'use-of-english', year: 2025, source: 'past_paper',
       text: { text: 'What is the passage about?', inline: [] },
       options: [{ id: 'a', text: { text: 'x', inline: [] } }],
@@ -192,5 +191,19 @@ describe('api adapter', function() {
     const q = overlay.english.questions[0];
     expect(q.passageId).toBe('p1');
     expect(q.passage.text).toBe('Once...');
+  });
+
+  it('drops exact duplicate rows but keeps same-stem diagram questions', function() {
+    function row(id, stem, fig) {
+      return { id: id, question: stem, options: ['a', 'b'], image: fig ? { url: fig, position: 'below' } : null };
+    }
+    const out = dedupeQuestions([
+      row('1', 'What is X?', null),
+      row('2', '  what   is x? ', null), // same stem, case/space differ: dupe
+      row('3', 'The part labelled I is the', 'https://cdn.example/fig1.png'),
+      row('4', 'The part labelled I is the', 'https://cdn.example/fig2.png'), // same stem, other figure: keep
+      row('5', 'The part labelled I is the', 'https://cdn.example/fig2.png'), // same stem, same figure: dupe
+    ]);
+    expect(out.map(function(q) { return q.id; })).toEqual(['1', '3', '4']);
   });
 });

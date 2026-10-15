@@ -191,6 +191,30 @@ async function fetchPassages(ids) {
 }
 
 /**
+ * Drop duplicate rows within one subject pool. The key is stem + options +
+ * figure: two rows sharing a stem but carrying different diagrams (e.g. two
+ * "labelled diagram" questions) are different questions and both survive.
+ * Keeps the first of each key. Never throws.
+ */
+export function dedupeQuestions(questions) {
+  const seen = {};
+  return (questions || []).filter(function(q) {
+    if (!q) return false;
+    const stem = String(q.question || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const opts = (q.options || []).map(function(o) {
+      return String(o == null ? '' : o).toLowerCase().replace(/\s+/g, ' ').trim();
+    }).join(' | ');
+    const fig = (q.image && q.image.url) || '';
+    // Content-only key, deliberately not the id: bank dupes are the same
+    // content under two ids. Same stem + same options + same figure = dupe.
+    const key = stem + '\u001f' + opts + '\u001f' + fig;
+    if (seen[key]) return false;
+    seen[key] = true;
+    return true;
+  });
+}
+
+/**
  * Attach passages to rows that need them. Returns only answerable rows:
  * a row with a passageId but no fetched passage is dropped — a
  * comprehension stem without its passage cannot be answered. Never throws.
@@ -282,7 +306,8 @@ export async function fetchApiBank(pairs) {
   settled.forEach(function(row) {
     if (!row) return;
     const answerable = attachPassages(row.questions, passages);
-    if (answerable.length > 0) overlay[row.appKey] = { questions: answerable };
+    const unique = dedupeQuestions(answerable);
+    if (unique.length > 0) overlay[row.appKey] = { questions: unique };
   });
   return overlay;
 }
