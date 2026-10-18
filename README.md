@@ -26,12 +26,27 @@ the API base is hardcoded in `js/api.js`. Vercel auto-detects Vite, no extra con
 All subjects and questions load live from the utmelab-api
 (`js/subject-map.js` holds the subject keys, names come from the catalog,
 icons from a static map). Key in `VITE_UTMELAB_API_KEY`; without one the
-subject grid still renders (the catalog is public) but quizzes have no
-rows. There is no local question bank — stale fallback rows are worse
-than an honest load error. Repeat visits are served from a
-version-gated `localStorage` cache (`bank_version` from `/health`):
-same version costs zero question requests, any content fix refetches
-on the next boot.
+subject grid still renders once the keyless discovery surface
+(`/api/v1/public/exams`) is deployed, but quizzes have no rows. There is
+no local question bank — stale fallback rows are worse than an honest
+load error.
+
+Boot fetches the catalog and paints cached rows, but fetches **no
+question rows**. A subject's rows are fetched when it is selected (at
+most `MAX_SUBJECTS`), so traffic scales with what a visitor practises
+instead of 25 requests per page view. The shared deployment key is
+metered at 60 req/min, which is why this matters.
+
+The API no longer publishes a `bank_version` (`/health` is plain liveness
+text now), so each selected subject is cached per subject and revalidated
+with the question endpoint's `ETag`: each cached page is re-requested with
+`If-None-Match`, a `304` reuses it and a `200` replaces it. No TTL — a
+content fix changes the response bytes, so the ETag changes and the next
+selection picks it up. A keyed client reads `/api/v1/exams/JAMB/subjects`
+directly; a keyless one uses `/api/v1/public/exams`, and each falls back
+to the other. The keyed catalog serves a bare array on current
+deployments and an `{ exam, subjects }` envelope on older ones. Passages
+are keyed too and are fetched with the API key.
 
 ### Vercel
 
@@ -60,7 +75,7 @@ Jamb-Lab/
 │   ├── history.js      # best scores per subject
 │   ├── api.js          # utmelab-api adapter (catalog + questions)
 │   ├── subject-map.js  # subject keys, API slugs, icons
-│   ├── questions.js    # subject grid + quiz engine
+│   ├── questions.js    # subject grid, lazy row loading, quiz engine
 │   └── main.js         # wires the UI
 ├── assets/
 │   ├── favicon.svg

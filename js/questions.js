@@ -6,8 +6,7 @@ import JAMB_STATE from './state.js';
 import JAMB_UTILS from './utils.js';
 import JAMB_POINTS from './points.js';
 import JAMB_HISTORY from './history.js';
-import { apiEnabled, buildBankFromCatalog, fetchApiBank, fetchApiSubjects, fetchBankVersion } from './api.js';
-import { SUBJECT_MAP } from './subject-map.js';
+import { apiEnabled, buildBankFromCatalog, fetchApiBank, fetchApiSubjects } from './api.js';
 import { readCache, writeCache } from './cache.js';
 import { addSeen, clearSeen, getSeen } from './seen.js';
 
@@ -47,6 +46,15 @@ const JAMB_QUESTIONS = (function() {
   let reviewExpanded = false;
   let reviewToggleBound = false;
   let quizFinished = false;
+
+  // Rows are loaded per subject on selection, never all at boot: the shared
+  // deployment key is metered at 60 req/min, and a visitor only practises
+  // up to MAX_SUBJECTS. `loadedKeys` means this session has a fetched or
+  // revalidated copy (not just a cached one); `loading` holds the in-flight
+  // promise so a second click joins it instead of fetching again.
+  const loadedKeys = {};
+  const loading = {};
+  let sessionCache = {};
 
   function getSubjectName(key) {
     const bank = state.getQuestionBank();
@@ -90,20 +98,76 @@ const JAMB_QUESTIONS = (function() {
 
   function applyOverlay(bank, rows) {
     Object.keys(rows).forEach(function(key) {
-      if (bank[key] && Array.isArray(rows[key])) bank[key].questions = rows[key];
+      if (bank[key] && rows[key] && Array.isArray(rows[key].questions)) {
+        bank[key].questions = rows[key].questions;
+      }
     });
     return bank;
   }
 
-  function freshRows(overlay) {
-    const fresh = {};
-    Object.keys(overlay).forEach(function(key) {
-      if (overlay[key] && Array.isArray(overlay[key].questions) &&
-          overlay[key].questions.length > 0) {
-        fresh[key] = overlay[key].questions;
-      }
+  /** Cached pages as an overlay, for painting cached rows without a request. */
+  function cachedRows(cached) {
+    const rows = {};
+    Object.keys(cached || {}).forEach(function(key) {
+      const entry = cached[key];
+      if (!entry || !Array.isArray(entry.pages)) return;
+      const questions = [];
+      entry.pages.forEach(function(page) {
+        questions.push.apply(questions, page.questions || []);
+      });
+      if (questions.length > 0) rows[key] = { questions: questions, pages: entry.pages };
     });
-    return fresh;
+    return rows;
+  }
+
+  /**
+   * Fetch (or revalidate) one subject's rows. Returns the same promise while
+   * a request is in flight, so selecting and pressing Start cannot double-
+   * fetch. Never rejects: a failed subject stays unloaded and can be retried.
+   */
+  function ensureSubjectLoaded(key) {
+    if (!apiEnabled()) return Promise.resolve(null);
+    const bank = state.getQuestionBank();
+    const subject = bank && bank[key];
+    if (!subject || !subject.apiSlug) return Promise.resolve(null);
+    if (loadedKeys[key]) {
+      return Promise.resolve({
+        questions: subject.questions,
+        pages: (sessionCache[key] && sessionCache[key].pages) || [],
+      });
+    }
+    if (loading[key]) return loading[key];
+
+    state.addLoadingSubject(key);
+    const promise = fetchApiBank([[key, subject.apiSlug]], sessionCache)
+      .then(function(overlay) {
+        const entry = overlay[key];
+        if (!entry) {
+          utils.showToast('Could not load ' + getSubjectName(key), 'red');
+          return null;
+        }
+        applyOverlay(bank, overlay);
+        writeCache(overlay);
+        sessionCache[key] = { pages: entry.pages };
+        loadedKeys[key] = true;
+        return entry;
+      })
+      .catch(function() {
+        utils.showToast('Could not load ' + getSubjectName(key), 'red');
+        return null;
+      })
+      .then(function(result) {
+        delete loading[key];
+        state.removeLoadingSubject(key);
+        renderSubjectGrid();
+        updateSubjectUI();
+        return result;
+      });
+
+    loading[key] = promise;
+    updateSubjectUI();
+    renderSubjectGrid();
+    return promise;
   }
 
   function loadQuestionBank() {
@@ -111,36 +175,22 @@ const JAMB_QUESTIONS = (function() {
     if (loadingEl) loadingEl.style.display = 'block';
     setLoadingText('Loading subjects…');
 
-    // Subjects come from the API catalog (public, keyless); rows come from
-    // the metered questions endpoint when a key is configured, through a
-    // version-gated cache — one keyless health check proves last session's
-    // rows current, so a repeat visit costs zero question requests and a
-    // content fix is picked up on the very next boot. There is no local
-    // bank: stale fallback rows are worse than an honest error.
+    // Subjects come from the discovery catalog (or the keyed catalog while
+    // that surface rolls out). Boot paints any cached rows but fetches no
+    // question endpoint: a subject's rows are fetched/revalidated when it is
+    // selected. That keeps a visitor's traffic proportional to the subjects
+    // they actually practise, instead of 25 requests for every page view.
+    Object.keys(loadedKeys).forEach(function(key) { delete loadedKeys[key]; });
+    Object.keys(loading).forEach(function(key) { delete loading[key]; });
+    state.clearLoadingSubjects();
+    sessionCache = {};
+
     return fetchApiSubjects()
       .then(function(apiSubjects) {
         const bank = buildBankFromCatalog(apiSubjects);
         if (!apiEnabled()) return bank;
-        setLoadingText('Loading questions…');
-        return fetchBankVersion().then(function(version) {
-          const cached = readCache(version);
-          const missing = SUBJECT_MAP.filter(function(pair) { return !cached[pair[0]]; });
-          if (missing.length === 0) return applyOverlay(bank, cached);
-          return fetchApiBank(missing).then(function(overlay) {
-            const fresh = freshRows(overlay);
-            writeCache(version, fresh);
-            return applyOverlay(bank, Object.assign({}, cached, fresh));
-          }, function() {
-            return applyOverlay(bank, cached);
-          });
-        }, function() {
-          // Version unknown: trust nothing cached — fetch all, store nothing.
-          return fetchApiBank().then(function(overlay) {
-            return applyOverlay(bank, freshRows(overlay));
-          }, function() {
-            return bank;
-          });
-        });
+        sessionCache = readCache();
+        return applyOverlay(bank, cachedRows(sessionCache));
       })
       .then(function(bank) {
         state.setQuestionBank(bank);
@@ -178,14 +228,23 @@ const JAMB_QUESTIONS = (function() {
 
     visible.forEach(function(key) {
       const displayName = getSubjectName(key);
+      const isLoading = Boolean(loading[key]);
       const item = document.createElement('div');
-      item.className = 'subject-item' + (selected.indexOf(key) !== -1 ? ' selected' : '');
+      item.className = 'subject-item' +
+        (selected.indexOf(key) !== -1 ? ' selected' : '') +
+        (isLoading ? ' loading' : '');
       item.setAttribute('data-subject-key', key);
 
       const icon = document.createElement('i');
       icon.className = getSubjectIcon(key);
       item.appendChild(icon);
       item.appendChild(document.createTextNode(' ' + displayName));
+
+      if (isLoading) {
+        const spin = document.createElement('i');
+        spin.className = 'fas fa-spinner fa-spin subject-spinner';
+        item.appendChild(spin);
+      }
 
       if (history) {
         const best = history.getBest(key);
@@ -225,6 +284,7 @@ const JAMB_QUESTIONS = (function() {
       }
       state.addSelectedSubject(key);
       if (item) item.classList.add('selected');
+      ensureSubjectLoaded(key);
     }
 
     updateSubjectUI();
@@ -749,6 +809,19 @@ const JAMB_QUESTIONS = (function() {
       utils.showToast('Select at least 1 subject', 'red');
       return false;
     }
+    if (apiEnabled()) {
+      const awaiting = selected.filter(function(key) { return Boolean(loading[key]); });
+      if (awaiting.length > 0) {
+        utils.showToast('Still loading ' + awaiting.map(getSubjectName).join(', '), 'red');
+        return false;
+      }
+      const missing = selected.filter(function(key) { return !loadedKeys[key]; });
+      if (missing.length > 0) {
+        missing.forEach(ensureSubjectLoaded);
+        utils.showToast('Loading ' + missing.map(getSubjectName).join(', ') + '…', 'red');
+        return false;
+      }
+    }
     const cost = selected.length * POINTS_CONFIG.QUIZ_COST;
     if (!points.deductPoints(cost)) {
       utils.showToast('Need ' + cost + ' pts (you have ' + points.getPoints() + '). Share below to get points!', 'red');
@@ -770,6 +843,7 @@ const JAMB_QUESTIONS = (function() {
   return {
     getSubjectName: getSubjectName,
     getSubjectIcon: getSubjectIcon,
+    ensureSubjectLoaded: ensureSubjectLoaded,
     loadQuestionBank: loadQuestionBank,
     renderSubjectGrid: renderSubjectGrid,
     toggleSubjectSelection: toggleSubjectSelection,

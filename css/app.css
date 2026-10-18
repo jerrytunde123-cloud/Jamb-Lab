@@ -104,6 +104,8 @@ body { background: #f4f7fb; min-height: 100vh; display: flex; justify-content: c
 .subject-item.selected { background: #25D366; color: white; border-color: #25D366; }
 .subject-item.selected i { color: white; }
 .subject-item.selected::after { content: '✓'; position: absolute; top: -4px; right: -4px; background: #0b2b40; color: white; width: 18px; height: 18px; border-radius: 50%; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.subject-item.loading { opacity: 0.65; cursor: progress; }
+.subject-item .subject-spinner { margin-left: 4px; }
 .subject-info { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border-radius: 1rem; padding: 0.6rem 0.9rem; margin: 8px 0; font-size: 0.8rem; color: #3f637a; }
 .subject-info strong { color: #1a5f7a; }
 .share-section { background: #f2f6fa; border-radius: 1.5rem; padding: 1rem 1rem 0.8rem; margin: 1.2rem 0 0.5rem; }

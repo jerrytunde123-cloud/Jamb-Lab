@@ -43,7 +43,8 @@ function makeApiQuestion(id, opts) {
 
 function makeCatalog() {
   return {
-    exam: 'JAMB',
+    code: 'JAMB',
+    name: 'Joint Admissions',
     subjects: [
       { slug: 'use-of-english', exam: 'JAMB', name: 'Use of English' },
       { slug: 'mathematics', exam: 'JAMB', name: 'Mathematics' },
@@ -62,13 +63,14 @@ function makePage(slug) {
 
 const fetchMock = vi.fn(function(url) {
   const u = String(url);
-  const payload = u.indexOf('/health') !== -1
-    ? { status: 'ok', bank_version: 'smoke-v1' }
+  const payload = u.indexOf('/public/exams') !== -1
+    ? [makeCatalog()]
     : u.indexOf('/subjects') !== -1
-      ? makeCatalog()
+      ? makeCatalog().subjects
       : makePage((/subject=([^&]*)/.exec(u) || [])[1] || 'mathematics');
   return Promise.resolve({
     ok: true,
+    headers: new Headers(),
     json: function() { return Promise.resolve(payload); }
   });
 });
@@ -107,12 +109,26 @@ describe('app smoke', function() {
     expect(document.querySelectorAll('#subjectGrid .subject-skel').length).toBe(0);
   });
 
-  it('keeps Start Quiz disabled until a subject is selected', function() {
+  it('fetches no question rows at boot, then only the selected subject', async function() {
+    function questionCalls() {
+      return fetchMock.mock.calls.filter(function(call) {
+        return String(call[0]).indexOf('/api/v1/questions?') !== -1;
+      }).length;
+    }
+
     const btn = document.getElementById('startQuizBtn');
     expect(btn.disabled).toBe(true);
+    expect(questionCalls()).toBe(0);
+
     document.querySelector('[data-subject-key="english"]').click();
+    expect(btn.disabled).toBe(true);
+    expect(btn.innerHTML).toContain('Loading questions');
+
+    await JAMB_QUESTIONS.ensureSubjectLoaded('english');
     expect(btn.disabled).toBe(false);
     expect(btn.innerHTML).toContain('-5 pts');
+    expect(questionCalls()).toBe(1);
+    expect(JAMB_STATE.getQuestionBank().english.questions.length).toBe(20);
   });
 
   it('opens the unlock modal when locked', function() {
@@ -203,7 +219,10 @@ describe('app smoke', function() {
   });
 
   it('shows an honest error when the catalog cannot load', async function() {
-    fetchMock.mockRejectedValueOnce(new Error('network down'));
+    // Discovery and its keyed fallback both fail, so the loader has no
+    // catalog to render — the one case that must surface an error.
+    fetchMock.mockRejectedValueOnce(new Error('network down'))
+      .mockRejectedValueOnce(new Error('network down'));
     const result = await JAMB_QUESTIONS.loadQuestionBank();
     expect(result).toBeNull();
     expect(document.querySelectorAll('#subjectGrid .subject-skel').length).toBe(0);

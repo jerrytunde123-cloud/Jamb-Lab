@@ -2,6 +2,7 @@
  * JAMB Quiz - utmelab-api adapter tests.
  */
 
+import { createHash, webcrypto } from 'node:crypto';
 import { vi } from 'vitest';
 import { apiEnabled, attachPassages, buildBankFromCatalog, catalogEnabled, dedupeQuestions, fetchApiBank, fetchApiSubjects } from '../js/api.js';
 
@@ -25,6 +26,14 @@ function rendered(id, answerId) {
 
 function page(questions, totalPages) {
   return { questions: questions, page: 1, per_page: 200, total_pages: totalPages || 1, total_records: questions.length };
+}
+
+function reply(payload, headers) {
+  return Promise.resolve({
+    ok: true,
+    json: function() { return Promise.resolve(payload); },
+    headers: new Headers(headers || {}),
+  });
 }
 
 describe('api adapter', function() {
@@ -103,21 +112,51 @@ describe('api adapter', function() {
     expect(overlay.mathematics.questions.length).toBe(1);
   });
 
-  it('loads the subject list from the public catalog without a key', async function() {
+  it('uses the keyless discovery surface when no key is configured', async function() {
+    vi.stubEnv('VITE_UTMELAB_API_KEY', '');
     const seen = {};
     vi.stubGlobal('fetch', vi.fn(function(url, opts) {
-      seen.url = url;
+      seen.url = String(url);
       seen.headers = (opts && opts.headers) || {};
-      return Promise.resolve({ ok: true, json: function() {
-        return Promise.resolve({ exam: 'JAMB', subjects: [
-          { slug: 'mathematics', exam: 'JAMB', name: 'Mathematics' },
-        ] });
-      } });
+      return reply([{
+        code: 'JAMB',
+        name: 'Joint Admissions',
+        subjects: [{ slug: 'mathematics', name: 'Mathematics', is_compulsory: false }],
+      }]);
     }));
     const subjects = await fetchApiSubjects();
     expect(subjects.length).toBe(1);
     expect(subjects[0].slug).toBe('mathematics');
+    expect(seen.url).toContain('/api/v1/public/exams');
     expect(seen.headers['x-api-key']).toBeUndefined();
+  });
+
+  it('uses the keyed catalog when a key is configured and accepts its bare array', async function() {
+    const seen = {};
+    vi.stubGlobal('fetch', vi.fn(function(url, opts) {
+      if (String(url).indexOf('/public/exams') !== -1) {
+        return Promise.resolve({ ok: false, status: 404 });
+      }
+      seen.headers = (opts && opts.headers) || {};
+      return reply([{ slug: 'mathematics', exam: 'JAMB', name: 'Mathematics' }]);
+    }));
+    const subjects = await fetchApiSubjects();
+    expect(subjects[0].slug).toBe('mathematics');
+    expect(seen.headers['x-api-key']).toBe('sk_test');
+  });
+
+  it('accepts the older keyed envelope with a subjects field', async function() {
+    vi.stubGlobal('fetch', vi.fn(function(url) {
+      if (String(url).indexOf('/public/exams') !== -1) {
+        return Promise.resolve({ ok: false, status: 404 });
+      }
+      return reply({ exam: 'JAMB', subjects: [
+        { slug: 'mathematics', exam: 'JAMB', name: 'Mathematics' },
+      ] });
+    }));
+    const subjects = await fetchApiSubjects();
+    expect(subjects.length).toBe(1);
+    expect(subjects[0].slug).toBe('mathematics');
   });
 
   it('builds the bank from the catalog: names from JAMB, icons static', function() {
@@ -168,29 +207,128 @@ describe('api adapter', function() {
     const out = attachPassages(questions, { p1: { title: 'T', author: null, kind: 'comprehension', text: 'Once...' } });
     expect(out.map(function(q) { return q.id; })).toEqual(['free', 'held']);
     expect(out[1].passage.text).toBe('Once...');
-  });
-
-  it('attaches fetched passages through fetchApiBank', async function() {    const row = {
+  });  it('attaches a keyed, bare passage and sends the key', async function() {
+    const row = {
       id: 'q-eng', exam: 'JAMB', subject: 'use-of-english', year: 2025, source: 'past_paper',
       text: { text: 'What is the passage about?', inline: [] },
       options: [{ id: 'a', text: { text: 'x', inline: [] } }],
       answer: 'a',
       passage_id: 'p1',
     };
-    vi.stubGlobal('fetch', vi.fn(function(url) {
+    let passageHeaders = null;
+    vi.stubGlobal('fetch', vi.fn(function(url, opts) {
       if (String(url).indexOf('/passages/') !== -1) {
-        return Promise.resolve({ ok: true, json: function() {
-          return Promise.resolve({ passage: { id: 'p1', kind: 'comprehension', title: 'T', author: null, text: { text: 'Once...', inline: [] } } });
-        } });
+        passageHeaders = (opts && opts.headers) || {};
+        return reply({ id: 'p1', kind: 'comprehension', title: 'T', author: null, text: { text: 'Once...', inline: [] } });
       }
-      return Promise.resolve({ ok: true, json: function() {
-        return Promise.resolve(page([row]));
-      } });
+      return reply(page([row]));
     }));
     const overlay = await fetchApiBank([['english', 'use-of-english']]);
     const q = overlay.english.questions[0];
     expect(q.passageId).toBe('p1');
     expect(q.passage.text).toBe('Once...');
+    expect(passageHeaders['x-api-key']).toBe('sk_test');
+  });
+
+  it('marks a successful empty subject as loaded so it is not refetched', async function() {
+    vi.stubGlobal('fetch', vi.fn(function() {
+      return reply(page([]));
+    }));
+    const overlay = await fetchApiBank([['mathematics', 'mathematics']]);
+    expect(overlay.mathematics).toBeDefined();
+    expect(overlay.mathematics.questions).toEqual([]);
+    expect(overlay.mathematics.loaded).toBe(true);
+  });
+
+  it('waits the full Retry-After window before retrying a 429', async function() {
+    vi.useFakeTimers();
+    let calls = 0;
+    vi.stubGlobal('fetch', vi.fn(function() {
+      calls += 1;
+      if (calls === 1) {
+        return Promise.resolve({
+          ok: false,
+          status: 429,
+          headers: new Headers({ 'retry-after': '60' }),
+        });
+      }
+      return reply(page([rendered('q1', 'a')]));
+    }));
+    try {
+      const pending = fetchApiBank([['mathematics', 'mathematics']]);
+      await vi.advanceTimersByTimeAsync(59999);
+      expect(calls).toBe(1);
+      await vi.advanceTimersByTimeAsync(1);
+      const overlay = await pending;
+      expect(overlay.mathematics.questions.length).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('revalidates cached pages with If-None-Match and reuses a 304', async function() {
+    const seen = [];
+    let calls = 0;
+    vi.stubGlobal('fetch', vi.fn(function(url, opts) {
+      seen.push((opts && opts.headers) || {});
+      calls += 1;
+      if (calls === 1) {
+        return reply(page([rendered('q1', 'a')]), {
+          etag: '"v1"',
+          'access-control-expose-headers': 'etag',
+        });
+      }
+      return Promise.resolve({
+        ok: false,
+        status: 304,
+        headers: new Headers({ etag: '"v1"', 'access-control-expose-headers': 'etag' }),
+      });
+    }));
+    const first = await fetchApiBank([['mathematics', 'mathematics']]);
+    expect(first.mathematics.pages[0].etag).toBe('"v1"');
+    const second = await fetchApiBank([['mathematics', 'mathematics']], first);
+    expect(second.mathematics.questions.length).toBe(1);
+    expect(second.mathematics.questions[0].id).toBe('q1');
+    expect(seen[1]['if-none-match']).toBe('"v1"');
+  });
+
+  it('derives the server ETag from the body when CORS hides the header', async function() {
+    vi.stubGlobal('crypto', webcrypto);
+    const body = JSON.stringify(page([rendered('q1', 'a')]));
+    const expected = '"' + createHash('sha256').update(body).digest('hex') + '"';
+    vi.stubGlobal('fetch', vi.fn(function() {
+      return Promise.resolve({
+        ok: true,
+        text: function() { return Promise.resolve(body); },
+        headers: new Headers({ 'access-control-expose-headers': 'etag' }),
+      });
+    }));
+    const overlay = await fetchApiBank([['mathematics', 'mathematics']]);
+    expect(overlay.mathematics.pages[0].etag).toBe(expected);
+  });
+
+  it('does not send a validator the CORS policy has not exposed', async function() {
+    const body = JSON.stringify(page([rendered('q1', 'a')]));
+    vi.stubGlobal('fetch', vi.fn(function() {
+      return Promise.resolve({
+        ok: true,
+        text: function() { return Promise.resolve(body); },
+        headers: new Headers(),
+      });
+    }));
+    const overlay = await fetchApiBank([['mathematics', 'mathematics']]);
+    expect(overlay.mathematics.pages[0].etag).toBeNull();
+  });
+
+  it('keeps a cached subject when its revalidation request fails', async function() {
+    const cached = {
+      mathematics: { pages: [{ etag: '"v1"', questions: [{ id: 'cached', question: 'Q', options: ['A', 'B'], correct: 0, image: null }] }] },
+    };
+    vi.stubGlobal('fetch', vi.fn(function() {
+      return Promise.reject(new Error('offline'));
+    }));
+    const overlay = await fetchApiBank([['mathematics', 'mathematics']], cached);
+    expect(overlay.mathematics.questions[0].id).toBe('cached');
   });
 
   it('drops exact duplicate rows but keeps same-stem diagram questions', function() {

@@ -58,6 +58,7 @@ const JAMB_STATE = (function() {
     subjectsLoaded: false,
     showMoreSubjects: false,
     selectedSubjects: new Set(),
+    loadingSubjects: new Set(),
     currentQuiz: null,
     lastTopUpTime: localStorage.getItem('jamb_daily_topup')
   };
@@ -107,6 +108,17 @@ const JAMB_STATE = (function() {
     removeSelectedSubject: function(key) { state.selectedSubjects.delete(key); },
     clearSelectedSubjects: function() { state.selectedSubjects.clear(); },
     getSelectedSubjectCount: function() { return state.selectedSubjects.size; },
+
+    isSubjectLoading: function(key) { return state.loadingSubjects.has(key); },
+    hasLoadingSelected: function() {
+      const selected = state.selectedSubjects;
+      return Array.from(selected).some(function(key) {
+        return state.loadingSubjects.has(key);
+      });
+    },
+    addLoadingSubject: function(key) { state.loadingSubjects.add(key); },
+    removeLoadingSubject: function(key) { state.loadingSubjects.delete(key); },
+    clearLoadingSubjects: function() { state.loadingSubjects.clear(); },
 
     getCurrentQuiz: function() { return state.currentQuiz; },
     setCurrentQuiz: function(quiz) { state.currentQuiz = quiz; },

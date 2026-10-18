@@ -108,6 +108,14 @@ const JAMB_POINTS = (function() {
       return;
     }
 
+    // A selected subject still fetching must not be startable, however the
+    // button was last refreshed (share, top-up, selection).
+    if (state.hasLoadingSelected()) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading questions…';
+      return;
+    }
+
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-play"></i> Start Quiz (-' + cost + ' pts)';
   }

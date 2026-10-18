@@ -1,22 +1,26 @@
 /**
- * JAMB Quiz - version-gated question cache.
+ * JAMB Quiz - ETag-revalidated question cache.
  *
- * The API's content is still being corrected, so rows are never cached by
- * time: a TTL would serve fixed-then-unfixed questions. Instead every entry
- * is tagged with the bank's content version (`bank_version` from `/health`,
- * which changes if and only if content changed):
+ * The API no longer publishes a `bank_version` (its `/health` is plain
+ * liveness text now), so the cache cannot be gated on a content version.
+ * What the question endpoint does publish is an `ETag` over the exact
+ * response bytes, which changes whenever a row in that page changes. Every
+ * cached subject therefore stores its pages as `{ etag, questions }` and
+ * `js/api.js` re-requests each page with `If-None-Match`:
  *
- *   same version  → serve from localStorage, zero question requests
- *   new version   → refetch, store under the new version
- *   unknown       → trust nothing, fetch everything, store nothing
+ *   304  → the page is byte-identical: reuse it, download nothing
+ *   200  → the page changed: replace it
  *
- * Entries are per subject (`jamb_qcache_v1:<appKey>`), so a quota failure
- * or a corrupt row degrades to refetch — never to a half-loaded quiz.
- * Storage failures (private mode, quota) clear the cache and carry on
- * uncached; they never throw into the loader.
+ * There is no TTL: a fixed-then-unfixed question changes the response
+ * bytes, so the ETag changes and the next boot picks the fix up. Entries
+ * are per subject (`jamb_qcache_v3:<appKey>`), so a quota failure or a
+ * corrupt row degrades to refetch — never to a half-loaded quiz. Storage
+ * failures (private mode, quota) clear the cache and carry on uncached;
+ * they never throw into the loader.
  */
 
-const PREFIX = 'jamb_qcache_v2:';
+const PREFIX = 'jamb_qcache_v3:';
+const LEGACY_PREFIXES = ['jamb_qcache_v1:', 'jamb_qcache_v2:'];
 
 function storage() {
   try {
@@ -26,14 +30,40 @@ function storage() {
   }
 }
 
-/** `{ appKey: questions[] }` for entries stamped with this version. */
-export function readCache(bankVersion) {
+function validPage(page) {
+  return Boolean(page) &&
+    Array.isArray(page.questions) &&
+    (page.etag === null || page.etag === undefined || typeof page.etag === 'string');
+}
+
+/** Drop cache entries written by the old version-gated scheme. */
+function purgeLegacy(store) {
+  try {
+    const dead = [];
+    for (let i = 0; i < store.length; i += 1) {
+      const k = store.key(i);
+      if (!k) continue;
+      for (let j = 0; j < LEGACY_PREFIXES.length; j += 1) {
+        if (k.indexOf(LEGACY_PREFIXES[j]) === 0) {
+          dead.push(k);
+          break;
+        }
+      }
+    }
+    dead.forEach(function(k) { store.removeItem(k); });
+  } catch (e) {
+    // Unusable storage: nothing cached anyway.
+  }
+}
+
+/** `{ appKey: { pages: [{ etag, questions }] } }` for every usable entry. */
+export function readCache() {
   const hit = {};
   const store = storage();
-  if (!store || !bankVersion) return hit;
-  let i = 0;
+  if (!store) return hit;
+  purgeLegacy(store);
   try {
-    for (i = 0; i < store.length; i += 1) {
+    for (let i = 0; i < store.length; i += 1) {
       const k = store.key(i);
       if (!k || k.indexOf(PREFIX) !== 0) continue;
       let row = null;
@@ -42,9 +72,14 @@ export function readCache(bankVersion) {
       } catch (e) {
         continue; // corrupt entry: a miss, not a crash
       }
-      if (row && row.version === bankVersion &&
-          Array.isArray(row.questions) && row.questions.length > 0) {
-        hit[k.slice(PREFIX.length)] = row.questions;
+      if (!row || !Array.isArray(row.pages) || row.pages.length === 0) continue;
+      if (!row.pages.every(validPage)) continue;
+      const questions = [];
+      row.pages.forEach(function(page) {
+        questions.push.apply(questions, page.questions);
+      });
+      if (questions.length > 0) {
+        hit[k.slice(PREFIX.length)] = { pages: row.pages };
       }
     }
   } catch (e) {
@@ -53,16 +88,26 @@ export function readCache(bankVersion) {
   return hit;
 }
 
-/** Store `{ appKey: questions[] }` under this version. Never throws. */
-export function writeCache(bankVersion, entries) {
+/** Store `{ appKey: { pages } }` entries. Never throws. */
+export function writeCache(entries) {
   const store = storage();
-  if (!store || !bankVersion || !entries) return;
+  if (!store || !entries) return;
+  purgeLegacy(store);
   try {
     Object.keys(entries).forEach(function(appKey) {
-      store.setItem(PREFIX + appKey, JSON.stringify({
-        version: bankVersion,
-        questions: entries[appKey],
-      }));
+      const entry = entries[appKey];
+      if (!entry || !Array.isArray(entry.pages) || entry.pages.length === 0) return;
+      if (!entry.pages.every(validPage)) return;
+      const questions = [];
+      entry.pages.forEach(function(page) {
+        questions.push.apply(questions, page.questions);
+      });
+      // A subject that now serves nothing must not keep old rows alive.
+      if (questions.length === 0) {
+        store.removeItem(PREFIX + appKey);
+        return;
+      }
+      store.setItem(PREFIX + appKey, JSON.stringify({ pages: entry.pages }));
     });
   } catch (e) {
     clearCache();
@@ -76,7 +121,7 @@ export function clearCache() {
     const dead = [];
     for (let i = 0; i < store.length; i += 1) {
       const k = store.key(i);
-      if (k && k.indexOf(PREFIX) === 0) dead.push(k);
+      if (k && k.indexOf('jamb_qcache_') === 0) dead.push(k);
     }
     dead.forEach(function(k) { store.removeItem(k); });
   } catch (e) {

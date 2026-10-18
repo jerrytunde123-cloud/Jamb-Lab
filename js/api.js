@@ -20,9 +20,11 @@
  * cannot be fetched are dropped too — a comprehension stem without its
  * passage is unanswerable.
  *
- * There is no local fallback bank: stale rows are worse than an honest
- * error, so a subject the API cannot serve stays empty and the loader
- * says so instead of serving rot.
+ * The API is content-versioned only by ETag: there is no `bank_version`
+ * endpoint any more. Cached question pages are therefore revalidated with
+ * If-None-Match when their subject is selected (304 reuses, 200 replaces),
+ * never trusted by age. A subject the API cannot serve and that has no
+ * cached copy stays empty rather than inventing rows.
  */
 
 import { ICONS, SLUG_TO_KEY, SUBJECT_MAP } from './subject-map.js';
@@ -43,31 +45,103 @@ export function apiEnabled() {
   return Boolean(apiBase() && apiKey());
 }
 
-// The catalog is public (no key): which subjects exist is API data even
-// for keyless clients. Question rows still need the key (see apiEnabled).
-// Passages are public too — content to read, not answers to protect.
+// The discovery surface is public (no key); the keyed catalog is the
+// fallback while deployments without `/api/v1/public/*` are still live.
+// Question rows and passages need the key (see apiEnabled).
 export function catalogEnabled() {
   return Boolean(apiBase());
 }
 
-async function getJSON(path, attempt) {
-  const res = await fetch(apiBase() + path, {
-    headers: { 'x-api-key': apiKey() },
-  });
-  // The deployment key is shared by every visitor at 60 req/min, so a
-  // fresh boot (~26 requests) can legitimately 429 under concurrency.
-  // The API answers 429 with Retry-After (and only on 429s, D43) plus
-  // X-RateLimit-Reset — wait as told, then retry twice, then give up.
-  if (res.status === 429 && (attempt || 0) < 2) {
-    await new Promise(function(resolve) { setTimeout(resolve, retryDelayMs(res.headers)); });
-    return getJSON(path, (attempt || 0) + 1);
+function responseHeader(res, name) {
+  return res && res.headers && typeof res.headers.get === 'function'
+    ? res.headers.get(name)
+    : null;
+}
+
+/**
+ * The response's strong ETag.
+ *
+ * The header is the source of truth, but the API's CORS policy does not
+ * expose it to browser JS. The API computes it as the quoted lowercase
+ * SHA-256 of the exact response bytes, so a browser can derive the same
+ * value from the body it just read. Prefer the header when a deployment
+ * exposes it; otherwise hash the text. No crypto (very old browser) means
+ * no ETag, which only costs a full fetch — never correctness.
+ */
+async function responseEtag(res, text) {
+  const exposed = String(
+    responseHeader(res, 'access-control-expose-headers') || '',
+  ).split(',').map(function(h) { return h.trim().toLowerCase(); });
+  const crossOrigin = typeof location !== 'undefined' &&
+    location.origin !== apiBase();
+  // A cross-origin ETag is invisible without `Access-Control-Expose-Headers`.
+  // The same CORS policy that exposes it also has to allow the echo header in
+  // preflight, so exposing `etag` is the feature test for revalidation: until
+  // it appears, do not send If-None-Match (the browser would block it).
+  if (crossOrigin && exposed.indexOf('etag') === -1) return null;
+  const header = responseHeader(res, 'etag');
+  if (header) return header;
+  if (!text || typeof crypto === 'undefined' || !crypto.subtle ||
+      typeof TextEncoder === 'undefined') {
+    return null;
   }
-  if (!res.ok) throw new Error('API ' + res.status + ' for ' + path);
-  return res.json();
+  try {
+    const digest = await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(text),
+    );
+    const hex = Array.from(new Uint8Array(digest)).map(function(b) {
+      return b.toString(16).padStart(2, '0');
+    }).join('');
+    return '"' + hex + '"';
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * One API request. Sends the key when configured (every catalog read except
+ * the discovery surface is keyed), and can revalidate a cached page with its
+ * ETag: a 304 comes back as `{ notModified: true }` without a body.
+ *
+ * The deployment key is shared by every visitor at 60 req/min, so
+ * concurrent selections can still meet the ceiling even though boot no
+ * longer fetches rows. The API answers 429 with Retry-After (and only on
+ * 429s, D43) plus X-RateLimit-Reset — wait as told, then retry twice.
+ */
+async function request(path, options) {
+  options = options || {};
+  const attempt = options.attempt || 0;
+  const headers = {};
+  if (apiKey()) headers['x-api-key'] = apiKey();
+  if (options.etag) headers['if-none-match'] = options.etag;
+
+  const res = await fetch(apiBase() + path, { headers: headers });
+  if (res.status === 429 && attempt < 2) {
+    await new Promise(function(resolve) { setTimeout(resolve, retryDelayMs(res.headers)); });
+    return request(path, { etag: options.etag, attempt: attempt + 1 });
+  }
+  if (res.status === 304) {
+    return { notModified: true, etag: options.etag || null };
+  }
+  if (!res.ok) {
+    const err = new Error('API ' + res.status + ' for ' + path);
+    err.status = res.status;
+    throw err;
+  }
+  // Read the body once: text is what the server hashed for its ETag, so
+  // the client can derive the same tag without the header being exposed.
+  if (typeof res.text === 'function') {
+    const text = await res.text();
+    return { data: JSON.parse(text), etag: await responseEtag(res, text) };
+  }
+  return { data: await res.json(), etag: responseHeader(res, 'etag') };
 }
 
 function retryDelayMs(headers) {
-  const cap = 15000;
+  // The API answers 429 with Retry-After: 60 (the rate-limit window), so a
+  // shorter cap would retry inside the same window and fail twice more.
+  const cap = 60000;
   const after = headers && parseFloat(headers.get('retry-after'));
   if (!isNaN(after)) return Math.min(Math.max(after * 1000, 0), cap);
   const reset = headers && parseFloat(headers.get('x-ratelimit-reset'));
@@ -133,23 +207,41 @@ function toLocalQuestion(rq) {
   };
 }
 
-async function fetchSubjectQuestions(slug) {
-  const out = [];
+/**
+ * One subject's pages, revalidated against the cached copy.
+ * The API has no content-version endpoint, so each cached page carries the
+ * ETag it arrived with and is re-requested with If-None-Match: a 304 reuses
+ * that page, a 200 replaces it. No TTL — a fixed-then-unfixed row is picked
+ * up on the very next selection because the response bytes (and so the
+ * ETag) changed. Returns `[{ etag, questions }]` in page order.
+ */
+async function fetchSubjectQuestions(slug, cached) {
+  const pages = [];
+  const cachedPages = cached && Array.isArray(cached.pages) ? cached.pages : [];
   let page = 1;
   for (;;) {
+    const prev = cachedPages[page - 1];
     const url = '/api/v1/questions?exam=' + encodeURIComponent(EXAM) +
       '&subject=' + encodeURIComponent(slug) +
       '&include_explanation=true&per_page=' + PER_PAGE + '&page=' + page;
-    const data = await getJSON(url);
-    if (!data || !Array.isArray(data.questions)) throw new Error('bad payload for ' + slug);
-    data.questions.forEach(function(rq) {
-      const q = toLocalQuestion(rq);
-      if (q) out.push(q);
-    });
-    if (page >= (data.total_pages || 1)) break;
+    const out = await request(url, { etag: prev && prev.etag });
+    if (out.notModified) {
+      pages.push(prev);
+      if (page >= cachedPages.length) break;
+    } else {
+      const data = out.data;
+      if (!data || !Array.isArray(data.questions)) throw new Error('bad payload for ' + slug);
+      const questions = [];
+      data.questions.forEach(function(rq) {
+        const q = toLocalQuestion(rq);
+        if (q) questions.push(q);
+      });
+      pages.push({ etag: out.etag, questions: questions });
+      if (page >= (data.total_pages || 1)) break;
+    }
     page += 1;
   }
-  return out;
+  return pages;
 }
 
 /**
@@ -159,11 +251,12 @@ async function fetchSubjectQuestions(slug) {
  */
 async function fetchPassage(id) {
   try {
-    const res = await fetch(apiBase() + '/api/v1/passages/' + encodeURIComponent(id));
-    if (!res.ok) return null;
-    const data = await res.json();
-    const p = data && data.passage;
-    if (!p) return null;
+    const out = await request('/api/v1/passages/' + encodeURIComponent(id));
+    // The endpoint serves the passage bare now; older deployments wrapped
+    // it in `{ passage }`. Accept both so a rolling deploy cannot blank
+    // every comprehension set.
+    const p = out.data && (out.data.passage || out.data);
+    if (!p || !p.id) return null;
     return {
       title: p.title || null,
       author: p.author || null,
@@ -229,31 +322,47 @@ export function attachPassages(questions, passages) {
   });
 }
 
-/**
- * The bank's content version. Keyless and tiny — the one request a boot
- * always makes, so the question cache can prove itself current without
- * re-downloading anything. Throws when unreachable or malformed.
- */
-export async function fetchBankVersion() {
-  const res = await fetch(apiBase() + '/health');
-  if (!res.ok) throw new Error('API ' + res.status + ' for health');
+async function fetchKeyedSubjects() {
+  const exam = encodeURIComponent(EXAM);
+  const out = await request('/api/v1/exams/' + exam + '/subjects');
+  const data = out.data;
+  // Current deployments serve a bare array; older ones wrapped it in
+  // `{ exam, subjects }`. Accept both across a rolling deploy.
+  const subjects = Array.isArray(data) ? data : (data && data.subjects);
+  if (!Array.isArray(subjects)) throw new Error('bad subjects payload');
+  return subjects;
+}
+
+async function fetchPublicSubjects() {
+  const res = await fetch(apiBase() + '/api/v1/public/exams');
+  if (!res.ok) throw new Error('API ' + res.status + ' for public exams');
   const data = await res.json();
-  if (!data || !data.bank_version) throw new Error('bad health payload');
-  return data.bank_version;
+  const exams = Array.isArray(data) ? data : (data && data.exams);
+  const found = (exams || []).filter(function(e) { return e && e.code === EXAM; })[0];
+  if (!found || !Array.isArray(found.subjects)) throw new Error('bad public exams payload');
+  return found.subjects;
 }
 
 /**
- * The exam's subject list, straight from the catalog. Public endpoint —
- * no key sent. Throws on any failure or malformed payload.
+ * The exam's subject list. A keyed client asks the keyed catalog directly
+ * (one request, no guaranteed 404); a keyless one uses the discovery surface
+ * `/api/v1/public/exams`. Each falls back to the other so a deployment in
+ * either state still renders. Throws only when no surface answers.
  * Returns array of { slug, name, is_compulsory, objective_paper_questions }
  */
 export async function fetchApiSubjects() {
-  const exam = encodeURIComponent(EXAM);
-  const res = await fetch(apiBase() + '/api/v1/exams/' + exam + '/subjects');
-  if (!res.ok) throw new Error('API ' + res.status + ' for subjects');
-  const data = await res.json();
-  if (!data || !Array.isArray(data.subjects)) throw new Error('bad subjects payload');
-  return data.subjects;
+  if (apiKey()) {
+    try {
+      return await fetchKeyedSubjects();
+    } catch (e) {
+      return fetchPublicSubjects();
+    }
+  }
+  try {
+    return await fetchPublicSubjects();
+  } catch (e) {
+    return fetchKeyedSubjects();
+  }
 }
 
 /**
@@ -279,21 +388,34 @@ export function buildBankFromCatalog(apiSubjects) {
 }
 
 /**
- * Returns `{ appKey: { questions } }` for every subject that served at
- * least one answerable question. `pairs` defaults to the whole catalog;
- * pass a subset to refetch only what's missing. Passages are resolved
- * once across all subjects and attached before rows are servable; rows
- * left dangling are dropped. Never throws — a failed subject is simply
- * absent.
+ * Returns `{ appKey: { questions, pages } }` for every subject that served
+ * at least one answerable question. `pairs` defaults to the whole catalog;
+ * `cached` is the previous boot's `{ appKey: { pages } }`, used both to
+ * revalidate with If-None-Match and to keep a subject usable when its
+ * revalidation fails. Passages are resolved once across all subjects and
+ * attached before rows are servable; rows left dangling are dropped.
+ * Never throws — a failed subject with no cached copy is simply absent.
  */
-export async function fetchApiBank(pairs) {
+export async function fetchApiBank(pairs, cached) {
   const overlay = {};
   const settled = await Promise.all((pairs || SUBJECT_MAP).map(function([appKey, slug]) {
-    return fetchSubjectQuestions(slug).then(
-      function(questions) { return { appKey: appKey, questions: questions }; },
-      function() { return null; },
+    return fetchSubjectQuestions(slug, cached && cached[appKey]).then(
+      function(pages) { return { appKey: appKey, pages: pages, ok: true }; },
+      function() {
+        const prev = cached && cached[appKey];
+        return prev && Array.isArray(prev.pages)
+          ? { appKey: appKey, pages: prev.pages, ok: false }
+          : null;
+      },
     );
   }));
+  settled.forEach(function(row) {
+    if (!row) return;
+    row.questions = [];
+    row.pages.forEach(function(p) {
+      row.questions.push.apply(row.questions, p.questions);
+    });
+  });
   // One passage fetch per distinct id across all subjects — English
   // comprehension sets share passages, so this is a handful of requests.
   const allRows = [];
@@ -307,7 +429,16 @@ export async function fetchApiBank(pairs) {
     if (!row) return;
     const answerable = attachPassages(row.questions, passages);
     const unique = dedupeQuestions(answerable);
-    if (unique.length > 0) overlay[row.appKey] = { questions: unique };
+    // A successful empty subject is a real answer (render it and stop
+    // retrying); all-rows-dropped is not — that is a passage/serve failure
+    // and the subject should stay loadable.
+    if (unique.length > 0 || (row.ok && row.questions.length === 0)) {
+      overlay[row.appKey] = {
+        questions: unique,
+        pages: row.pages,
+        loaded: row.ok,
+      };
+    }
   });
   return overlay;
 }

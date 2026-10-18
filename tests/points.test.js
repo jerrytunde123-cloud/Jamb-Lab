@@ -14,6 +14,7 @@ describe('JAMB_POINTS - Points System', function() {
     JAMB_STATE.setSpent(0);
     JAMB_STATE.setUnlocked(true);
     JAMB_STATE.clearSelectedSubjects();
+    JAMB_STATE.clearLoadingSubjects();
     document.body.innerHTML =
       '<span id="pointsValue"></span>' +
       '<span id="pointsBig"></span>' +
@@ -193,6 +194,19 @@ describe('JAMB_POINTS - Points System', function() {
       JAMB_STATE.setPoints(100);
       JAMB_POINTS.updateStartButtonState();
       expect(document.getElementById('startQuizBtn').innerHTML).toContain('-10 pts');
+    });
+
+    it('should stay disabled while a selected subject is loading', function() {
+      JAMB_STATE.addSelectedSubject('english');
+      JAMB_STATE.addLoadingSubject('english');
+      JAMB_POINTS.updateStartButtonState();
+      expect(document.getElementById('startQuizBtn').disabled).toBe(true);
+      expect(document.getElementById('startQuizBtn').innerHTML).toContain('Loading questions');
+
+      JAMB_STATE.removeLoadingSubject('english');
+      JAMB_POINTS.updateStartButtonState();
+      expect(document.getElementById('startQuizBtn').disabled).toBe(false);
+      expect(document.getElementById('startQuizBtn').innerHTML).toContain('-5 pts');
     });
   });
 

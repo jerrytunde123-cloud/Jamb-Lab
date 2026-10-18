@@ -12,6 +12,7 @@ describe('JAMB_STATE - Application State', function() {
     JAMB_STATE.setSpent(0);
     JAMB_STATE.setUnlocked(false);
     JAMB_STATE.clearSelectedSubjects();
+    JAMB_STATE.clearLoadingSubjects();
     JAMB_STATE.setQuestionBank(null);
     JAMB_STATE.setSubjectsLoaded(false);
     JAMB_STATE.setShowMoreSubjects(false);
@@ -151,6 +152,22 @@ describe('JAMB_STATE - Application State', function() {
       expect(JAMB_STATE.getSelectedSubjectCount()).toBe(1);
       JAMB_STATE.addSelectedSubject('math');
       expect(JAMB_STATE.getSelectedSubjectCount()).toBe(2);
+    });
+
+    it('should track loading subjects, and only selected ones gate Start', function() {
+      JAMB_STATE.addSelectedSubject('english');
+      JAMB_STATE.addLoadingSubject('english');
+      expect(JAMB_STATE.isSubjectLoading('english')).toBe(true);
+      expect(JAMB_STATE.hasLoadingSelected()).toBe(true);
+
+      JAMB_STATE.addLoadingSubject('physics');
+      expect(JAMB_STATE.isSubjectLoading('physics')).toBe(true);
+      expect(JAMB_STATE.hasLoadingSelected()).toBe(true);
+
+      JAMB_STATE.removeLoadingSubject('english');
+      expect(JAMB_STATE.hasLoadingSelected()).toBe(false);
+      JAMB_STATE.removeLoadingSubject('physics');
+      expect(JAMB_STATE.isSubjectLoading('physics')).toBe(false);
     });
   });
 
