@@ -10,17 +10,28 @@
 
 const pinsStore = require('../_utils/pins');
 
+function getHeader(req, name) {
+  const v = req.headers && req.headers[name];
+  if (Array.isArray(v)) return v[0] || '';
+  return v == null ? '' : String(v);
+}
+
 function isAuthorized(req) {
   const secret = process.env.PIN_ADMIN_SECRET;
-  if (!secret) return false;
-  const hdr = req.headers['x-pin-admin-secret'] || '';
-  const auth = req.headers['authorization'] || '';
+  if (!secret) return { ok: false, reason: 'not_configured' };
+  const hdr = getHeader(req, 'x-pin-admin-secret').trim();
+  const auth = getHeader(req, 'authorization');
   const bearer = auth.toLower().startsWith('bearer ') ? auth.slice(7).trim() : '';
-  return hdr === secret || bearer === secret;
+  if (hdr === secret || bearer === secret) return { ok: true };
+  return { ok: false, reason: 'unauthorized' };
 }
 
 module.exports = async function handler(req, res) {
-  if (!isAuthorized(req)) {
+  const authz = isAuthorized(req);
+  if (!authz.ok) {
+    if (authz.reason === 'not_configured') {
+      return res.status(500).json({ success: false, message: 'PIN admin secret not configured' });
+    }
     return res.status(401).json({ success: false, message: 'Unauthorized' });
   }
 
