@@ -11,17 +11,21 @@
 const pinsStore = require('../_utils/pins');
 
 function getHeader(req, name) {
-  const v = req.headers && req.headers[name];
-  if (Array.isArray(v)) return v[0] || '';
-  return v == null ? '' : String(v);
+  try {
+    const v = req && req.headers ? req.headers[name] : '';
+    if (Array.isArray(v)) return String(v[0] == null ? '' : v[0]);
+    return v == null ? '' : String(v);
+  } catch (e) {
+    return '';
+  }
 }
 
 function isAuthorized(req) {
-  const secret = process.env.PIN_ADMIN_SECRET;
+  const secret = process.env.PIN_ADMIN_SECRET ? String(process.env.PIN_ADMIN_SECRET) : '';
   if (!secret) return { ok: false, reason: 'not_configured' };
-  const hdr = getHeader(req, 'x-pin-admin-secret').trim();
-  const auth = getHeader(req, 'authorization');
-  const bearer = auth.toLower().startsWith('bearer ') ? auth.slice(7).trim() : '';
+  const hdr = String(getHeader(req, 'x-pin-admin-secret') || '').trim();
+  const auth = String(getHeader(req, 'authorization') || '');
+  const bearer = auth.toLower().indexOf('bearer ') === 0 ? auth.slice(7).trim() : '';
   if (hdr === secret || bearer === secret) return { ok: true };
   return { ok: false, reason: 'unauthorized' };
 }
