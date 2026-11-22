@@ -22,10 +22,6 @@ const JAMB_PURCHASE = (function() {
     return getPaymentConfig().ADMIN_WHATSAPP || '';
   }
 
-  function getPins() {
-    return getPaymentConfig().ACTIVATION_PINS || {};
-  }
-
   // ==================== BUY POINTS UI ====================
 
   function setupBuyPointsUI() {
@@ -176,27 +172,50 @@ const JAMB_PURCHASE = (function() {
 
   // ==================== PIN ====================
 
-  function redeemPin(rawPin) {
+  async function redeemPin(rawPin) {
     const pin = (rawPin || '').trim().toUpperCase();
     if (!pin) { utils.showToast('Enter a PIN', 'red'); return; }
 
-    if (localStorage.getItem('jamb_used_pin_' + pin) === 'yes') {
-      utils.showToast('This PIN has already been used', 'red');
-      return;
-    }
-
-    const pins = getPins();
-    const pts = pins[pin];
-    if (typeof pts === 'undefined') {
-      utils.showToast('Invalid PIN', 'red');
-      return;
-    }
-
-    points.addPoints(pts);
-    localStorage.setItem('jamb_used_pin_' + pin, 'yes');
+    const activateBtn = utils.$('activatePinBtn');
     const input = utils.$('pinInput');
-    if (input) input.value = '';
-    utils.showToast('+' + pts + ' points added!', 'green');
+    if (activateBtn) {
+      activateBtn.disabled = true;
+      activateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    }
+
+    try {
+      const response = await fetch('/api/redeem-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pin: pin,
+          userId: localStorage.getItem('jamb_uid') || 'anon'
+        })
+      });
+      const result = await response.json().catch(function() { return null; });
+
+      if (!response.ok || !result || !result.success) {
+        utils.showToast((result && result.message) || 'Could not redeem PIN', 'red');
+        return;
+      }
+
+      const pts = Number(result.points);
+      if (!pts || isNaN(pts) || pts < 1) {
+        utils.showToast('Invalid points returned', 'red');
+        return;
+      }
+
+      points.addPoints(pts);
+      if (input) input.value = '';
+      utils.showToast('+' + pts + ' points added!', 'green');
+    } catch (err) {
+      utils.showToast('Network error: ' + (err && err.message ? err.message : 'could not redeem PIN'), 'red');
+    } finally {
+      if (activateBtn) {
+        activateBtn.disabled = false;
+        activateBtn.innerHTML = '<i class="fas fa-check"></i> Activate';
+      }
+    }
   }
 
   // ==================== SEND POINTS ====================
