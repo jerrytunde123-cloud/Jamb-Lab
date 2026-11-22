@@ -25,7 +25,7 @@ function isAuthorized(req) {
   if (!secret) return { ok: false, reason: 'not_configured' };
   const hdr = String(getHeader(req, 'x-pin-admin-secret') || '').trim();
   const auth = String(getHeader(req, 'authorization') || '');
-  const bearer = auth.toLower().indexOf('bearer ') === 0 ? auth.slice(7).trim() : '';
+  const bearer = auth.toLowerCase().indexOf('bearer ') === 0 ? auth.slice(7).trim() : '';
   if (hdr === secret || bearer === secret) return { ok: true };
   return { ok: false, reason: 'unauthorized' };
 }
